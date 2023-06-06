@@ -56,5 +56,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/refund-booking', 'refundBooking');                       // 21 ( Refund Booking )  
         Route::post('water-tanker/list-refund-booking', 'listRefundBooking');              // 22 ( List Refund Booking )  
         Route::post('water-tanker/list-ulb-booking', 'listUlbBooking');                    // 23 ( List ULB Booking )  
+        Route::post('water-tanker/edit-agency', 'editAgency');                             // 24 ( Edit Agency )  
     });
 });
