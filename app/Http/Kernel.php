@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\ApiAuthentication;
+use App\Http\Middleware\CheckToken;
 use App\Http\Middleware\ExpireBearerToken;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -67,6 +68,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'json.response' => \App\Http\Middleware\ForceJsonResponse::class,
         'auth.citizen' => ApiAuthentication::class,
-        'expireBearerToken' => ExpireBearerToken::class
+        'expireBearerToken' => ExpireBearerToken::class,
+        'checkToken' => CheckToken::class
     ];
 }
