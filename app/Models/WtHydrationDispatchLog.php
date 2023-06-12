@@ -43,6 +43,7 @@ class WtHydrationDispatchLog extends Model
                         ->leftjoin('wt_agencies as wa', 'hdl.agency_id', '=', 'wa.id')
                         ->join('wt_hydration_centers as whc', 'hdl.hydration_center_id', '=', 'whc.id')
                         ->select('hdl.*', 'wc.capacity','wa.agency_name','whc.name as hydration_center_name')
+                        ->orderBy('hdl.id','desc')
                         ->get();
     }
 }

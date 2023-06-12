@@ -48,6 +48,30 @@ class WtResource extends Model
                         ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
                         ->leftjoin('wt_agencies as wa', 'wr.agency_id', '=', 'wa.id')
                         ->select('wr.*', 'wc.capacity','wa.agency_name')
+                        ->orderBy('wr.id','desc')
                         ->get();
+    }
+
+    /**
+     * | Get Resource Details By Id
+     */
+    public function getResourceById($id){
+        return $list = DB::table('wt_resources as wr')
+                        ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
+                        ->leftjoin('wt_agencies as wa', 'wr.agency_id', '=', 'wa.id')
+                        ->select('wr.*', 'wc.capacity','wa.agency_name')
+                        ->where('wr.id', $id)
+                        ->first();
+    }
+
+    /**
+     * | Get vehicle list for Master Data
+     */
+    public function getVehicleForMasterData(){
+        return $list = DB::table('wt_resources as wr')
+        ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
+        ->leftjoin('wt_agencies as wa', 'wr.agency_id', '=', 'wa.id')
+        ->select('wr.*', 'wc.capacity','wa.agency_name')
+        ->get();
     }
 }

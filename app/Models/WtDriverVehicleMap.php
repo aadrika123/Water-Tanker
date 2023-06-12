@@ -49,4 +49,19 @@ class WtDriverVehicleMap extends Model
             ->select('wdvm.*', 'wd.driver_name','wd.driver_license_no','wd.driver_address','wd.driver_mobile', 'wr.vehicle_name','wr.vehicle_no','wc.capacity','wa.agency_name')
             ->get();
     }
+
+  /**
+     * | Get Map Driver & Vehicle Mapping By Id
+     */
+    public function getDriverVehicleMapById($id){
+        return $list = DB::table('wt_driver_vehicle_maps as wdvm')
+        ->join('wt_resources as wr', 'wdvm.vehicle_id', '=', 'wr.id')
+        ->leftjoin('wt_agencies as wa', 'wr.agency_id', '=', 'wa.id')
+        ->join('wt_drivers as wd', 'wdvm.driver_id', '=', 'wd.id')
+        ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
+        ->select('wdvm.*', 'wd.driver_name','wd.driver_license_no','wd.driver_address','wd.driver_mobile', 'wr.vehicle_name','wr.vehicle_no','wc.capacity','wa.agency_name')
+        ->where('wdvm.id',$id)
+        ->first();
+
+    }
 }

@@ -82,15 +82,16 @@ class WaterTankerController extends Controller
             // return $req;
             $mWtAgency = new WtAgency();
             $list = $mWtAgency->getAllAgency();
-            $bearerToken = $req->token;
+            // $bearerToken = $req->token;
             // $bearerToken = (collect(($req->headers->all())['authorization'] ?? "")->first());
-            $contentType = (collect(($req->headers->all())['content-type'] ?? "")->first());
+            // $contentType = (collect(($req->headers->all())['content-type'] ?? "")->first());
             // $bearerToken = "34|gDhTZJ1PYRx1B8Xl3mMSTTZJ97ztz8UZV2NpzqGp";
 
             $ulb = $this->_ulbs;
             $ulbId = "";
             $wards = collect([]);
-            $f_list = $list->map(function ($val) use ($ulb, $bearerToken, $contentType, $ulbId, $wards) {
+            // $f_list = $list->map(function ($val) use ($ulb, $bearerToken, $contentType, $ulbId, $wards) {
+            $f_list = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
                 $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d/m/Y');
                 // if ($ulbId != $val["ulb_id"]) {
@@ -155,7 +156,11 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtCapacity = new WtCapacity();
             $list = $mWtCapacity->getCapacityList();
-            return responseMsgs(true, "Capacity List !!!", $list, "050104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $f_list = $list->map(function ($val) {
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                return $val;
+            });
+            return responseMsgs(true, "Capacity List !!!", $f_list, "050104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "050104", "1.0", "", 'POST', $req->deviceId ?? "");
         }
@@ -200,7 +205,11 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
             $list = $mWtUlbCapacityRate->getUlbCapacityRateList();
-            return responseMsgs(true, "Capacity Rate List !!!", $list, "0501056", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $f_list = $list->map(function ($val) {
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                return $val;
+            });
+            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "0501056", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "050106", "1.0", "", 'POST', $req->deviceId ?? "");
         }
@@ -217,7 +226,7 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'name' => 'required|string',
             'ulbId' => 'required|integer|digits_between:1,200',
-            'wardId' => 'required|integer|digits_between:1,200',
+            // 'wardId' => 'required|integer|digits_between:1,200',
             'waterCapacity' => 'required|numeric',
             'address' => 'required|string',
 
@@ -794,24 +803,507 @@ class WaterTankerController extends Controller
             return ['status' => false, 'message' => $validator->errors()];
         }
         try {
-           $mWtAgency=WtAgency::find($req->agencyId);
-           $mWtAgency->agency_name=$req->agencyName;
-           $mWtAgency->agency_address=$req->agencyAddress;
-           $mWtAgency->agency_mobile=$req->agencyMobile;
-           $mWtAgency->agency_email=$req->agencyEmail;
-           $mWtAgency->owner_name=$req->ownerName;
-           $mWtAgency->dispatch_capacity=$req->dispatchCapacity;
-           $mWtAgency->ulb_id=$req->ulbId;
-           $mWtAgency->save();
-           return responseMsgs(true, "Agency Updated Successfully !!!", '', "050123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $mWtAgency = WtAgency::find($req->agencyId);
+            if (!$mWtAgency)
+                throw new Exception("No Data Found !!!");
+            $mWtAgency->agency_name = $req->agencyName;
+            $mWtAgency->agency_address = $req->agencyAddress;
+            $mWtAgency->agency_mobile = $req->agencyMobile;
+            $mWtAgency->agency_email = $req->agencyEmail;
+            $mWtAgency->owner_name = $req->ownerName;
+            $mWtAgency->dispatch_capacity = $req->dispatchCapacity;
+            $mWtAgency->ulb_id = $req->ulbId;
+            $mWtAgency->save();
+            return responseMsgs(true, "Agency Updated Successfully !!!", '', "050123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "050124", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
+
+    /**
+     * | Get Booking list
+     * | Function - 25
+     * | API - 25
+     */
+    public function editHydrationCenter(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'hydrationCenterId' => 'required|integer',
+            'name' => 'required|string',
+            'ulbId' => 'required|integer|digits_between:1,200',
+            // 'wardId' => 'required|integer|digits_between:1,200',
+            'waterCapacity' => 'required|numeric',
+            'address' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtHydrationCenter = WtHydrationCenter::find($req->hydrationCenterId);
+            if (!$mWtHydrationCenter)
+                throw new Exception("No Data Found !!!");
+            $mWtHydrationCenter->name = $req->name;
+            $mWtHydrationCenter->ulb_id = $req->ulbId;
+            $mWtHydrationCenter->water_capacity = $req->waterCapacity;
+            $mWtHydrationCenter->address = $req->address;
+            $mWtHydrationCenter->save();
+            return responseMsgs(true, "Hydration Center Details Updated Successfully !!!", '', "050125", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050125", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details of Resource
+     * | Function - 26
+     * | API - 26
+     */
+    public function editResource(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'resourceId' => 'required|integer',
+            'ulbId' => 'required|integer|digits_between:1,200',
+            'agencyId' => 'nullable|integer',
+            'vehicleName' => 'required|string|max:200',
+            'vehicleNo' => 'required|string|max:16',
+            'capacityId' => 'required|integer|digits_between:1,150',
+            'resourceType' => 'required|string|max:200',
+            'isUlbResource' => 'required|boolean',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtResource = WtResource::find($req->resourceId);
+            if (!$mWtResource)
+                throw new Exception("No Data Found !!!");
+            $mWtResource->ulb_id = $req->ulbId;
+            $mWtResource->agency_id = $req->agencyId;
+            $mWtResource->vehicle_name = $req->vehicleName;
+            $mWtResource->vehicle_no = $req->vehicleNo;
+            $mWtResource->capacity_id = $req->capacityId;
+            $mWtResource->resource_type = $req->resourceType;
+            $mWtResource->is_ulb_resource = $req->isUlbResource;
+            $mWtResource->save();
+            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "050126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050126", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details of Capacity
+     * | Function - 27
+     * | API - 27
+     */
+    public function editCapacity(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityId' => 'required|integer',
+            'capacity' => 'required|numeric',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtCapacity = WtCapacity::find($req->capacityId);
+            if (!$mWtCapacity)
+                throw new Exception("No Data Found !!!");
+            $mWtCapacity->capacity = $req->capacity;
+            $mWtCapacity->save();
+            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "050127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050127", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details of Capacity Rates
+     * | Function - 28
+     * | API - 28
+     */
+    public function editCapacityRate(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer',
+            'capacityId' => 'required|integer',
+            'capacityRateId' => 'required|integer',
+            'rate' => 'required|numeric',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtUlbCapacityRate = WtUlbCapacityRate::find($req->capacityRateId);
+            if (!$mWtUlbCapacityRate)
+                throw new Exception("No Data Found !!!");
+            $mWtUlbCapacityRate->ulb_id = $req->ulbId;
+            $mWtUlbCapacityRate->capacity_id = $req->capacityId;
+            $mWtUlbCapacityRate->rate = $req->rate;
+            $mWtUlbCapacityRate->save();
+            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "050128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050128", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Update Details for Driver
+     * | Function - 29
+     * | API - 29
+     */
+    public function editDriver(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer|digits_between:1,200',
+            'agencyId' => 'required|integer',
+            'driverId' => 'required|integer',
+            'driverName' => 'required|string|max:200',
+            'driverAadharNo' => 'required|string|max:16',
+            'driverMobile' => 'required|digits:10',
+            'driverAddress' => 'required|string',
+            'driverFather' => 'required|string|max:200',
+            'driverDob' => 'required|date',
+            'driverLicenseNo' => 'required|string|max:50',
+
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtDriver = WtDriver::find($req->driverId);
+            if (!$mWtDriver)
+                throw new Exception("No Data Found !!!");
+            $mWtDriver->ulb_id = $req->ulbId;
+            $mWtDriver->agency_id = $req->agencyId;
+            $mWtDriver->driver_name = $req->driverName;
+            $mWtDriver->driver_aadhar_no = $req->driverAadharNo;
+            $mWtDriver->driver_mobile = $req->driverMobile;
+            $mWtDriver->driver_address = $req->driverAddress;
+            $mWtDriver->driver_father = $req->driverFather;
+            $mWtDriver->driver_dob = $req->driverDob;
+            $mWtDriver->driver_license_no = $req->driverLicenseNo;
+            $mWtDriver->save();
+            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "050129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050129", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+
+    /**
+     * | Get Agency Details By Id
+     * | Function - 30
+     * | API - 30
+     */
+
+    public function getAgencyDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'agencyId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtAgency = new WtAgency();
+            $list = $mWtAgency->getAgencyById($req->agencyId);
+            return responseMsgs(true, "Data Fetched !!!",  $list, "050129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050129", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Hydration Center Details By Id
+     * | Function - 31
+     * | API - 31
+     */
+    public function getHydrationCenterDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'hydrationCenterId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtHydrationCenter = new WtHydrationCenter();
+            $list = $mWtHydrationCenter->getHydrationCenterDetailsByID($req->hydrationCenterId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050130", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050130", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 32
+     * | API - 32
+     */
+    public function getResourceDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'resourceId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtResource = new WtResource();
+            $list = $mWtResource->getResourceById($req->resourceId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050112", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 33
+     * | API - 33
+     */
+    public function getCapacityDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtCapacity = new WtCapacity();
+            $list = $mWtCapacity->getCapacityById($req->capacityId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050133", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050133", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 34
+     * | API - 34
+     */
+    public function getCapacityRateDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityRateId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtUlbCapacityRate = new WtUlbCapacityRate();
+            $list = $mWtUlbCapacityRate->getCapacityRateDetailsById($req->capacityRateId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050134", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 35
+     * | API - 35
+     */
+    public function getDriverDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'driverId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtDriver = new WtDriver();
+            $list = $mWtDriver->getDriverDetailsById($req->driverId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050135", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Driver Vehicle Map List
+     * | Function - 36
+     * | API - 36
+     */
+    public function listDriverVehicleForAssign(Request $req)
+    {
+        try {
+            // Variable initialization
+            $mWtDriverVehicleMap = new WtDriverVehicleMap();
+            $list = $mWtDriverVehicleMap->getMapDriverVehicle();
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->driver_vehicle = $val->vehicle_no . "( " . $val->driver_name . " )";
+                return $val;
+            });
+            return responseMsgs(true, "Driver Vehicle Mapping List !!!", $f_list, "050136", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050136", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Get Driver Vehicle Map Details By Id
+     * | Function - 37
+     * | API - 37
+     */
+    public function getDriverVehicleMapById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'mapId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            // Variable initialization
+            $mWtDriverVehicleMap = new WtDriverVehicleMap();
+            $list = $mWtDriverVehicleMap->getDriverVehicleMapById($req->mapId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "050137", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050137", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Driver Vehicle Map Details By Id
+     * | Function - 38
+     * | API - 38
+     * 
+     */
+    public function editDriverVehicleMap(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer|digits_between:1,200',
+            'driverId' => 'required|integer',
+            'vehicleId' => 'required|integer',
+            'mapId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->mapId);
+            if (!$mWtDriverVehicleMap)
+                throw new Exception("No Data Found !!!");
+            $mWtDriverVehicleMap->ulb_id = $req->ulbId;
+            $mWtDriverVehicleMap->driver_id = $req->driverId;
+            $mWtDriverVehicleMap->vehicle_id = $req->vehicleId;
+            $mWtDriverVehicleMap->save();
+            return responseMsgs(true, "Map Driver & Vehicle Details Updated Successfully !!!", '', "050138", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050138", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Booking Assign for Delevery (Tanker , Driver & Hydration Center )
+     * | Function - 39
+     * | API - 39
+     */
+    public function bookingAssignment(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+            'vdmId' => 'required|integer',
+            'hydrationCenterId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()];
+        }
+        try {
+            $mWtBooking = WtBooking::find($req->applicationId);
+            if (!$mWtBooking)
+                throw new Exception("No Data Found !!!");
+            $mWtBooking->vdm_id = $req->vdmId;
+            $mWtBooking->hydration_center_id = $req->hydrationCenterId;
+            $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
+            $mWtBooking->save();
+            return responseMsgs(true, "Booking Assignent Successfully !!!", '', "050139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050139", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Agency Booking Assign for Delevery (Tanker , Driver & Hydration Center )
+     * | Function - 40
+     * | API - 40
+     */
+    public function listAssignAgency(Request $req)
+    {
+        try {
+            $mWtBooking = new WtBooking();
+            $list = $mWtBooking->assignList()->get();
+            // $list=$list->where('agency_id','!=',NULL)->get();
+            // $list=$list->where('agency_id',$agencyId)->get();
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
+                return $val;
+            });
+            return responseMsgs(true, "Assign List !!!", $f_list, "050140", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050140", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    
+    /**
+     * | Hydration Center Booking Assign for Delevery (Tanker , Driver & Hydration Center )
+     * | Function - 41
+     * | API - 41
+     */
+    public function listAssignHydrationCenter(Request $req)
+    {
+        try {
+            $mWtBooking = new WtBooking();
+            $list = $mWtBooking->assignList()->get();
+            // $list=$list->where('hydration_center_id',$hydrationCenterId)->get();
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
+                return $val;
+            });
+            return responseMsgs(true, "Assign List !!!", $f_list, "050141", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050141", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+
+
+
     /**
      * | Get Ulb list from juidco database from GuzzleHttp
      * | Function - unknown
+     * | API - unknown
      */
     public function ulbList()
     {
@@ -831,6 +1323,53 @@ class WaterTankerController extends Controller
             }
             return $data1;
         } catch (Exception $e) {
+        }
+    }
+
+    /**
+     * | Get Master Data of Water Tanker
+     * | Function - unknown
+     * | API - unknown
+     */
+    public function masterData(Request $req)
+    {
+        $redis = Redis::connection();
+        try {
+            // Variable initialization
+            $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
+            if (1) {                                                      // If Cache Memory is not available
+                $data1 = array();
+
+                $magency = new WtAgency();
+                $adencyList = $magency->getAllAgencyForMasterData();
+                $data1['agency'] = $adencyList;
+
+                $mWtCapacity = new WtCapacity();
+                $listCapacity = $mWtCapacity->getCapacityList();
+                $data1['capacity'] = $listCapacity;
+
+                $mWtDriver = new WtDriver();
+                $listDriver = $mWtDriver->getDriverListForMasterData();
+                $data1['driver'] = $listDriver;
+
+                $mWtHydrationCenter = new WtHydrationCenter();
+                $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData();
+                $data1['hydrationCenter'] = $hydrationCenter;
+
+                $mWtUlbCapacityRate = new WtUlbCapacityRate();
+                $capacityRate = $mWtUlbCapacityRate->getCapacityRateForMasterData();
+                $data1['capacityRate'] = $capacityRate;
+
+
+                $mWtResource = new WtResource();
+                $capacityRate = $mWtResource->getVehicleForMasterData();
+                $data1['vehicle'] = $capacityRate;
+
+                $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
+            }
+            return responseMsgs(true, "Data Fetched !!!", $data1, "050112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "050112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 }

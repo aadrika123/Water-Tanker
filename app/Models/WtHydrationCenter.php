@@ -11,13 +11,14 @@ class WtHydrationCenter extends Model
 
     protected $guarded = [];
 
-    public function metaReqs($req){
+    public function metaReqs($req)
+    {
         return [
-            'name'=>$req->name,
-            'ulb_id'=>$req->ulbId,
-            'ward_id'=>$req->wardId,
+            'name' => $req->name,
+            'ulb_id' => $req->ulbId,
+            'ward_id' => $req->wardId,
             'water_capacity' => $req->waterCapacity,
-            'address'=>$req->address
+            'address' => $req->address
         ];
     }
 
@@ -26,14 +27,31 @@ class WtHydrationCenter extends Model
      */
     public function storeHydrationCenter($req)
     {
-        $metaReqs=$this->metaReqs($req);
+        $metaReqs = $this->metaReqs($req);
         return WtHydrationCenter::create($metaReqs);
     }
 
     /**
      * | Get Hydration Center list
      */
-    public function getHydrationCenterList($req){
-       return Self::all();
+    public function getHydrationCenterList($req)
+    {
+        return Self::select('*')->orderBy('id','desc')->get();
+    }
+
+    /**
+     * | Get Hydration Center Details By Id
+     */
+    public function getHydrationCenterDetailsByID($id)
+    {
+        return Self::where('id', $id)->first();
+    }
+
+    /**
+     * | Get Hydration Center List For Master Data
+     */
+    public function getHydrationCeenterForMasterData()
+    {
+        return self::select('id', 'name')->get();
     }
 }

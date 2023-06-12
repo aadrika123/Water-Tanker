@@ -36,6 +36,13 @@ class WtCapacity extends Model
      */
     public function getCapacityList()
     {
-        return WtCapacity::select('id','capacity')->get();
+        return WtCapacity::select('id','capacity','date')->get();
+    }
+
+    /**
+     * | Get Capacity Details By Id
+     */
+    public function getCapacityById($id){
+        return WtCapacity::select('id','capacity')->where('id',$id)->first();
     }
 }
