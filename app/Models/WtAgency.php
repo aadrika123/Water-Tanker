@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 class WtAgency extends Model
 {
     use HasFactory;
+    // protected $connection='pgsql';
     protected $guarded = [];
 
     /**
@@ -19,6 +20,7 @@ class WtAgency extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
+            'u_id' => $req->UId,
             'agency_name' => $req->agencyName,
             'owner_name' => $req->ownerName,
             'agency_address' => $req->agencyAddress,

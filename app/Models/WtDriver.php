@@ -47,7 +47,7 @@ class WtDriver extends Model
     public function getDriverList()
     {
         return $list = DB::table('wt_drivers as wd')
-            ->join('wt_agencies as wa', 'wd.agency_id', '=', 'wa.id')
+            ->leftjoin('wt_agencies as wa', 'wd.agency_id', '=', 'wa.id')
             ->select('wd.*', 'wa.agency_name')
             ->orderBy('id','desc')
             ->get();

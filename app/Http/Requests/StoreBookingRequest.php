@@ -25,16 +25,18 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'ulbId' => 'required|integer',
-            'citizenId' => 'required|integer',
+            // 'citizenId' => 'required|integer',
+            'applicantName' => 'required|string|max:255',
             'agencyId' => 'required|integer',
-            'bookingDate' => 'required|date_format:Y-m-d',
+            // 'bookingDate' => 'required|date_format:Y-m-d',
             'deliveryDate' => 'required|date_format:Y-m-d',
             'deliveryTime' => 'required|date_format:H:i',
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
-            'wardId' => 'required|integer',
+            'locationId' => 'required|integer',
             'capacityId' => 'required|integer',
-            'quantity' => 'required|integer',
+            // 'quantity' => 'required|integer',
+            'address' => 'required|string|max:255',
         ];
     }
 

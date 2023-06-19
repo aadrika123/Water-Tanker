@@ -17,8 +17,10 @@ class WtHydrationCenter extends Model
             'name' => $req->name,
             'ulb_id' => $req->ulbId,
             'ward_id' => $req->wardId,
+            'email' => $req->mobile,
             'water_capacity' => $req->waterCapacity,
-            'address' => $req->address
+            'address' => $req->address,
+            'u_id' => $req->UId,
         ];
     }
 
