@@ -16,7 +16,7 @@ class WtBooking extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
-            'citizen_id' => $req->citizenId??'69',
+            'citizen_id' => $req->citizenId,
             'agency_id' => $req->agencyId,
             'booking_date' => Carbon::now()->format('Y-m-d'),
             'delivery_date' => $req->deliveryDate,
@@ -52,7 +52,7 @@ class WtBooking extends Model
      */
     public function getBookingList()
     {
-        return $list = DB::table('wt_bookings as wb')
+        return DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
@@ -98,5 +98,12 @@ class WtBooking extends Model
         ->select('wb.booking_no','wb.applicant_name','wb.payment_amount','wb.id as applicationId','wb.mobile','wb.email', 'wc.capacity')
         ->where('wb.id',$id)
         ->first();
+    }
+
+    /**
+     * | Get Today booking list
+     */
+    public function todayBookings($agencyId){
+        return $list = self::select('*')->where('delivery_date',Carbon::now()->format('Y-m-d'))->where('agency_id',$agencyId);
     }
 }

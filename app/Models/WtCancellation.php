@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -22,5 +23,12 @@ class WtCancellation extends Model
             ->select('wtc.*', 'wc.capacity', 'wa.agency_name')
             ->orderBy('wtc.ulb_id')
             ->get();
+    }
+
+    /**
+     * | Get Today Cancelled Booking List
+     */
+    public function todayCancelledBooking($agencyId){
+        return self::select('*')->where('delivery_date',Carbon::now()->format('Y-m-d'))->where('agency_id',$agencyId);  
     }
 }

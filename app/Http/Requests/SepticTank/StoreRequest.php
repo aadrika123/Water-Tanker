@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\SepticTank;
 
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class StoreBookingRequest extends FormRequest
+class StoreRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,21 +21,20 @@ class StoreBookingRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'ulbId' => 'required|integer',
-            // 'citizenId' => 'required|integer',
+            'locationId' => 'required|integer',
             'applicantName' => 'required|string|max:255',
-            'agencyId' => 'required|integer',
-            // 'bookingDate' => 'required|date_format:Y-m-d',
-            'deliveryDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
-            'deliveryTime' => 'required|date_format:H:i',
+            'cleaningDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
-            'locationId' => 'required|integer',
-            'capacityId' => 'required|integer',
-            // 'quantity' => 'required|integer',
+            'wardId' => 'required|integer',
+            'holdingNo' => 'required|string|max:20',
+            'roadWidth' => 'required|numeric',
+            'distance' => 'required|numeric',
+            'capacity' => 'required|numeric',
             'address' => 'required|string|max:255',
         ];
     }
@@ -44,7 +43,7 @@ class StoreBookingRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'success'   => false,
-            'message'   =>$validator->errors()->first(),
+            'message'   => 'Validation errors',
             'data'      => $validator->errors()
         ], 422),);
     }

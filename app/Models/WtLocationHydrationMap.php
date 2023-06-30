@@ -83,4 +83,11 @@ class WtLocationHydrationMap extends Model
             ->get();
         return $list;
     }
+
+    /**
+     * | Check given location and hydration is mapped or not
+     */
+    public function isLocationHydrationMapOrNot($locationId,$hydrationCenterId){
+        return DB::table('wt_location_hydration_maps')->where(['location_id'=>$locationId,'hydration_center_id'=>$hydrationCenterId])->count();
+    }
 }

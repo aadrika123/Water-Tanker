@@ -17,7 +17,8 @@ class WtHydrationCenter extends Model
             'name' => $req->name,
             'ulb_id' => $req->ulbId,
             'ward_id' => $req->wardId,
-            'email' => $req->mobile,
+            'email' => $req->email,
+            'mobile' => $req->mobile,
             'water_capacity' => $req->waterCapacity,
             'address' => $req->address,
             'u_id' => $req->UId,
@@ -52,8 +53,8 @@ class WtHydrationCenter extends Model
     /**
      * | Get Hydration Center List For Master Data
      */
-    public function getHydrationCeenterForMasterData()
+    public function getHydrationCeenterForMasterData($ulbId)
     {
-        return self::select('id', 'name')->get();
+        return self::select('id', 'name')->where('ulb_id',$ulbId)->get();
     }
 }

@@ -29,6 +29,7 @@ use App\Models\WtLocation;
 use App\Models\WtLocationHydrationMap;
 use App\Models\WtReassignBooking;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use PhpParser\Node\Stmt\Return_;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -70,12 +71,12 @@ class WaterTankerController extends Controller
             'dispatchCapacity' => 'required|numeric',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
-        $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             if ($req->auth['user_type'] != 'UlbUser')
-                throw new Exception("You Are Unothorized For Add Agency !!!");
+                throw new Exception("You Are Unauthorized For Add Agency !!!");
             // Variable initialization
             $reqs = [
                 "name" =>  $req->agencyName,
@@ -92,11 +93,11 @@ class WaterTankerController extends Controller
 
             $res = $mWtAgency->storeAgency($req);                                       // Store Agency Request
             DB::commit();
-            return responseMsgs(true, "Agency Added Successfully !!!", '', "090101", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency Added Successfully !!!", '', "110101", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
             // return $e->getMessage();
-            return responseMsgs(false, $e->getMessage(), "", "090101", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110101", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -109,7 +110,7 @@ class WaterTankerController extends Controller
     {
         try {
             if ($req->auth['user_type'] != 'UlbUser')
-                throw new Exception('You Are Not Authorized !!!');
+                throw new Exception('You Are Not Aauthorized !!!');
             // Variable initialization
             $mWtAgency = new WtAgency();
             $list = $mWtAgency->getAllAgency()->where('ulb_id', $req->auth['ulb_id']);
@@ -120,9 +121,9 @@ class WaterTankerController extends Controller
                 $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Agency List !!!",  $f_list, "090102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency List !!!",  $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090102", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -134,10 +135,10 @@ class WaterTankerController extends Controller
     public function addCapacity(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'capacity' => 'required|numeric',
+            'capacity' => 'required|integer|unique:wt_capacities',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
@@ -145,11 +146,11 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtCapacity->storeCapacity($req);                                       // Store Capacity Request
             DB::commit();
-            return responseMsgs(true, "Capacity Added Successfully !!!", '', "090103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Added Successfully !!!", '', "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
             // return $e->getMessage();
-            return responseMsgs(false, $e->getMessage(), "", "090103", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -168,9 +169,9 @@ class WaterTankerController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Capacity List !!!", $f_list, "090104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity List !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090104", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -182,23 +183,24 @@ class WaterTankerController extends Controller
     public function addCapacityRate(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'capacityId' => 'required|integer|digits_between:1,99',
-            'ulbId' => 'required|integer|digits_between:1,200',
-            'rate' => 'required|numeric',
+            'capacityId' => 'required|integer|digits_between:1,999999',
+            // 'ulbId' => 'required|integer|digits_between:1,200',
+            'rate' => 'required|integer|gt:0',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
             DB::beginTransaction();
             $res = $mWtUlbCapacityRate->storeCapacityRate($req);                                       // Store Capacity Rate Request
             DB::commit();
-            return responseMsgs(true, "Capacity Rate Added Successfully !!!",  '', "090105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate Added Successfully !!!",  '', "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090105", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -217,9 +219,9 @@ class WaterTankerController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "090106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090106", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -249,13 +251,13 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
             // Variable initialization
             if ($req->auth['user_type'] != 'UlbUser')
-                throw new Exception("You Are Unothorized For Add Hydration Center !!!");
+                throw new Exception("You Are Unauthorized For Add Hydration Center !!!");
             $reqs = [
                 "name" =>  $req->name,
                 "email" => $req->email,
@@ -270,10 +272,10 @@ class WaterTankerController extends Controller
             $req->merge(['UId' => $userId]);
             $res = $mWtHydrationCenter->storeHydrationCenter($req);                                       // Store Capacity Rate Request
             DB::commit();
-            return responseMsgs(true, "Hydration Center Added Successfully !!!",  '', "090107", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Hydration Center Added Successfully !!!",  '', "110107", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090107", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110107", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -286,7 +288,7 @@ class WaterTankerController extends Controller
     {
         try {
             if ($req->auth['user_type'] != 'UlbUser')
-                throw new Exception("You Are Unothorized !!!");
+                throw new Exception("You Are Unauthorized !!!");
             // Variable initialization
             $mWtHydrationCenter = new WtHydrationCenter();
             $list = $mWtHydrationCenter->getHydrationCenterList($req);
@@ -314,9 +316,9 @@ class WaterTankerController extends Controller
                 // $val["ward_no"] = $wards->where("id", $val["agency_ward_id"])->value("ward_name");
                 return $val;
             });
-            return responseMsgs(true, "Hydration Center List !!!", $f_list, "090108", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Hydration Center List !!!", $f_list, "110108", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090108", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110108", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -333,16 +335,16 @@ class WaterTankerController extends Controller
             'driverMobile' => 'required|digits:10',
             'driverAddress' => 'required|string',
             'driverFather' => 'required|string|max:200',
-            'driverDob' => 'required|date',
+            'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
-                throw new Exception('Unothorised Access !!!');
+                throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
                 $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
@@ -353,10 +355,10 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
             DB::commit();
-            return responseMsgs(true, "Driver Added Successfully !!!",  '', "090109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090109", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -374,7 +376,7 @@ class WaterTankerController extends Controller
             $mWtDriver = new WtDriver();
             $list = $mWtDriver->getDriverList();
             if ($req->auth['user_type'] == 'UlbUser')
-                $list = $list->where('agency_id', NULL);
+                $list = $list->where('ulb_id', $req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id',  DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id);
             $ulb = $this->_ulbs;
@@ -384,9 +386,9 @@ class WaterTankerController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Driver List !!!", $f_list->values(), "090110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver List !!!", $f_list->values(), "110110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090110", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110110", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -399,8 +401,6 @@ class WaterTankerController extends Controller
     public function addResource(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer|digits_between:1,200',
-            'agencyId' => 'nullable|integer',
             'vehicleName' => 'required|string|max:200',
             'vehicleNo' => 'required|string|max:16',
             'capacityId' => 'required|integer|digits_between:1,150',
@@ -409,18 +409,25 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
+
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
+
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
             $mWtResource = new WtResource();
             DB::beginTransaction();
             $res = $mWtResource->storeResourceInfo($req);                                       // Store Resource Information in Model 
             DB::commit();
-            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "090111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090111", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110111", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -432,18 +439,22 @@ class WaterTankerController extends Controller
     public function listResource(Request $req)
     {
         try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtResource = new WtResource();
-            $list = $mWtResource->getResourceList($req);
+            $list = $mWtResource->getResourceList($req->auth['ulb_id']);
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $list = $list->where('agency_id', WtAgency::select('*')->where('u_id', $req->auth['id'])->first()->id);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Resource List !!!", $f_list, "090112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource List !!!", $f_list, "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090112", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -464,7 +475,7 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
@@ -472,10 +483,10 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtHydrationDispatchLog->storeHydrationDispatchLog($req);                                       // Store Resource Information in Model 
             DB::commit();
-            return responseMsgs(true, "Dispatch Log Added Successfully !!!",  '', "090113", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Dispatch Log Added Successfully !!!",  '', "110113", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090113", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110113", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -495,9 +506,9 @@ class WaterTankerController extends Controller
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 return $val;
             });
-            return responseMsgs(true, "Resource List !!!", $f_list, "090114", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource List !!!", $f_list, "110114", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090114", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110114", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -532,10 +543,10 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
-            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "090115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090115", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -546,33 +557,29 @@ class WaterTankerController extends Controller
      */
     public function listAgencyBooking(Request $req)
     {
-        $validator = Validator::make($req->all(), [
-            'perPage' => 'required|integer',
-        ]);
-        if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
-        }
         try {
             // Variable initialization
-            if($req->auth['user_type'] != "Water-Agency")
-                throw new Exception("Unothorished  Access !!!");
+            if ($req->auth['user_type'] != "Water-Agency")
+                throw new Exception("Unauthorized  Access !!!");
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
-                ->where('agency_id', WtAgency::select('id')->where('u_id',$req->auth['id'])->first()->id)
-                ->where('assign_date', NULL)
+                ->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)
+                ->where('is_vehicle_sent', '<=', '1')
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))
-               ->get();
+                ->orderByDesc('id')
+                ->get();
 
             $ulb = $this->_ulbs;
-            $f_list = $list['data']->map(function ($val) use ($ulb) {
+            $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
                 $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                 return $val;
             });
-            return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "090116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090116", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -584,15 +591,18 @@ class WaterTankerController extends Controller
     public function mapDriverVehicle(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer|digits_between:1,200',
             'driverId' => 'required|integer',
             'vehicleId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $req->merge(['agencyId' => WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id]);
+
             $mWtResource = WtResource::find($req->vehicleId);
             $isUlbVehicle = ['isUlbVehicle' => $mWtResource->is_ulb_resource];
             $req->request->add($isUlbVehicle);
@@ -600,10 +610,10 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtDriverVehicleMap->storeMappingDriverVehicle($req);                                       // Store Resource Information in Model 
             DB::commit();
-            return responseMsgs(true, "Mapping Added Successfully !!!",  '', "090117", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Mapping Added Successfully !!!",  '', "110117", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090117", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110117", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -615,19 +625,23 @@ class WaterTankerController extends Controller
     public function listMapDriverVehicle(Request $req)
     {
         try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
-            $list = $mWtDriverVehicleMap->getMapDriverVehicle();
+            $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 $val->is_ulb_vehicle = $val->is_ulb_vehicle == 1 ? 'Yes' : 'No';
                 return $val;
             });
-            return responseMsgs(true, "Mapping List !!!", $f_list, "090118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Mapping List !!!", $f_list->values(), "110118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090118", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110118", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -638,20 +652,18 @@ class WaterTankerController extends Controller
      */
     public function cancelBooking(Request $req)
     {
-        // return $req;
-
         $cancelledBy = $req->auth['user_type'];
         if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser')
             $cancelById = $req->auth['id'];
         if ($cancelledBy == 'Water-Agency')
-            $cancelById = WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id;
+            $cancelById = WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer',
             'remarks' => 'required|string',
             'cancelDetails' => 'nullable|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         $req->request->add(['cancelledById' => $cancelById, 'cancelledBy' => $cancelledBy]);
         try {
@@ -660,7 +672,7 @@ class WaterTankerController extends Controller
             // if (Carbon::now()->format('Y-m-d') > $mWtBooking->delivery_date)
             //     throw new Exception('Today Booking is Not Cancelled !!!');
             if ($mWtBooking->is_vehicle_sent > 0)
-                throw new Exception('This Booking is Not Cancel, Because Tanker is Going to Fillup !!!');
+                throw new Exception('This Booking is Not Cancel, Because Tanker is Going to Re-fill !!!');
             $cancelledBooking = $mWtBooking->replicate();                                   // Replicate Data fromm Booking to Cancel table
             $cancelledBooking->cancel_date = Carbon::now()->format('Y-m-d');
             $cancelledBooking->remarks = $req->remarks;
@@ -676,9 +688,9 @@ class WaterTankerController extends Controller
             $cancelledBooking->setTable('wt_cancellations');
             $cancelledBooking->save();                                                       // Save in Cancel Booking Table
             $mWtBooking->delete();                                                           // Delete Data From Booking Table
-            return responseMsgs(true, "Booking Cancelled Successfully !!!",  '', "090119", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Cancelled Successfully !!!",  '', "110119", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090119", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110119", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -703,11 +715,13 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d/m/Y');
                 return $val;
             })->values();
-            return responseMsgs(true, "Booking List !!!", $f_list, "090120", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking List !!!", $f_list, "110120", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090120", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110120", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -725,7 +739,7 @@ class WaterTankerController extends Controller
             'refundDetails' => 'nullable|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
@@ -735,9 +749,9 @@ class WaterTankerController extends Controller
             $mWtCancellation->refund_details = $req->refundDetails;
             $mWtCancellation->refund_date = Carbon::now()->format('Y-m-d');
             $mWtCancellation->save();                                                       // Update Cancellation Table for Refund
-            return responseMsgs(true, "Refund Successfully !!!",  '', "090121", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Refund Successfully !!!",  '', "110121", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090121", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110121", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -764,9 +778,9 @@ class WaterTankerController extends Controller
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 return $val;
             });
-            return responseMsgs(true, "Refund Booking List !!!", $f_list, "090122", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Refund Booking List !!!", $f_list, "110122", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090122", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110122", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -780,7 +794,7 @@ class WaterTankerController extends Controller
     {
         try {
             if ($req->auth['user_type'] != 'UlbUser')
-                throw new Exception("Unothorished Access !!!");
+                throw new Exception("Unauthorized Access !!!");
             // Variable initialization
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()->where('agency_id', '=', NULL)->where('ulb_id', $req->auth['ulb_id'])->get();
@@ -790,9 +804,9 @@ class WaterTankerController extends Controller
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 return $val;
             });
-            return responseMsgs(true, "ULB Booking List !!!", $f_list, "090123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "ULB Booking List !!!", $f_list, "110123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090123", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110123", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -815,7 +829,7 @@ class WaterTankerController extends Controller
             'ulbId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtAgency = WtAgency::find($req->agencyId);
@@ -829,9 +843,9 @@ class WaterTankerController extends Controller
             $mWtAgency->dispatch_capacity = $req->dispatchCapacity;
             $mWtAgency->ulb_id = $req->ulbId;
             $mWtAgency->save();
-            return responseMsgs(true, "Agency Updated Successfully !!!", '', "090123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency Updated Successfully !!!", '', "110123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090124", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110124", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -846,15 +860,16 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'hydrationCenterId' => 'required|integer',
             'name' => 'required|string',
-            'ulbId' => 'required|integer|digits_between:1,200',
+            // 'ulbId' => 'required|integer|digits_between:1,200',
             // 'wardId' => 'required|integer|digits_between:1,200',
             'waterCapacity' => 'required|numeric',
             'address' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $mWtHydrationCenter = WtHydrationCenter::find($req->hydrationCenterId);
             if (!$mWtHydrationCenter)
                 throw new Exception("No Data Found !!!");
@@ -863,9 +878,9 @@ class WaterTankerController extends Controller
             $mWtHydrationCenter->water_capacity = $req->waterCapacity;
             $mWtHydrationCenter->address = $req->address;
             $mWtHydrationCenter->save();
-            return responseMsgs(true, "Hydration Center Details Updated Successfully !!!", '', "090125", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Hydration Center Details Updated Successfully !!!", '', "110125", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090125", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110125", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -879,8 +894,8 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'resourceId' => 'required|integer',
-            'ulbId' => 'required|integer|digits_between:1,200',
-            'agencyId' => 'nullable|integer',
+            // 'ulbId' => 'required|integer|digits_between:1,200',
+            // 'agencyId' => 'nullable|integer',
             'vehicleName' => 'required|string|max:200',
             'vehicleNo' => 'required|string|max:16',
             'capacityId' => 'required|integer|digits_between:1,150',
@@ -888,8 +903,11 @@ class WaterTankerController extends Controller
             'isUlbResource' => 'required|boolean',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
+        if ($req->auth['user_type'] == 'Water-Agency')
+            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
         try {
             $mWtResource = WtResource::find($req->resourceId);
             if (!$mWtResource)
@@ -902,9 +920,9 @@ class WaterTankerController extends Controller
             $mWtResource->resource_type = $req->resourceType;
             $mWtResource->is_ulb_resource = $req->isUlbResource;
             $mWtResource->save();
-            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "090126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090126", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -918,10 +936,10 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'capacityId' => 'required|integer',
-            'capacity' => 'required|numeric',
+            'capacity' => 'required|numeric|unique:wt_capacities',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtCapacity = WtCapacity::find($req->capacityId);
@@ -929,9 +947,9 @@ class WaterTankerController extends Controller
                 throw new Exception("No Data Found !!!");
             $mWtCapacity->capacity = $req->capacity;
             $mWtCapacity->save();
-            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "090127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090127", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110127", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -944,15 +962,16 @@ class WaterTankerController extends Controller
     public function editCapacityRate(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer',
+            // 'ulbId' => 'required|integer',
             'capacityId' => 'required|integer',
             'capacityRateId' => 'required|integer',
-            'rate' => 'required|numeric',
+            'rate' => 'required|integer|gt:0',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $mWtUlbCapacityRate = WtUlbCapacityRate::find($req->capacityRateId);
             if (!$mWtUlbCapacityRate)
                 throw new Exception("No Data Found !!!");
@@ -960,9 +979,9 @@ class WaterTankerController extends Controller
             $mWtUlbCapacityRate->capacity_id = $req->capacityId;
             $mWtUlbCapacityRate->rate = $req->rate;
             $mWtUlbCapacityRate->save();
-            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "090128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090128", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110128", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -974,8 +993,6 @@ class WaterTankerController extends Controller
     public function editDriver(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer|digits_between:1,200',
-            'agencyId' => 'required|integer',
             'driverId' => 'required|integer',
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
@@ -987,8 +1004,11 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
+        if ($req->auth['user_type'] == 'Water-Agency')
+            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
         try {
             $mWtDriver = WtDriver::find($req->driverId);
             if (!$mWtDriver)
@@ -1003,9 +1023,9 @@ class WaterTankerController extends Controller
             $mWtDriver->driver_dob = $req->driverDob;
             $mWtDriver->driver_license_no = $req->driverLicenseNo;
             $mWtDriver->save();
-            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "090129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090129", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1023,15 +1043,15 @@ class WaterTankerController extends Controller
             'agencyId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtAgency = new WtAgency();
             $list = $mWtAgency->getAgencyById($req->agencyId);
-            return responseMsgs(true, "Data Fetched !!!",  $list, "090130", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!",  $list, "110130", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090130", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110130", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1046,15 +1066,15 @@ class WaterTankerController extends Controller
             'hydrationCenterId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtHydrationCenter = new WtHydrationCenter();
             $list = $mWtHydrationCenter->getHydrationCenterDetailsByID($req->hydrationCenterId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090131", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110131", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090131", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110131", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1069,15 +1089,15 @@ class WaterTankerController extends Controller
             'resourceId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtResource = new WtResource();
             $list = $mWtResource->getResourceById($req->resourceId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090132", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110132", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090132", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110132", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1092,15 +1112,15 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtCapacity = new WtCapacity();
             $list = $mWtCapacity->getCapacityById($req->capacityId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090133", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110133", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090133", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110133", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1115,15 +1135,15 @@ class WaterTankerController extends Controller
             'capacityRateId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
             $list = $mWtUlbCapacityRate->getCapacityRateDetailsById($req->capacityRateId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090134", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1139,15 +1159,15 @@ class WaterTankerController extends Controller
             'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtDriver = new WtDriver();
             $list = $mWtDriver->getDriverDetailsById($req->driverId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090135", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110135", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1161,16 +1181,16 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
-            $list = $mWtDriverVehicleMap->getMapDriverVehicle();
+            $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->driver_vehicle = $val->vehicle_no . "( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Driver Vehicle Mapping List !!!", $f_list, "090136", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Vehicle Mapping List !!!", $f_list, "110136", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090136", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110136", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1186,15 +1206,15 @@ class WaterTankerController extends Controller
             'mapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
             $list = $mWtDriverVehicleMap->getDriverVehicleMapById($req->mapId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "090137", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110137", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090137", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110137", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1207,14 +1227,15 @@ class WaterTankerController extends Controller
     public function editDriverVehicleMap(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer|digits_between:1,200',
+            // 'ulbId' => 'required|integer|digits_between:1,200',
             'driverId' => 'required|integer',
             'vehicleId' => 'required|integer',
             'mapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
             $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->mapId);
             if (!$mWtDriverVehicleMap)
@@ -1223,9 +1244,9 @@ class WaterTankerController extends Controller
             $mWtDriverVehicleMap->driver_id = $req->driverId;
             $mWtDriverVehicleMap->vehicle_id = $req->vehicleId;
             $mWtDriverVehicleMap->save();
-            return responseMsgs(true, "Map Driver & Vehicle Details Updated Successfully !!!", '', "090138", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Map Driver & Vehicle Details Updated Successfully !!!", '', "110138", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090138", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110138", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1241,7 +1262,7 @@ class WaterTankerController extends Controller
             'vdmId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtBooking = WtBooking::find($req->applicationId);
@@ -1255,9 +1276,9 @@ class WaterTankerController extends Controller
             $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
             $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mWtBooking->save();
-            return responseMsgs(true, "Booking Assignment Successfully !!!", '', "090139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Assignment Successfully !!!", '', "110139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090139", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110139", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1282,9 +1303,9 @@ class WaterTankerController extends Controller
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Assign List !!!", $f_list, "090140", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assign List !!!", $f_list, "110140", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090140", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110140", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1308,9 +1329,9 @@ class WaterTankerController extends Controller
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Assign List !!!", $f_list, "090141", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assign List !!!", $f_list, "110141", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090141", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110141", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1324,23 +1345,23 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             // 'ulbId' => 'required|integer',
-            'location' => 'required|string|max:255',
+            'location' => 'required|string|max:255|unique:wt_locations',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
-        $req->merge(['ulbId' => $req->auth['ulb_id']]);
         // return $req;
         try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
             $mWtLocation = new WtLocation();
             DB::beginTransaction();
             $res = $mWtLocation->storelocation($req);                                       // Store Location in Model 
             DB::commit();
-            return responseMsgs(true, "Location Added Successfully !!!",  '', "090142", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location Added Successfully !!!",  '', "110142", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090142", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110142", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1353,16 +1374,16 @@ class WaterTankerController extends Controller
     {
         try {
             $mWtLocation = new WtLocation();
-            $list = $mWtLocation->listLocation();
+            $list = $mWtLocation->listLocation($req->auth['ulb_id']);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Location List !!!", $f_list, "090143", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location List !!!", $f_list, "110143", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090143", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110143", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1377,14 +1398,14 @@ class WaterTankerController extends Controller
             'locationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtLocation = new WtLocation();
             $list = $mWtLocation->getLocationDetailsById($req->locationId);
-            return responseMsgs(true, "Location List !!!", $list, "090144", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location List !!!", $list, "110144", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090144", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110144", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1397,12 +1418,12 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'locationId' => 'required|integer',
-            'ulbId' => 'required|integer',
             'location' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
             $mWtLocation = WtLocation::find($req->locationId);
             if (!$mWtLocation)
@@ -1410,9 +1431,9 @@ class WaterTankerController extends Controller
             $mWtLocation->ulb_id = $req->ulbId;
             $mWtLocation->location = $req->location;
             $mWtLocation->save();
-            return responseMsgs(true, "Update Location Successfully !!!", '', "090145", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Update Location Successfully !!!", '', "110145", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090145", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110145", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1425,25 +1446,28 @@ class WaterTankerController extends Controller
     public function addLocationHydrationMap(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
             'hydrationCenterId' => 'required|integer',
             'distance' => 'required|numeric',
             'rank' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
+            $check = $mWtLocationHydrationMap->isLocationHydrationMapOrNot($req->locationId, $req->hydrationCenterId);
+            if ($check > 0)
+                throw new Exception("Selected Location & Hydration are Already Mapped !!!");
             DB::beginTransaction();
             $res = $mWtLocationHydrationMap->storeLocationHydrationMap($req);                                       // Store Location in Model 
             DB::commit();
-            return responseMsgs(true, "Location Hydration Map Successfully !!!",  '', "090146", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location Hydration Map Successfully !!!",  '', "110146", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "090146", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110146", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1463,9 +1487,9 @@ class WaterTankerController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Location Hydration Map List !!!", $f_list, "090147", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location Hydration Map List !!!", $f_list, "110147", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090147", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110147", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1480,14 +1504,14 @@ class WaterTankerController extends Controller
             'locationHydrationMapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
             $list = $mWtLocationHydrationMap->getLocationHydrationMapDetailsById($req->locationHydrationMapId);
-            return responseMsgs(true, "Location Hydration Map Details !!!", $list, "090148", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location Hydration Map Details !!!", $list, "110148", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090148", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110148", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1500,16 +1524,17 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'locationHydrationMapId' => 'required|integer',
-            'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
             'hydrationCenterId' => 'required|integer',
             'distance' => 'required|numeric',
             'rank' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            // Variable Initialization
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $mtLocationHydrationMap = WtLocationHydrationMap::find($req->locationHydrationMapId);
             if (!$mtLocationHydrationMap)
                 throw new Exception("No Data Found !!!");
@@ -1519,9 +1544,9 @@ class WaterTankerController extends Controller
             $mtLocationHydrationMap->distance = $req->distance;
             $mtLocationHydrationMap->rank = $req->rank;
             $mtLocationHydrationMap->save();
-            return responseMsgs(true, "Update Location Hydration Center Successfully !!!", '', "090149", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Update Location Hydration Center Successfully !!!", '', "110149", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090149", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110149", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1536,14 +1561,16 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
-            return responseMsgs(true, "Booking Details!!!", $list, "090150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d/m/Y');
+            $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d/m/Y');
+            return responseMsgs(true, "Booking Details!!!", $list, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090150", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1559,7 +1586,7 @@ class WaterTankerController extends Controller
             'vdmId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtBooking = WtBooking::find($req->applicationId);
@@ -1581,9 +1608,9 @@ class WaterTankerController extends Controller
             $reassign->application_id =  $mWtBookingForReplicate->id;
             $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
             $reassign->save();
-            return responseMsgs(true, "Booking Assignent Successfully !!!", '', "090151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Assignent Successfully !!!", '', "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090151", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1607,9 +1634,9 @@ class WaterTankerController extends Controller
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Location Hydration Map List !!!", $list, "090151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Location Hydration Map List !!!", $list, "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090151", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1625,7 +1652,7 @@ class WaterTankerController extends Controller
             'ulbId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
@@ -1634,6 +1661,9 @@ class WaterTankerController extends Controller
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
             $list1 = $mWtLocationHydrationMap->listLocation($req->ulbId);
 
+            $mWtCapacity = new WtCapacity();
+            $listCapacity = $mWtCapacity->getCapacityList();
+
             $ulb = $this->_ulbs;
             $f_list['listAgency'] = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
@@ -1641,9 +1671,10 @@ class WaterTankerController extends Controller
                 return $val;
             });
             $f_list['listLocation'] = $list1;
-            return responseMsgs(true, "Agency List !!!",  $f_list, "090152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $f_list['listCapacity'] = $listCapacity;
+            return responseMsgs(true, "Agency List !!!",  $f_list, "110152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090152", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110152", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1658,7 +1689,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             $mWtBooking = new WtBooking();
@@ -1669,11 +1700,9 @@ class WaterTankerController extends Controller
             if (!$data)
                 throw new Exception("Application Not Found");
 
-            // $data->type = "Water Tanker";
-
-            return responseMsgs(true, "Booking Details for payment !!!",  $data, "090153", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Details for payment !!!",  $data, "110153", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090153", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110153", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1689,7 +1718,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
@@ -1717,11 +1746,10 @@ class WaterTankerController extends Controller
             $data->email = $mWtBooking->email;
             $data->contact = $mWtBooking->mobile;
             $data->type = "Water Tanker";
-            // return $data;
 
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data, "090154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090154", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1735,7 +1763,7 @@ class WaterTankerController extends Controller
     {
         try {
             if ($req->auth['user_type'] != 'Citizen')
-                throw new Exception('Anothorished Access !!!');
+                throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
@@ -1749,33 +1777,9 @@ class WaterTankerController extends Controller
                 $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Agency Booking List !!!", $f_list, "090155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090155", "1.0", "", 'POST', $req->deviceId ?? "");
-        }
-    }
-
-    /**
-     * | Get Applied Application 
-     * | Function - 55
-     * | API - 55
-     */
-    public function sentVehicle(Request $req)
-    {
-        $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
-        ]);
-        if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
-        }
-        try {
-            // Variable initialization
-            $mWtBooking = WtBooking::find($req->applicationId);
-            $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
-            $mWtBooking->save();
-            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "090155", "1.0", responseTime(), "POST", $req->deviceId ?? "");
-        } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090155", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110155", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -1784,35 +1788,187 @@ class WaterTankerController extends Controller
      * | Function - 56
      * | API - 56
      */
+    public function sentVehicle(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtBooking = WtBooking::find($req->applicationId);
+            if (!$mWtBooking)
+                throw new Exception("Application Not Found !!!");
+            if ($mWtBooking->vdm_id == NULL)
+                throw new Exception("First Assign Driver & Vehicle !!!");
+                // echo Carbon::now()->format('Y-m-d') ; die;
+            if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
+                throw new Exception("This Booking is Not Delivery Date Today !!!");
+            $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
+            $mWtBooking->save();
+            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Applied Application 
+     * | Function - 57
+     * | API - 57
+     */
     public function deliveredWater(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()];
+            return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
             // Variable initialization
             $mWtBooking = WtBooking::find($req->applicationId);
-            $mWtBooking->is_vehicle_sent = '2';                                                           // 2 - for Vehicle Delivered
+            $mWtBooking->is_vehicle_sent = '2';                                                           // 2 - for Booking Delivered
             $mWtBooking->save();
-            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "090155", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Water Delivered Successfully !!!", '', "110157", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "090155", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110157", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
+    /**
+     * | Get Applied Application 
+     * | Function - 58
+     * | API - 58
+     */
+    // public function bookingForAgency(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         'applicationId' => 'required|integer',
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return ['status' => false, 'message' => $validator->errors()];
+    //     }
+    //     try {
+    //         // Variable initialization
+    //         return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110155", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "110155", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
 
+    /**
+     * | Agency Dashboard
+     * | Function - 58
+     * | API - 58
+     */
+    public function wtAgencyDashboard(Request $req)
+    {
+        try {
+            if ($req->auth['user_type'] != 'Water-Agency')
+                throw new Exception("Unauthorized Access !!!");
+            // Variable initialization
+            $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('u_id', $req->auth['id'])->first();
+
+            $mWtBooking = new WtBooking();
+            $todayBookings = $mWtBooking->todayBookings($agencyDetails->id);
+
+            $mWtCancellation = new WtCancellation();
+            $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
+
+            $retData['todayTotalBooking'] = $todayBookings->get()->count();
+            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', '1')->get()->count();
+            $retData['todayTotalCancelBooking'] = $todayCancelBookings->get()->count();
+            $retData['agencyName'] =  $agencyDetails->agency_name;
+            $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
+            return responseMsgs(true, "Data Fetched Successfully !!!", $retData, "110158", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110158", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Delivered Application
+     * | Function - 59
+     * | API - 59
+     */
+    public function listDeliveredBooking(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'fromDate' => 'required|date_format:Y-m-d|before:' . date('Y-m-d'),
+            'toDate' => 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
+            // Variable initialization
+            $mWtBooking = new WtBooking();
+            $list = $mWtBooking->getBookingList()
+                ->where(['wb.ulb_id' => $req->auth['ulb_id'], 'is_vehicle_sent' => '2'])
+                // ->where()
+                ->orderByDesc('id')
+                ->get();
+
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id);
+
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+                return $val;
+            });
+            return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110159", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110159", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get ULB Wise Location List
+     * | Function - 60
+     * | API - 60
+     */
+    public function listUlbWiseLocation(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $mWtLocation = new WtLocation();
+            $list = $mWtLocation->listLocation($req->ulbId);
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                return $val;
+            });
+            return responseMsgs(true, "Location List !!!", $f_list, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 
     public function generateQRCode()
     {
-        $name = "John Doe";
-        $email = "johndoe@example.com";
+        $name = "Bikash Kumar";
+        $email = "bikash@gmail.com";
+        $contact = "8271522513";
 
         $data = [
             'name' => $name,
             'email' => $email,
+            'contact' => $contact,
         ];
 
         $qrCode = QrCode::size(300)->generate(json_encode($data));
@@ -1834,7 +1990,6 @@ class WaterTankerController extends Controller
             $data1 = json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
             if (!$data1) {                                                   // If Cache Memory is not available
                 $data1 = array();
-
                 $client = new \GuzzleHttp\Client();
                 $request = $client->get($this->_base_url . 'api/get-all-ulb'); // Url of your choosing
                 $data1 = $request->getBody()->getContents();
@@ -1854,15 +2009,18 @@ class WaterTankerController extends Controller
      */
     public function masterData(Request $req)
     {
-        $redis = Redis::connection();
+        // $redis = Redis::connection();
+        // return $req;
         try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
             // Variable initialization
-            $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
+            // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
             if (1) {                                                      // If Cache Memory is not available
                 $data1 = array();
 
                 $magency = new WtAgency();
-                $adencyList = $magency->getAllAgencyForMasterData();
+                $adencyList = $magency->getAllAgencyForMasterData($req->auth['ulb_id']);
                 $data1['agency'] = $adencyList;
 
                 $mWtCapacity = new WtCapacity();
@@ -1870,28 +2028,39 @@ class WaterTankerController extends Controller
                 $data1['capacity'] = $listCapacity;
 
                 $mWtDriver = new WtDriver();
-                $listDriver = $mWtDriver->getDriverListForMasterData();
+                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
                 $data1['driver'] = $listDriver;
+                if ($req->auth['user_type'] == 'UlbUser')
+                    $data1['driver'] = $listDriver->where('agency_id', NULL);
+                if ($req->auth['user_type'] == 'Water-Agency')
+                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
 
                 $mWtHydrationCenter = new WtHydrationCenter();
-                $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData();
+                $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
                 $data1['hydrationCenter'] = $hydrationCenter;
 
                 $mWtUlbCapacityRate = new WtUlbCapacityRate();
-                $capacityRate = $mWtUlbCapacityRate->getCapacityRateForMasterData();
+                $capacityRate = $mWtUlbCapacityRate->getCapacityRateForMasterData($req->auth['ulb_id']);
                 $data1['capacityRate'] = $capacityRate;
 
-
                 $mWtResource = new WtResource();
-                $resource = $mWtResource->getVehicleForMasterData();
-                $data1['vehicle'] = $resource;
+                $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
+                // $data1['vehicle'] = $resource;
+                if ($req->auth['user_type'] == 'UlbUser')
+                    $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
+                if ($req->auth['user_type'] == 'Water-Agency')
+                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+
 
                 $mWtLocation = new WtLocation();
-                $location = $mWtLocation->listLocation();
+                $location = $mWtLocation->listLocation($req->auth['ulb_id']);
                 $data1['location'] = $location;
 
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
-                $list = $mWtDriverVehicleMap->getMapDriverVehicle();
+                $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
+                if ($req->auth['user_type'] == 'Water-Agency')
+                    $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+
                 $ulb = $this->_ulbs;
                 $f_list = $list->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -1900,8 +2069,7 @@ class WaterTankerController extends Controller
                 });
                 $data1['driverVehicleMap'] = $f_list;
 
-
-                $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
+                // $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
             }
             return responseMsgs(true, "Data Fetched !!!", $data1, "050112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {

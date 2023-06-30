@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SepticTankController;
 use App\Http\Controllers\WaterTankerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -37,7 +38,7 @@ Route::group(['middleware' => ['checkToken']], function () {
      * | Controller - 01
      * | Created By - Bikash Kumar
      * | Status - Open
-     * | Module - 9 (Water Tanker)
+     * | Module Id - 11 (Water Tanker)
      */
     Route::controller(WaterTankerController::class)->group(function () {
         Route::post('water-tanker/list-ulb', 'ulbList');                                    // 01 ( Ulb List )
@@ -94,10 +95,30 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/get-booking-details-by-id', 'getBookingDetailById');                                        // 50 ( Get Booking Details By Id ) 
         Route::post('water-tanker/re-assign-booking', 'reassignBooking');                                                     // 51 ( Re-Assign Booking ) 
         Route::post('water-tanker/list-re-assign-booking', 'listReassignBooking');                                            // 52 ( List Re-Assign Booking ) 
-        Route::post('water-tanker/list-ulb-wise-agency', 'listUlbWiseAgency');                                                // 52 ( List Ulb Wise Agency ) 
-        Route::post('water-tanker/get-payment-details-by-id', 'getPaymentDetailsById');                                       // 53 ( Get Payment Details By Id ) 
+        Route::post('water-tanker/list-ulb-wise-agency', 'listUlbWiseAgency');                                                // 53 ( List Ulb Wise Agency ) 
+        Route::post('water-tanker/get-payment-details-by-id', 'getPaymentDetailsById');                                       // 54 ( Get Payment Details By Id ) 
         Route::post('water-tanker/get-applied-application', 'getappliedApplication');                                         // 55 ( Get Applied Application ) 
         Route::post('water-tanker/sent-vehicle', 'sentVehicle');                                                              // 56 ( Sent Vehicle For Fill Water ) 
         Route::post('water-tanker/delivered-water', 'deliveredWater');                                                        // 57 ( Delivered Water ) 
+        Route::post('water-tanker/wt-agency-dashboard', 'wtAgencyDashboard');                                                 // 58 ( Agency Dashboard ) 
+        Route::post('water-tanker/list-delivered-booking', 'listDeliveredBooking');                                           // 59 ( List Delivered Booking ) 
+        Route::post('water-tanker/generate-qr', 'generateQRCode');                                                            // 59 ( Qr code generator ) 
+        Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                            // 60 ( List Ulb Wise Agency ) 
+    });
+
+     /**
+     * | Controller - 02
+     * | Created By - Bikash Kumar
+     * | Status - Open
+     * | Module Id - 11 (Septic Tanker)
+     */
+    Route::controller(SepticTankController::class)->group(function () {
+        Route::post('septic-tanker/add-booking', 'addBooking');                                    // 01 ( Add Booking )
+        Route::post('septic-tanker/list-booking', 'listBooking');                                  // 02 ( List Booking )
+        Route::post('septic-tanker/get-applied-application', 'getAppliedApplication');             // 03 ( Get Applied Application )
+        Route::post('septic-tanker/assignment-booking', 'assignmentBooking');                      // 04 ( Driver & Vehicle Assign on Booking )
+        Route::post('septic-tanker/cancel-booking', 'cancelBooking');                              // 05 ( Cancel Booking )
+        Route::post('septic-tanker/list-cancel-booking', 'listCancelBooking');                     // 06 ( List Cancel Booking )
+        Route::post('septic-tanker/get-application-details-by-id', 'getApplicationDetailsById');   // 07 ( Get Application Details By Id )
     });
 });

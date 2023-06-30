@@ -30,8 +30,8 @@ class WtLocation extends Model
         return self::create($metaReqs);
     }
 
-    public function listLocation(){
-        return self::select('id','ulb_id','location','date')->where('status','1')->orderby('id','desc')->get();
+    public function listLocation($ulbId){
+        return self::select('id','ulb_id','location','date')->where('status','1')->where('ulb_id',$ulbId)->orderby('id','desc')->get();
     }
 
     /**

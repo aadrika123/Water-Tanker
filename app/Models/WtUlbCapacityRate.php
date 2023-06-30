@@ -47,9 +47,9 @@ class WtUlbCapacityRate extends Model
     /**
      * | Get Capacity Rate Details for Master Datas
      */
-    public function getCapacityRateForMasterData()
+    public function getCapacityRateForMasterData($ulbId)
     {
-        return self::select('id', 'rate')->get();
+        return self::select('id', 'rate')->where('ulb_id',$ulbId)->get();
     }
 
     /**
