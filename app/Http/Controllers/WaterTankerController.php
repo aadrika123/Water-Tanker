@@ -1975,6 +1975,31 @@ class WaterTankerController extends Controller
         }
     }
 
+
+    /**
+     * | Get ULB Dashboard Data
+     * | Function - 61
+     * | API - 61
+     */
+    public function  ulbDashboard(Request $req)
+    {
+        if ($req->auth['user_type'] != 'UlbUser')
+            throw new Exception('Unauthorized Access !!!');
+        try {
+            $data['noOfAgency'] = WtAgency::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
+            $data['noOfLocation'] = WtLocation::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
+            $data['noOfHydrationCenter'] = WtHydrationCenter::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
+            $data['noOfUlbDriver'] = WtDriver::select('*')->where('ulb_id', $req->auth['ulb_id'])->where('agency_id', NULL)->count();
+            $data['noOfDriver'] = WtDriver::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
+            $data['noOfUlbVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->where('agency_id', NULL)->count();
+            $data['noOfVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
+            $data['noOfCapacity'] = WtCapacity::select('*')->count();
+            return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
     public function generateQRCode()
     {
         $name = "Bikash Kumar";

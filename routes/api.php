@@ -104,6 +104,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/list-delivered-booking', 'listDeliveredBooking');                                           // 59 ( List Delivered Booking ) 
         Route::post('water-tanker/generate-qr', 'generateQRCode');                                                            // 59 ( Qr code generator ) 
         Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                            // 60 ( List Ulb Wise Agency ) 
+        Route::post('water-tanker/ulb-dashboard', 'ulbDashboard');                                                            // 61 ( Ulb Dashboard ) 
     });
 
      /**
