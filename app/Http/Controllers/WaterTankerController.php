@@ -558,7 +558,7 @@ class WaterTankerController extends Controller
     public function listAgencyBooking(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'date' => 'nullable|date|date_format:Y-m-d|before_or_equal:' . Carbon::now()->format('Y-m-d'),
+            'date' => 'nullable|date|date_format:Y-m-d',
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
