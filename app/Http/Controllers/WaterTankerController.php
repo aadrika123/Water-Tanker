@@ -575,7 +575,7 @@ class WaterTankerController extends Controller
                 ->orderByDesc('id')
                 ->get();
             if ($req->date != NULL)
-               $list=$list->where('delivery_date',$req->date)->values();
+                $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -800,12 +800,20 @@ class WaterTankerController extends Controller
      */
     public function listUlbBooking(Request $req)
     {
+        $validator = Validator::make($req->all(), [
+            'date' => 'nullable|date|date_format:Y-m-d',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
         try {
             if ($req->auth['user_type'] != 'UlbUser')
                 throw new Exception("Unauthorized Access !!!");
             // Variable initialization
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()->where('agency_id', '=', NULL)->where('ulb_id', $req->auth['ulb_id'])->get();
+            if ($req->date != NULL)
+                $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
