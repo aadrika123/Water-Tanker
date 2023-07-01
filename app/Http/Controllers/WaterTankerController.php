@@ -557,6 +557,12 @@ class WaterTankerController extends Controller
      */
     public function listAgencyBooking(Request $req)
     {
+        $validator = Validator::make($req->all(), [
+            'date' => 'nullable|date|date_format:Y-m-d|before_or_equal:' . Carbon::now()->format('Y-m-d'),
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
         try {
             // Variable initialization
             if ($req->auth['user_type'] != "Water-Agency")
@@ -568,6 +574,8 @@ class WaterTankerController extends Controller
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id')
                 ->get();
+            if ($req->date != NULL)
+               $list=$list->where('delivery_date',$req->date)->values();
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -1803,7 +1811,7 @@ class WaterTankerController extends Controller
                 throw new Exception("Application Not Found !!!");
             if ($mWtBooking->vdm_id == NULL)
                 throw new Exception("First Assign Driver & Vehicle !!!");
-                // echo Carbon::now()->format('Y-m-d') ; die;
+            // echo Carbon::now()->format('Y-m-d') ; die;
             if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
                 throw new Exception("This Booking is Not Delivery Date Today !!!");
             $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
