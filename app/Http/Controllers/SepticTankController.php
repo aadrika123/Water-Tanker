@@ -227,7 +227,7 @@ class SepticTankController extends Controller
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Cancelled Booking List !!!", $f_list, "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
         }
