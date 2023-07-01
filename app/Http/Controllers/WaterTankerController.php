@@ -1994,6 +1994,8 @@ class WaterTankerController extends Controller
             $data['noOfUlbVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->where('agency_id', NULL)->count();
             $data['noOfVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
             $data['noOfCapacity'] = WtCapacity::select('*')->count();
+            $data['user_type']=$req->auth['user_type'];
+            $data['data']=$data;
             return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
