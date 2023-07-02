@@ -444,7 +444,7 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtResource = new WtResource();
-            $list = $mWtResource->getResourceList($req->auth['ulb_id'])->values();
+            $list = $mWtResource->getResourceList($req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id', WtAgency::select('*')->where('u_id', $req->auth['id'])->first()->id);
             $ulb = $this->_ulbs;
@@ -453,7 +453,7 @@ class WaterTankerController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Resource List !!!", $f_list, "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
