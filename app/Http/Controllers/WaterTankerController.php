@@ -214,7 +214,7 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
-            $list = $mWtUlbCapacityRate->getUlbCapacityRateList();
+            $list = $mWtUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id',$req->auth['ulb_id']);
             $f_list = $list->map(function ($val) {
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
@@ -292,6 +292,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtHydrationCenter = new WtHydrationCenter();
             $list = $mWtHydrationCenter->getHydrationCenterList($req);
+            $list=$list->where('ulb_id',$req->auth['ulb_id'])->values();
             $ulb = $this->_ulbs;
             // $ulbId = "";
             // $bearerToken = (collect(($req->headers->all())['authorization'] ?? "")->first());
@@ -1496,7 +1497,7 @@ class WaterTankerController extends Controller
     {
         try {
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
-            $list = $mWtLocationHydrationMap->listLocationHydrationMap();
+            $list = $mWtLocationHydrationMap->listLocationHydrationMap()->where('ulb_id',$req->auth['ulb_id']);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");

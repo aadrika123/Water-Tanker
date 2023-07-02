@@ -75,7 +75,7 @@ class SepticTankController extends Controller
                 ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id')
                 ->get();
-
+            $list=$list->where('ulb_id',$req->auth['ulb_id'])->values();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
