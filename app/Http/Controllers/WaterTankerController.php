@@ -444,7 +444,7 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtResource = new WtResource();
-            $list = $mWtResource->getResourceList($req->auth['ulb_id']);
+            $list = $mWtResource->getResourceList($req->auth['ulb_id'])->values();
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id', WtAgency::select('*')->where('u_id', $req->auth['id'])->first()->id);
             $ulb = $this->_ulbs;
