@@ -214,7 +214,7 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
-            $list = $mWtUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id',$req->auth['ulb_id']);
+            $list = $mWtUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id', $req->auth['ulb_id']);
             $f_list = $list->map(function ($val) {
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
@@ -292,7 +292,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtHydrationCenter = new WtHydrationCenter();
             $list = $mWtHydrationCenter->getHydrationCenterList($req);
-            $list=$list->where('ulb_id',$req->auth['ulb_id'])->values();
+            $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
             $ulb = $this->_ulbs;
             // $ulbId = "";
             // $bearerToken = (collect(($req->headers->all())['authorization'] ?? "")->first());
@@ -1497,7 +1497,7 @@ class WaterTankerController extends Controller
     {
         try {
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
-            $list = $mWtLocationHydrationMap->listLocationHydrationMap()->where('ulb_id',$req->auth['ulb_id']);
+            $list = $mWtLocationHydrationMap->listLocationHydrationMap()->where('ulb_id', $req->auth['ulb_id']);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -1785,6 +1785,7 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
                 ->where('citizen_id', $req->auth['id'])
+                ->orderByDesc('id')
                 ->get();
 
             $ulb = $this->_ulbs;
@@ -1995,8 +1996,8 @@ class WaterTankerController extends Controller
             $data['noOfUlbVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->where('agency_id', NULL)->count();
             $data['noOfVehicle'] = WtResource::select('*')->where('ulb_id', $req->auth['ulb_id'])->count();
             $data['noOfCapacity'] = WtCapacity::select('*')->count();
-            $data['userName']=$req->auth['user_name'];
-            $data['userEmail']=$req->auth['email'];
+            $data['userName'] = $req->auth['user_name'];
+            $data['userEmail'] = $req->auth['email'];
             return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
