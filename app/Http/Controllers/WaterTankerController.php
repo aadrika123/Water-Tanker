@@ -1898,6 +1898,7 @@ class WaterTankerController extends Controller
 
             $retData['todayTotalBooking'] = $todayBookings->get()->count();
             $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', '1')->get()->count();
+            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', '2')->get()->count();
             $retData['todayTotalCancelBooking'] = $todayCancelBookings->get()->count();
             $retData['agencyName'] =  $agencyDetails->agency_name;
             $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
