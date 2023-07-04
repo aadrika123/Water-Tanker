@@ -18,12 +18,6 @@ use Illuminate\Support\Facades\Redis;
 
 class SepticTankController extends Controller
 {
-    /**
-     * | Add Booking 
-     * | Function - 01
-     * | API - 01
-     */
-
     protected $_paramId;
     protected $_base_url;
     protected $_ulbs;
@@ -125,9 +119,9 @@ class SepticTankController extends Controller
                 $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
-            return responseMsgs(true, "Septic Tank Assigned Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Assigned Booking List !!!", $f_list, "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -157,9 +151,9 @@ class SepticTankController extends Controller
                 $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Assign Successfully !!!", $f_list, "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assign Successfully !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -194,9 +188,9 @@ class SepticTankController extends Controller
             $mStBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mStBooking->assign_status = '1';
             $mStBooking->save();
-            return responseMsgs(true, "Assignment Booking Successfully !!!", "", "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assignment Booking Successfully !!!", "", "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -229,9 +223,9 @@ class SepticTankController extends Controller
             $cancelledBooking->setTable('st_cancelled_bookings');
             $cancelledBooking->save();
             $mStBooking->delete();
-            return responseMsgs(true, "Booking Cancelled Successfully !!!", "", "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Cancelled Successfully !!!", "", "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -264,9 +258,9 @@ class SepticTankController extends Controller
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110107", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110107", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -294,9 +288,9 @@ class SepticTankController extends Controller
             $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d/m/Y');
             $list->cleaning_date = Carbon::createFromFormat('Y-m-d', $list->cleaning_date)->format('d/m/Y');
 
-            return responseMsgs(true, "Details Featch Successfully!!!", $list, "110107", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Details Featch Successfully!!!", $list, "110108", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110107", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110108", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -385,9 +379,9 @@ class SepticTankController extends Controller
             $list = $mStDriver->getDriverDetailsById($req->driverId);
             if (!$list)
                 throw new Exception("No Records Found !!!");
-            return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110135", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110111", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -427,9 +421,9 @@ class SepticTankController extends Controller
             $mStDriver->driver_dob = $req->driverDob;
             $mStDriver->driver_license_no = $req->driverLicenseNo;
             $mStDriver->save();
-            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -462,10 +456,10 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStResource->storeResourceInfo($req);                                       // Store Resource Information in Model 
             DB::commit();
-            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110113", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110111", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110113", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -489,9 +483,9 @@ class SepticTankController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
                 return $val;
             });
-            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110114", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110114", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -513,9 +507,9 @@ class SepticTankController extends Controller
             // Variable initialization
             $mStResource = new StResource();
             $list = $mStResource->getResourceById($req->resourceId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "110132", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110132", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -548,9 +542,9 @@ class SepticTankController extends Controller
             $mWtResource->capacity_id = $req->capacityId;
             $mWtResource->resource_type = $req->resourceType;
             $mWtResource->save();
-            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -572,9 +566,9 @@ class SepticTankController extends Controller
             $driver = $mStDriver->getDriverListForAssign()->where('ulb_id', $req->auth['ulb_id']);
             $f_list['listResource'] = $resource->values();
             $f_list['listDriver'] = $driver->values();
-            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110117", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110117", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -601,9 +595,9 @@ class SepticTankController extends Controller
                 throw new Exception("No Data Found !!!");
             $mStBooking->assign_status = '2';
             $mStBooking->save();
-            return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110118", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -645,9 +639,9 @@ class SepticTankController extends Controller
                 $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
-            return responseMsgs(true, "Septic Tank Cleaned Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Cleaned Booking List !!!", $f_list, "110119", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110119", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
