@@ -6,6 +6,8 @@ use App\BLL\Calculations;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
+use App\Models\StDriver;
+use App\Models\StResource;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -73,17 +75,19 @@ class SepticTankController extends Controller
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
                 ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->where('assign_date', NULL)
                 ->orderByDesc('id')
                 ->get();
-            $list=$list->where('ulb_id',$req->auth['ulb_id'])->values();
+            $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
                 $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
-                $val->vehicle_no = $val->vehicle_no === NULL ? "Not Assign" : $val->vehicle_no;
+                $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
+                $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
             return responseMsgs(true, "Septic Tank Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -92,11 +96,46 @@ class SepticTankController extends Controller
         }
     }
 
+    /**
+     * | List Septic Tank Assign Booking
+     * | Function - 03
+     * | API - 03
+     */
+    public function listAssignedBooking(Request $req)
+    {
+        try {
+            // Variable initialization
+            if ($req->auth['user_type'] != "UlbUser")
+                throw new Exception("Unothorished  Access !!!");
+            $mStBooking = new StBooking();
+            $list = $mStBooking->getBookingList()
+                ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->where('assign_status', '1')
+                ->orderByDesc('id')
+                ->get();
+            $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
+                $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
+                $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
+                $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
+                $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
+                return $val;
+            });
+            return responseMsgs(true, "Septic Tank Assigned Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
 
     /**
      * | Get Applied Application 
-     * | Function - 03
-     * | API - 03
+     * | Function - 04
+     * | API - 04
      */
     public function getappliedApplication(Request $req)
     {
@@ -128,16 +167,15 @@ class SepticTankController extends Controller
 
     /**
      * | Booking Assignment with vehicle and Driver
-     * | Function - 04
-     * | API - 04
+     * | Function - 05
+     * | API - 05
      */
     public function assignmentBooking(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer',
-            'vehicleNo' => 'required|string|max:15',
-            'driverName' => 'required|string',
-            'driverMobile' => 'required|digits:10',
+            'vehicleId' => 'required|integer',
+            'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -151,9 +189,8 @@ class SepticTankController extends Controller
                 throw new Exception('Application Not Found !!!');
             if ($mStBooking->assign_status == '1')
                 throw new Exception('Application Already Assigned !!!');
-            $mStBooking->vehicle_no = $req->vehicleNo;
-            $mStBooking->driver_name = $req->driverName;
-            $mStBooking->driver_mobile = $req->driverMobile;
+            $mStBooking->vehicle_id = $req->vehicleId;
+            $mStBooking->driver_id = $req->driverId;
             $mStBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mStBooking->assign_status = '1';
             $mStBooking->save();
@@ -165,8 +202,8 @@ class SepticTankController extends Controller
 
     /**
      * | Booking Cancel
-     * | Function - 05
-     * | API - 05
+     * | Function - 06
+     * | API - 06
      */
     public function cancelBooking(Request $req)
     {
@@ -200,8 +237,8 @@ class SepticTankController extends Controller
 
     /**
      * | Booking Cancel
-     * | Function - 06
-     * | API - 06
+     * | Function - 07
+     * | API - 07
      */
     public function listCancelBooking(Request $req)
     {
@@ -235,8 +272,8 @@ class SepticTankController extends Controller
 
     /**
      * | Booking Cancel
-     * | Function - 07
-     * | API - 07
+     * | Function - 08
+     * | API - 08
      */
     public function getApplicationDetailsById(Request $req)
     {
@@ -262,6 +299,358 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110107", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+
+    /**
+     * | Add Driver
+     * | Function - 09
+     * | API - 09
+     */
+    public function addDriver(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'driverName' => 'required|string|max:200',
+            'driverAadharNo' => 'required|string|max:16',
+            'driverMobile' => 'required|digits:10',
+            'driverAddress' => 'required|string',
+            'driverFather' => 'required|string|max:200',
+            'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
+            'driverLicenseNo' => 'required|string|max:50',
+
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            if ($req->auth['user_type'] != 'UlbUser')
+                throw new Exception('Unauthorized Access !!!');
+
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            // Variable initialization
+            $mStDriver = new StDriver();
+            DB::beginTransaction();
+            $res = $mStDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
+            DB::commit();
+            return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Driver List
+     * | Function - 10
+     * | API - 10
+     */
+    public function listDriver(Request $req)
+    {
+        if ($req->auth['user_type'] == 'Citizen')
+            throw new Exception("Unothorized Access !!!");
+        try {
+            // Variable initialization
+            $mStDriver = new StDriver();
+            $list = $mStDriver->getDriverList();
+            if ($req->auth['user_type'] == 'UlbUser')
+                $list = $list->where('ulb_id', $req->auth['ulb_id']);
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->driver_dob = Carbon::createFromFormat('Y-m-d', $val->driver_dob)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                return $val;
+            });
+            return responseMsgs(true, "Driver List !!!", $f_list->values(), "110110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110110", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 11
+     * | API - 11
+     */
+    public function getDriverDetailById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'driverId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStDriver = new StDriver();
+            $list = $mStDriver->getDriverDetailsById($req->driverId);
+            if (!$list)
+                throw new Exception("No Records Found !!!");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110135", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details for Driver
+     * | Function - 12
+     * | API - 12
+     */
+    public function editDriver(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'driverId' => 'required|integer',
+            'driverName' => 'required|string|max:200',
+            'driverAadharNo' => 'required|string|max:16',
+            'driverMobile' => 'required|digits:10',
+            'driverAddress' => 'required|string',
+            'driverFather' => 'required|string|max:200',
+            'driverDob' => 'required|date',
+            'driverLicenseNo' => 'required|string|max:50',
+
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
+        try {
+            $mStDriver = StDriver::find($req->driverId);
+            if (!$mStDriver)
+                throw new Exception("No Data Found !!!");
+            $mStDriver->ulb_id = $req->ulbId;
+            $mStDriver->driver_name = $req->driverName;
+            $mStDriver->driver_aadhar_no = $req->driverAadharNo;
+            $mStDriver->driver_mobile = $req->driverMobile;
+            $mStDriver->driver_address = $req->driverAddress;
+            $mStDriver->driver_father = $req->driverFather;
+            $mStDriver->driver_dob = $req->driverDob;
+            $mStDriver->driver_license_no = $req->driverLicenseNo;
+            $mStDriver->save();
+            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+
+    /**
+     * | Add Agency and ULB Resources
+     * | Function - 13
+     * | API - 13
+     */
+    public function addResource(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'vehicleName' => 'required|string|max:200',
+            'vehicleNo' => 'required|string|max:16',
+            'capacityId' => 'required|integer|digits_between:1,150',
+            'resourceType' => 'required|string|max:200',
+
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            if ($req->auth['user_type'] != 'UlbUser')
+                throw new Exception('Unauthorized Access !!!');
+
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            // Variable initialization
+            $mStResource = new StResource();
+            DB::beginTransaction();
+            $res = $mStResource->storeResourceInfo($req);                                       // Store Resource Information in Model 
+            DB::commit();
+            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110111", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Add Agency and ULB Resources
+     * | Function - 14
+     * | API - 14
+     */
+    public function listResource(Request $req)
+    {
+        try {
+            if ($req->auth['user_type'] != 'UlbUser')
+                throw new Exception('Unauthorized Access !!!');
+            // Variable initialization
+            $mStResource = new StResource();
+            $list = $mStResource->getResourceList($req->auth['ulb_id']);
+
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                return $val;
+            });
+            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 15
+     * | API - 15
+     */
+    public function getResourceDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'resourceId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStResource = new StResource();
+            $list = $mStResource->getResourceById($req->resourceId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "110132", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110132", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details of Resource
+     * | Function - 16
+     * | API - 16
+     */
+    public function editResource(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'resourceId' => 'required|integer',
+            'vehicleName' => 'required|string|max:200',
+            'vehicleNo' => 'required|string|max:16',
+            'capacityId' => 'required|integer|digits_between:1,150',
+            'resourceType' => 'required|string|max:200',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        $req->merge(['ulbId' => $req->auth['ulb_id']]);
+        try {
+            $mWtResource = StResource::find($req->resourceId);
+            if (!$mWtResource)
+                throw new Exception("No Data Found !!!");
+            $mWtResource->ulb_id = $req->ulbId;
+            $mWtResource->vehicle_name = $req->vehicleName;
+            $mWtResource->vehicle_no = $req->vehicleNo;
+            $mWtResource->capacity_id = $req->capacityId;
+            $mWtResource->resource_type = $req->resourceType;
+            $mWtResource->save();
+            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Update Details of Resource
+     * | Function - 17
+     * | API - 17
+     */
+    public function vehicleDriverMasterUlbWise(Request $req)
+    {
+        try {
+            if ($req->auth['user_type'] != 'UlbUser')
+                throw new Exception('Unauthorized Access !!!');
+            // Initialize Variable
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            $mStResource = new StResource();
+            $resource = $mStResource->getResourceListForAssign($req->auth['ulb_id']);
+            $mStDriver = new StDriver();
+            $driver = $mStDriver->getDriverListForAssign()->where('ulb_id', $req->auth['ulb_id']);
+            $f_list['listResource'] = $resource->values();
+            $f_list['listDriver'] = $driver->values();
+            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Update Details of Resource
+     * | Function - 18
+     * | API - 18
+     */
+    public function septicTankCleaned(Request $req)
+    {
+
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            if ($req->auth['user_type'] != 'UlbUser')
+                throw new Exception('Unauthorized Access !!!');
+            // Initialize Variable
+            $mStBooking = StBooking::find($req->applicationId);
+            if (!$mStBooking)
+                throw new Exception("No Data Found !!!");
+            $mStBooking->assign_status = '2';
+            $mStBooking->save();
+            return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110126", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | List Septic Tank Cleaned Booking
+     * | Function - 19
+     * | API - 19
+     */
+    public function listCleanedBooking(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            if ($req->auth['user_type'] != "UlbUser")
+                throw new Exception("Unothorished  Access !!!");
+            $mStBooking = new StBooking();
+            $list = $mStBooking->getBookingList()
+                ->where('assign_status', '2')
+                ->orderByDesc('id')
+                ->get();
+            $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
+            if ($req->fromDate != NULL)
+                $list = $list->whereBetween('cleaning_date', [$req->fromDate, $req->toDate])->values();
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
+                $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
+                $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
+                $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
+                $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
+                return $val;
+            });
+            return responseMsgs(true, "Septic Tank Cleaned Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
 
     /**
      * | Get Ulb list from juidco database from GuzzleHttp

@@ -107,7 +107,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/ulb-dashboard', 'ulbDashboard');                                                            // 61 ( Ulb Dashboard ) 
     });
 
-     /**
+    /**
      * | Controller - 02
      * | Created By - Bikash Kumar
      * | Status - Open
@@ -116,10 +116,22 @@ Route::group(['middleware' => ['checkToken']], function () {
     Route::controller(SepticTankController::class)->group(function () {
         Route::post('septic-tanker/add-booking', 'addBooking');                                    // 01 ( Add Booking )
         Route::post('septic-tanker/list-booking', 'listBooking');                                  // 02 ( List Booking )
-        Route::post('septic-tanker/get-applied-application', 'getAppliedApplication');             // 03 ( Get Applied Application )
-        Route::post('septic-tanker/assignment-booking', 'assignmentBooking');                      // 04 ( Driver & Vehicle Assign on Booking )
-        Route::post('septic-tanker/cancel-booking', 'cancelBooking');                              // 05 ( Cancel Booking )
-        Route::post('septic-tanker/list-cancel-booking', 'listCancelBooking');                     // 06 ( List Cancel Booking )
-        Route::post('septic-tanker/get-application-details-by-id', 'getApplicationDetailsById');   // 07 ( Get Application Details By Id )
+        Route::post('septic-tanker/list-assigned-booking', 'listAssignedBooking');                 // 03 ( List Booking )
+        Route::post('septic-tanker/get-applied-application', 'getAppliedApplication');             // 04 ( Get Applied Application )
+        Route::post('septic-tanker/assignment-booking', 'assignmentBooking');                      // 05 ( Driver & Vehicle Assign on Booking )
+        Route::post('septic-tanker/cancel-booking', 'cancelBooking');                              // 06 ( Cancel Booking )
+        Route::post('septic-tanker/list-cancel-booking', 'listCancelBooking');                     // 07 ( List Cancel Booking )
+        Route::post('septic-tanker/get-application-details-by-id', 'getApplicationDetailsById');   // 08 ( Get Application Details By Id )
+        Route::post('septic-tanker/add-driver', 'addDriver');                                      // 09 ( Add Driver )
+        Route::post('septic-tanker/list-driver', 'listDriver');                                    // 10 ( List Driver )
+        Route::post('septic-tanker/get-driver-detail-by-id', 'getDriverDetailById');               // 11 ( Get Driver Details By ID )
+        Route::post('septic-tanker/edit-driver', 'editDriver');                                    // 12 ( Update Driver Details)
+        Route::post('septic-tanker/add-resource', 'addResource');                                  // 13 ( Add Resource )
+        Route::post('septic-tanker/list-resource', 'listResource');                                // 14 ( list Resource )
+        Route::post('septic-tanker/get-resource-details-by-id', 'getResourceDetailsById');         // 15 ( Get Agency Details By Id )
+        Route::post('septic-tanker/edit-resource', 'editResource');                                // 16 ( Edit Resource )
+        Route::post('septic-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise'); // 17 ( Vehicle Driver Master ULB Wise )
+        Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                     // 18 ( Septic Tank Cleaned )
+        Route::post('septic-tanker/list-cleaned-booking', 'listCleanedBooking');                   // 19 ( List Cleaned Booking)
     });
 });
