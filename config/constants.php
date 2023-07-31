@@ -10,5 +10,6 @@ return [
     "PARAM_ID" => '35',
     "PARAM_ST_ID" => '36',
     "WATER_TANKER_MODULE_ID"=>"11",
-    "PAYMENT_URL" => "http://192.168.0.108:8000"
+    "PAYMENT_URL" => "http://192.168.0.108:8000",
+    "API_KEY" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
 ];
