@@ -741,8 +741,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Booking List !!!", $f_list, "110120", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1809,8 +1809,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2024,6 +2024,54 @@ class WaterTankerController extends Controller
         }
     }
 
+    /**
+     * | Get list of Applied and Cancelled Application
+     * | Function - 64
+     * | API - 64
+     */
+    public function listAppliedAndCancelledApplication(Request $req)
+    {
+        try {
+            if ($req->auth['user_type'] != 'Citizen')
+                throw new Exception('Unauthorized Access !!!');
+            // Variable initialization
+            $mWtBooking = new WtBooking();
+            $list = $mWtBooking->getBookingList()
+                ->where('citizen_id', $req->auth['id'])
+                ->orderByDesc('id')
+                ->get();
+
+            $ulb = $this->_ulbs;
+            $f_list['listApplied'] = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                return $val;
+            });
+
+
+            $mWtCancellation = new WtCancellation();
+            $list = $mWtCancellation->getCancelBookingList()->where('refund_status', '0');    // 0 - Booking Cancel Success
+            if ($req->auth['user_type'] == 'Citizen')
+                $list = $list->where('citizen_id', $req->auth['id']);                        // Get Citizen Cancel Application List
+            if ($req->auth['user_type'] == 'UlbUser')
+                $list = $list->where('ulb_id', $req->auth['id']);                            // Get ULB Cancel Application List
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $list = $list->where('agency_id', WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id);
+
+            $ulb = $this->_ulbs;
+            $f_list ['listCancelled']= $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
+                return $val;
+            })->values();
+            return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110155", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
     public function generateQRCode()
     {
         $name = "Bikash Kumar";
@@ -2145,27 +2193,6 @@ class WaterTankerController extends Controller
 
     public function store($req)
     {
-
-        // $validator = Validator::make($req->all(), [
-        //     'name' => ['required', 'string', 'max:255'],
-        //     'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-        //     'password' => [
-        //         'required',
-        //         'min:6',
-        //         'max:255',
-        //         'regex:/[a-z]/',      // must contain at least one lowercase letter
-        //         'regex:/[A-Z]/',      // must contain at least one uppercase letter
-        //         'regex:/[0-9]/',      // must contain at least one digit
-        //         'regex:/[@$!%*#?&]/'  // must contain a special character
-        //     ],
-        //     'mobile' => ['required', 'min:10', 'max:10'],
-        //     'ulb' => ['required', 'integer'],
-        //     'userType' => ['required']
-        // ]);
-        // if ($validator->fails()) {
-        //     return ['status' => false, 'message' => $validator->errors()];
-        // }
-
         try {
             // Validation---@source-App\Http\Requests\AuthUserRequest
             $user = new User;

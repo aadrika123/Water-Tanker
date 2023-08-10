@@ -108,7 +108,8 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                            // 60 ( List Ulb Wise Agency ) 
         Route::post('water-tanker/ulb-dashboard', 'ulbDashboard');                                                            // 61 ( Ulb Dashboard ) 
         Route::post('water-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                      // 62 ( Generate Payment Order Id For Water Tanker Payment ) 
-        Route::post('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                            // 63 ( Get Payment Details By Payment Id ) 
+        Route::post('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                            // 63 ( Get Payment Details By Payment Id )  
+        Route::post('water-tanker/list-applied-and-cancelled-application', 'listAppliedAndCancelledApplication');             // 64 ( List Applied and cancelled applications ) 
     });
 
     /**
@@ -137,6 +138,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise'); // 17 ( Vehicle Driver Master ULB Wise )
         Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                     // 18 ( Septic Tank Cleaned )
         Route::post('septic-tanker/list-cleaned-booking', 'listCleanedBooking');                   // 19 ( List Cleaned Booking)
-        Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                                            // 61 ( Ulb Dashboard ) 
+        Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');          // 20 ( Ulb Dashboard ) 
+        Route::post('septic-tanker/list-applied-and-cancelled-application', 'listAppliedAndCancelledApplication');  // 21 ( List Applied and cancelled applications ) 
     });
 });
