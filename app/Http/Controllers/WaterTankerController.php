@@ -38,11 +38,13 @@ class WaterTankerController extends Controller
     protected $_base_url;
     protected $_paramId;
     protected $_ulbs;
+    protected $_ulbLogoUrl;
 
     public function __construct()
     {
         $this->_base_url = Config::get('constants.BASE_URL');
         $this->_paramId = Config::get('constants.PARAM_ID');
+        $this->_ulbLogoUrl = Config::get('constants.ULB_LOGO_URL');
         $this->_ulbs = $this->ulbList();
     }
     /**
@@ -299,7 +301,7 @@ class WaterTankerController extends Controller
             // $contentType = (collect(($req->headers->all())['content-type'] ?? "")->first());
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d H:i:s', $val->created_at)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d H:i:s', $val->created_at)->format('d-m-Y');
                 // if ($ulbId != $val["ulb_id"]) {
                 //     $wardRespons = Http::withHeaders(
                 //         [
@@ -574,18 +576,18 @@ class WaterTankerController extends Controller
                 ->where('is_vehicle_sent', '<=', '1')
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id');
-                
+
             if ($req->date != NULL)
                 $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
-            $perPage = $req->perPage?$req->perPage:1;
+            $perPage = $req->perPage ? $req->perPage : 1;
             $list = $list->paginate($perPage);
             $f_list = [
-                "currentPage"=>$list->currentPage(),
-                "lastPage"=>$list->lastPage(),
-                "total"=>$list->total(),
-                "data"=>collect($list->items())->map(function ($val) use ($ulb) {
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
                     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
@@ -1758,9 +1760,10 @@ class WaterTankerController extends Controller
             $reqData = [
                 "id" => $mWtBooking->id,
                 'amount' => $mWtBooking->payment_amount,
-                // 'workflowId' => $mAdvAgency->workflow_id,
+                'workflowId' => "0",
                 'ulbId' => $mWtBooking->ulb_id,
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'auth' => $req->auth,
             ];
             $paymentUrl = Config::get('constants.PAYMENT_URL');
             $refResponse = Http::withHeaders([
@@ -1779,7 +1782,7 @@ class WaterTankerController extends Controller
             $data->contact = $mWtBooking->mobile;
             $data->type = "Water Tanker";
 
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
@@ -1972,6 +1975,7 @@ class WaterTankerController extends Controller
      */
     public function listUlbWiseLocation(Request $req)
     {
+        dd($req->all());
         $validator = Validator::make($req->all(), [
             'ulbId' => 'required|integer',
         ]);
@@ -2230,5 +2234,62 @@ class WaterTankerController extends Controller
         $image->move($relativePath, $imageName);
 
         return $imageName;
+    }
+
+    /**
+     * | Payment Success or Failure of Water Tanker
+     */
+    public function paymentSuccessOrFailure(Request $req)
+    {
+        if ($req->orderId != NULL && $req->paymentId != NULL) {
+            try {
+                // Variable initialization
+                DB::beginTransaction();
+                $mWtBooking = WtBooking::find($req->id);
+
+                $mWtBooking->payment_date = Carbon::now();
+                $mWtBooking->payment_mode = "Online";
+                $mWtBooking->payment_status = 1;
+                $mWtBooking->payment_id = $req->paymentId;
+                $mWtBooking->payment_details = $req->all();
+                $mWtBooking->save();
+
+                DB::commit();
+
+                $msg = "Payment Accepted Successfully !!!";
+                return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
+            } catch (Exception $e) {
+                DB::rollBack();
+                return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+            }
+        }
+    }
+    /**
+     * | Get Payment Details By Payment Id
+     */
+    public function getPaymentDetailsByPaymentId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'paymentId' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mWtBooking = new WtBooking();
+            $payDetails = $mWtBooking->getPaymentDetails($req->paymentId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->paymentAgainst = "Water Tanker";
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+        }
     }
 }

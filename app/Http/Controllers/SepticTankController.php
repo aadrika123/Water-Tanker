@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 
 class SepticTankController extends Controller
@@ -76,8 +77,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
                 $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
@@ -111,8 +112,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
                 $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
@@ -147,8 +148,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Assign Successfully !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -669,6 +670,54 @@ class SepticTankController extends Controller
             }
             return $data1;
         } catch (Exception $e) {
+        }
+    }
+
+
+    /**
+     * | Generate Payment Order ID
+     * | Function - 54
+     * | API - 54
+     */
+    public function generatePaymentOrderId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStBooking = StBooking::find($req->applicationId);
+            $reqData = [
+                "id" => $mStBooking->id,
+                'amount' => $mStBooking->payment_amount,
+                'workflowId' => "5",
+                'ulbId' => $mStBooking->ulb_id,
+                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'auth' => $req->auth,
+            ];
+            $paymentUrl = Config::get('constants.PAYMENT_URL');
+            $refResponse = Http::withHeaders([
+                "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
+            ])
+                ->withToken($req->bearerToken())
+                ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
+
+            $data = json_decode($refResponse);
+
+            if (!$data)
+                throw new Exception("Payment Order Id Not Generate");
+
+            $data->name = $mStBooking->applicant_name;
+            $data->email = $mStBooking->email;
+            $data->contact = $mStBooking->mobile;
+            $data->type = "Septic Tanker";
+
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 }
