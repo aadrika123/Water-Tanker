@@ -560,6 +560,7 @@ class WaterTankerController extends Controller
      */
     public function listAgencyBooking(Request $req)
     {
+        // WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
         $validator = Validator::make($req->all(), [
             'date' => 'nullable|date|date_format:Y-m-d',
         ]);
