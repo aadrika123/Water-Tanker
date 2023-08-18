@@ -715,7 +715,7 @@ class SepticTankController extends Controller
             $data->contact = $mStBooking->mobile;
             $data->type = "Septic Tanker";
 
-            $mStBooking->order_id =  $data->data->$data->orderId;
+            $mStBooking->order_id =  $data->data->data->orderId;
             $mStBooking->save();
             return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
