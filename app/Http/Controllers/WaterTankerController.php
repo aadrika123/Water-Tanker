@@ -597,7 +597,7 @@ class WaterTankerController extends Controller
             //     }),
             // ];
 
-            $f_list = $list->map(function ($val) use ($ulb) {
+            $f_list =collect($list->items())->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
                 $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
