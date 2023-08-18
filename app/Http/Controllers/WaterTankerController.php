@@ -1651,7 +1651,7 @@ class WaterTankerController extends Controller
 
 
     /**
-     * | Re-Assign Booking
+     * | List of Re-Assign Booking
      * | Function - 51
      * | API - 51
      */
@@ -2060,7 +2060,7 @@ class WaterTankerController extends Controller
                 $list = $list->where('agency_id', WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id);
 
             $ulb = $this->_ulbs;
-            $f_list ['listCancelled']= $list->map(function ($val) use ($ulb) {
+            $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
@@ -2072,6 +2072,34 @@ class WaterTankerController extends Controller
         }
     }
 
+    /**
+     * | Get ULB Dashboard Data
+     * | Function - 65
+     * | API - 65
+     */
+    public function reAssignHydrationCenter(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+            'hydrationCenterId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtBooking = WtBooking::find($req->applicationId);
+            if (!$mWtBooking)
+                throw new Exception("Application Not Found !!!");
+            if ($mWtBooking->is_vehicle_sent == 1)
+                throw new Exception("This Booking is Not Re-Assign, Because Vehicle Sent Successfully !!!");
+            $mWtBooking->hydration_center_id = $req->hydrationCenterId;                                                           // 1 - for Vehicle sent
+            $mWtBooking->save();
+            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
     public function generateQRCode()
     {
         $name = "Bikash Kumar";
