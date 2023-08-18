@@ -1663,13 +1663,13 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 // $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
-                $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Location Hydration Map List !!!", $list, "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Re-Assign Booking List !!!", $list, "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
         }
