@@ -582,7 +582,7 @@ class WaterTankerController extends Controller
                 $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
-            $perPage = $req->perPage ? $req->perPage : 1;
+            $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
             $f_list = [
                 "currentPage" => $list->currentPage(),
@@ -2123,7 +2123,6 @@ class WaterTankerController extends Controller
     public function masterData(Request $req)
     {
         // $redis = Redis::connection();
-        // return $req;
         try {
             if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
                 throw new Exception('Unauthorized Access !!!');
@@ -2133,14 +2132,16 @@ class WaterTankerController extends Controller
                 $data1 = array();
 
                 $magency = new WtAgency();
+                $mWtCapacity = new WtCapacity();
+                $mWtDriver = new WtDriver();
+                $mWtHydrationCenter = new WtHydrationCenter();
+
                 $adencyList = $magency->getAllAgencyForMasterData($req->auth['ulb_id']);
                 $data1['agency'] = $adencyList;
 
-                $mWtCapacity = new WtCapacity();
                 $listCapacity = $mWtCapacity->getCapacityList();
                 $data1['capacity'] = $listCapacity;
 
-                $mWtDriver = new WtDriver();
                 $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
                 $data1['driver'] = $listDriver;
                 if ($req->auth['user_type'] == 'UlbUser')
@@ -2148,7 +2149,6 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'Water-Agency')
                     $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
 
-                $mWtHydrationCenter = new WtHydrationCenter();
                 $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
                 $data1['hydrationCenter'] = $hydrationCenter;
 
