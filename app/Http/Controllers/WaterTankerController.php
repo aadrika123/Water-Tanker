@@ -583,27 +583,27 @@ class WaterTankerController extends Controller
 
             $ulb = $this->_ulbs;
             $perPage = $req->perPage ? $req->perPage : 1;
-            $list = $list->paginate($perPage);
-            $f_list = [
-                "currentPage" => $list->currentPage(),
-                "lastPage" => $list->lastPage(),
-                "total" => $list->total(),
-                "data" => collect($list->items())->map(function ($val) use ($ulb) {
-                    $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
-                    $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
-                    return $val;
-                }),
-            ];
+            // $list = $list->paginate($perPage);
+            // $f_list = [
+            //     "currentPage" => $list->currentPage(),
+            //     "lastPage" => $list->lastPage(),
+            //     "total" => $list->total(),
+            //     "data" => collect($list->items())->map(function ($val) use ($ulb) {
+            //         $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+            //         $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+            //         $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+            //         $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+            //         return $val;
+            //     }),
+            // ];
 
-            // $f_list = $list->map(function ($val) use ($ulb) {
-            //     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
-            //     $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
-            //     return $val;
-            // });
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+                return $val;
+            });
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
