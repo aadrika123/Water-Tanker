@@ -715,6 +715,8 @@ class SepticTankController extends Controller
             $data->contact = $mStBooking->mobile;
             $data->type = "Septic Tanker";
 
+            $mStBooking->order_id =  $data->data->orderId;
+            $mStBooking->save();
             return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -773,7 +775,7 @@ class SepticTankController extends Controller
     }
 
     /**
-     * | Payment Success or Failure of Water Tanker
+     * | Payment Success or Failure of Septic Tanker
      */
     public function paymentSuccessOrFailure(Request $req)
     {
