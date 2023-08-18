@@ -2093,9 +2093,9 @@ class WaterTankerController extends Controller
                 throw new Exception("Application Not Found !!!");
             if ($mWtBooking->is_vehicle_sent == 1)
                 throw new Exception("This Booking is Not Re-Assign, Because Vehicle Sent Successfully !!!");
-            $mWtBooking->hydration_center_id = $req->hydrationCenterId;                                                           // 1 - for Vehicle sent
+            $mWtBooking->hydration_center_id = $req->hydrationCenterId;                                                           
             $mWtBooking->save();
-            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Re-Assign Hydration Center Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
         }
