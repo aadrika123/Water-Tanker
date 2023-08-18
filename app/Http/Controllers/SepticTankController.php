@@ -771,4 +771,33 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+    /**
+     * | Payment Success or Failure of Water Tanker
+     */
+    public function paymentSuccessOrFailure(Request $req)
+    {
+        if ($req->orderId != NULL && $req->paymentId != NULL) {
+            try {
+                // Variable initialization
+                DB::beginTransaction();
+                $mStBooking = StBooking::find($req->id);
+
+                $mStBooking->payment_date = Carbon::now();
+                $mStBooking->payment_mode = "Online";
+                $mStBooking->payment_status = 1;
+                $mStBooking->payment_id = $req->paymentId;
+                $mStBooking->payment_details = $req->all();
+                $mStBooking->save();
+
+                DB::commit();
+
+                $msg = "Payment Accepted Successfully !!!";
+                return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
+            } catch (Exception $e) {
+                DB::rollBack();
+                return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+            }
+        }
+    }
 }

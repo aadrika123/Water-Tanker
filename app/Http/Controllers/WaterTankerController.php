@@ -120,7 +120,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d/m/Y');
+                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency List !!!",  $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1976,7 +1976,6 @@ class WaterTankerController extends Controller
      */
     public function listUlbWiseLocation(Request $req)
     {
-        dd($req->all());
         $validator = Validator::make($req->all(), [
             'ulbId' => 'required|integer',
         ]);
