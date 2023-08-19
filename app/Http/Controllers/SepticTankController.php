@@ -710,7 +710,7 @@ class SepticTankController extends Controller
             // if (!$data)
             //     throw new Exception("Payment Order Id Not Generate");
             if ($data->status == false) {
-                return responseMsgs(false, $data->message, "working", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
+                return responseMsgs(false, "ordets not found", "working", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
             }
 
             // $data->name = $mStBooking->applicant_name;
