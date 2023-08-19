@@ -2302,7 +2302,7 @@ class WaterTankerController extends Controller
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 DB::beginTransaction();
-                $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id',$req->order_id)->count();
+                $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id',$req->orderId)->count();
                 if ($wtCount > 0) {
                     $mWtBooking = WtBooking::find($req->id);
                     $mWtBooking->payment_date = Carbon::now();
@@ -2312,7 +2312,7 @@ class WaterTankerController extends Controller
                     $mWtBooking->payment_details = $req->all();
                     $mWtBooking->save();
                 }
-                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id',$req->order_id)->count();
+                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id',$req->orderId)->count();
                 if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
