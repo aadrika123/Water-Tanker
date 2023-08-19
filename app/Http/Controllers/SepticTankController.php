@@ -699,13 +699,15 @@ class SepticTankController extends Controller
                 'auth' => $req->auth,
             ];
             $paymentUrl = Config::get('constants.PAYMENT_URL');
+            return $paymentUrl . 'api/payment/generate-orderid' . $reqData;
+
             $refResponse = Http::withHeaders([
                 "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
             ])
                 ->withToken($req->bearerToken())
                 ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
 
-            return $refResponse;
+            // return $refResponse;
             $data = json_decode($refResponse);
 
             if (!$data)
