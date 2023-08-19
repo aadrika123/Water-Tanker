@@ -699,7 +699,7 @@ class SepticTankController extends Controller
                 'auth' => $req->auth,
             ];
             $paymentUrl = Config::get('constants.PAYMENT_URL');
-            return $paymentUrl . 'api/payment/generate-orderid';
+            // return $paymentUrl . 'api/payment/generate-orderid';
 
             $refResponse = Http::withHeaders([
                 "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
@@ -708,19 +708,19 @@ class SepticTankController extends Controller
                 ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
 
             // return $refResponse;
-            $data = json_decode($refResponse);
+            // $data = json_decode($refResponse);
 
-            if (!$data)
-                throw new Exception("Payment Order Id Not Generate");
+            // if (!$data)
+            //     throw new Exception("Payment Order Id Not Generate");
 
-            $data->name = $mStBooking->applicant_name;
-            $data->email = $mStBooking->email;
-            $data->contact = $mStBooking->mobile;
-            $data->type = "Septic Tanker";
+            // $data->name = $mStBooking->applicant_name;
+            // $data->email = $mStBooking->email;
+            // $data->contact = $mStBooking->mobile;
+            // $data->type = "Septic Tanker";
 
-            $mStBooking->order_id =  $data->data->orderId;
-            $mStBooking->save();
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            // $mStBooking->order_id =  $data->data->orderId;
+            // $mStBooking->save();
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", json_decode($refResponse), "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
