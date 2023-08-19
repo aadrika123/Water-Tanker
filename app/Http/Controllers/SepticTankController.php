@@ -693,7 +693,7 @@ class SepticTankController extends Controller
             $reqData = [
                 "id" => $mStBooking->id,
                 'amount' => $mStBooking->payment_amount,
-                'workflowId' => "5",
+                'workflowId' => "0",
                 'ulbId' => $mStBooking->ulb_id,
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
                 'auth' => $req->auth,
@@ -705,7 +705,7 @@ class SepticTankController extends Controller
                 ->withToken($req->bearerToken())
                 ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
 
-           return $data = json_decode($refResponse);
+            $data = json_decode($refResponse);
 
             if (!$data)
                 throw new Exception("Payment Order Id Not Generate");
@@ -714,7 +714,7 @@ class SepticTankController extends Controller
             $data->email = $mStBooking->email;
             $data->contact = $mStBooking->mobile;
             $data->type = "Septic Tanker";
-return $data->data;
+
             $mStBooking->order_id =  $data->data->orderId;
             $mStBooking->save();
             return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
