@@ -710,7 +710,7 @@ class SepticTankController extends Controller
             if (!$data)
                 throw new Exception("Payment Order Id Not Generate");
             if ($data->status == false) {
-                throw new Exception($data->message->first());
+                throw new Exception(collect($data->message)->first());
             }
 
             $data->name = $mStBooking->applicant_name;
