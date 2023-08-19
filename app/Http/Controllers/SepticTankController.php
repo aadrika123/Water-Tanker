@@ -707,20 +707,20 @@ class SepticTankController extends Controller
 
             $data = json_decode($refResponse);
 
-            if (!$data)
-                throw new Exception("Payment Order Id Not Generate");
-            if ($data->status == false) {
-                return responseMsgs(false, $data->message, "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
-            }
+            // if (!$data)
+            //     throw new Exception("Payment Order Id Not Generate");
+            // if ($data->status == false) {
+            //     return responseMsgs(false, $data->message, "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
+            // }
 
-            $data->name = $mStBooking->applicant_name;
-            $data->email = $mStBooking->email;
-            $data->contact = $mStBooking->mobile;
-            $data->type = "Septic Tanker";
+            // $data->name = $mStBooking->applicant_name;
+            // $data->email = $mStBooking->email;
+            // $data->contact = $mStBooking->mobile;
+            // $data->type = "Septic Tanker";
 
-            $mStBooking->order_id =  $data->data->orderId;
-            $mStBooking->save();
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            // $mStBooking->order_id =  $data->data->orderId;
+            // $mStBooking->save();
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
