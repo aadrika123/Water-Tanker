@@ -1778,6 +1778,9 @@ class WaterTankerController extends Controller
 
             if (!$data)
                 throw new Exception("Payment Order Id Not Generate");
+            if ($data->status == false) {
+                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110154", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
 
             $data->name = $mWtBooking->applicant_name;
             $data->email = $mWtBooking->email;
@@ -2302,7 +2305,7 @@ class WaterTankerController extends Controller
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 DB::beginTransaction();
-                $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id',$req->orderId)->count();
+                $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($wtCount > 0) {
                     $mWtBooking = WtBooking::find($req->id);
                     $mWtBooking->payment_date = Carbon::now();
@@ -2312,7 +2315,7 @@ class WaterTankerController extends Controller
                     $mWtBooking->payment_details = $req->all();
                     $mWtBooking->save();
                 }
-                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id',$req->orderId)->count();
+                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
