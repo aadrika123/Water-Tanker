@@ -705,7 +705,7 @@ class SepticTankController extends Controller
                 ->withToken($req->bearerToken())
                 ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
 
-            $data = json_decode($refResponse);
+           return $data = json_decode($refResponse);
 
             if (!$data)
                 throw new Exception("Payment Order Id Not Generate");
