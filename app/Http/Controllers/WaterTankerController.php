@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
+use App\Models\Septic\StBooking;
 use App\Models\User;
 use App\Models\WtLocation;
 use App\Models\WtLocationHydrationMap;
@@ -1782,7 +1783,8 @@ class WaterTankerController extends Controller
             $data->email = $mWtBooking->email;
             $data->contact = $mWtBooking->mobile;
             $data->type = "Water Tanker";
-
+            $mWtBooking->order_id =  $data->data->orderId;
+            $mWtBooking->save();
             return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -2093,7 +2095,7 @@ class WaterTankerController extends Controller
                 throw new Exception("Application Not Found !!!");
             if ($mWtBooking->is_vehicle_sent == 1)
                 throw new Exception("This Booking is Not Re-Assign, Because Vehicle Sent Successfully !!!");
-            $mWtBooking->hydration_center_id = $req->hydrationCenterId;                                                           
+            $mWtBooking->hydration_center_id = $req->hydrationCenterId;
             $mWtBooking->save();
             return responseMsgs(true, "Re-Assign Hydration Center Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -2300,17 +2302,27 @@ class WaterTankerController extends Controller
             try {
                 // Variable initialization
                 DB::beginTransaction();
-                $mWtBooking = WtBooking::find($req->id);
-
-                $mWtBooking->payment_date = Carbon::now();
-                $mWtBooking->payment_mode = "Online";
-                $mWtBooking->payment_status = 1;
-                $mWtBooking->payment_id = $req->paymentId;
-                $mWtBooking->payment_details = $req->all();
-                $mWtBooking->save();
-
+                $wtCount = DB::table('wt_bookings')->where(['id' => $req->id, 'order_id' => $req->order_id])->count();
+                if ($wtCount > 0) {
+                    $mWtBooking = WtBooking::find($req->id);
+                    $mWtBooking->payment_date = Carbon::now();
+                    $mWtBooking->payment_mode = "Online";
+                    $mWtBooking->payment_status = 1;
+                    $mWtBooking->payment_id = $req->paymentId;
+                    $mWtBooking->payment_details = $req->all();
+                    $mWtBooking->save();
+                }
+                $stCount = DB::table('st_bookings')->where(['id' => $req->id, 'order_id' => $req->order_id])->count();
+                if($stCount){
+                    $mStBooking = StBooking::find($req->id);
+                    $mStBooking->payment_date = Carbon::now();
+                    $mStBooking->payment_mode = "Online";
+                    $mStBooking->payment_status = 1;
+                    $mStBooking->payment_id = $req->paymentId;
+                    $mStBooking->payment_details = $req->all();
+                    $mStBooking->save();
+                }
                 DB::commit();
-
                 $msg = "Payment Accepted Successfully !!!";
                 return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
             } catch (Exception $e) {
