@@ -2298,11 +2298,11 @@ class WaterTankerController extends Controller
      */
     public function paymentSuccessOrFailure(Request $req)
     {
-        if ($req->orderId != NULL && $req->paymentId != NULL) {
-            try {
+        try {
+            if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 DB::beginTransaction();
-                $wtCount = DB::table('wt_bookings')->where(['id' => $req->id, 'order_id' => $req->order_id])->count();
+                $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id',$req->order_id)->count();
                 if ($wtCount > 0) {
                     $mWtBooking = WtBooking::find($req->id);
                     $mWtBooking->payment_date = Carbon::now();
@@ -2312,8 +2312,8 @@ class WaterTankerController extends Controller
                     $mWtBooking->payment_details = $req->all();
                     $mWtBooking->save();
                 }
-                $stCount = DB::table('st_bookings')->where(['id' => $req->id, 'order_id' => $req->order_id])->count();
-                if($stCount){
+                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id',$req->order_id)->count();
+                if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
                     $mStBooking->payment_mode = "Online";
@@ -2325,10 +2325,10 @@ class WaterTankerController extends Controller
                 DB::commit();
                 $msg = "Payment Accepted Successfully !!!";
                 return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
-            } catch (Exception $e) {
-                DB::rollBack();
-                return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
             }
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
     /**
