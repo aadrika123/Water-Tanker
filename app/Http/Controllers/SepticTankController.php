@@ -698,6 +698,7 @@ class SepticTankController extends Controller
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
                 'auth' => $req->auth,
             ];
+            return $reqData;
             $paymentUrl = Config::get('constants.PAYMENT_URL');
             $refResponse = Http::withHeaders([
                 "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
@@ -705,7 +706,7 @@ class SepticTankController extends Controller
                 ->withToken($req->bearerToken())
                 ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
 
-            return $refResponse;
+            
             $data = json_decode($refResponse);
 
             if (!$data)
