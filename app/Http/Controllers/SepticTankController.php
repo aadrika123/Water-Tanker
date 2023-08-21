@@ -24,10 +24,12 @@ class SepticTankController extends Controller
     protected $_paramId;
     protected $_base_url;
     protected $_ulbs;
+    protected $_ulbLogoUrl;
     public function __construct()
     {
         $this->_base_url = Config::get('constants.BASE_URL');
         $this->_paramId = Config::get('constants.PARAM_ST_ID');
+        $this->_ulbLogoUrl = Config::get('constants.ULB_LOGO_URL');
         $this->_ulbs = $this->ulbList();
     }
 
@@ -1040,6 +1042,35 @@ class SepticTankController extends Controller
             return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+     /**
+     * | Get Payment Details By Payment Id
+     */
+    public function getPaymentDetailsByPaymentId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'paymentId' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mStBooking = new StBooking();
+            $payDetails = $mStBooking->getPaymentDetails($req->paymentId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->paymentAgainst = "Water Tanker";
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
 

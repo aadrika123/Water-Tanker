@@ -152,5 +152,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/get-capacity-rate-details-by-id', 'getCapacityRateDetailsById');                             // 28 ( Get Capacity Rate Details By Id ) 
         Route::post('septic-tanker/edit-capacity-rate', 'editCapacityRate');                                                    // 29 ( Edit Capacity Rate ) 
         Route::post('septic-tanker/get-capacity-list-for-booking', 'getCapacityListForBooking');                                // 30 ( Edit Capacity Rate ) 
+        Route::post('septic-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                            // 63 ( Get Payment Details By Payment Id )  
     });
 });
