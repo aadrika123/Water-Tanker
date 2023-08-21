@@ -2304,6 +2304,7 @@ class WaterTankerController extends Controller
         try {
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
+                $msg = '';
                 DB::beginTransaction();
                 $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($wtCount > 0) {
@@ -2314,8 +2315,9 @@ class WaterTankerController extends Controller
                     $mWtBooking->payment_id = $req->paymentId;
                     $mWtBooking->payment_details = $req->all();
                     $mWtBooking->save();
+                    $msg = "Payment Accepted Successfully !!!";
                 }
-                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
+              $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
@@ -2324,9 +2326,9 @@ class WaterTankerController extends Controller
                     $mStBooking->payment_id = $req->paymentId;
                     $mStBooking->payment_details = $req->all();
                     $mStBooking->save();
+                    $msg = "Payment Accepted Successfully !!!";
                 }
                 DB::commit();
-                $msg = "Payment Accepted Successfully !!!";
                 return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {

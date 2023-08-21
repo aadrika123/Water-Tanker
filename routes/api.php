@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
  * | Routers for Water Tanker
  * | Created On - 23 May 2023 
  * | Created By - Bikash Kumar
- * | Module - 9 (Water Tanker)
+ * | Module - 11 (Water Tanker)
  * | Status - Open
  */
 
