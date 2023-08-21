@@ -13,6 +13,9 @@ class StBooking extends Model
 
     protected $guarded = [];
 
+    /**
+     * | Store meta Request in database 
+     */
     public function metaReqs($req)
     {
         return [
@@ -25,7 +28,7 @@ class StBooking extends Model
             'booking_date' => Carbon::now()->format('Y-m-d'),
             'cleaning_date' => $req->cleaningDate,
             'ward_id' => $req->wardId,
-            'capacity' => $req->capacity,
+            'capacity_id' => $req->capacityId,
             'distance' => $req->distance,
             'road_width' => $req->roadWidth,
             'booking_no' => $req->bookingNo,
@@ -55,7 +58,8 @@ class StBooking extends Model
         return DB::table('st_bookings as stb')
                     ->leftjoin('st_drivers as sd','sd.id','=','stb.driver_id')
                     ->leftjoin('st_resources as sr','sr.id','=','stb.vehicle_id')
-                    ->select('stb.*','wtl.location','sd.driver_name','sr.vehicle_no')
+                    ->leftjoin('st_capacities as sc','sc.id','=','stb.capacity_id')
+                    ->select('stb.*','wtl.location','sd.driver_name','sr.vehicle_no','sc.capacity')
                     ->join('wt_locations as wtl','wtl.id','=','stb.location_id');
     }
 

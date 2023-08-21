@@ -2,6 +2,7 @@
 
 namespace App\BLL;
 
+use App\Models\Septic\StUlbCapacityRate;
 use App\Models\WtAgency;
 use App\Models\WtBooking;
 use App\Models\WtCapacity;
@@ -130,6 +131,16 @@ class Calculations
      */
     public function getAmount($ulb, $capacityId)
     {
-        return WtUlbCapacityRate::select('rate')->where('ulb_id',$ulb)->where('capacity_id',$capacityId)->first()->rate;
+        return WtUlbCapacityRate::select('rate')->where('ulb_id', $ulb)->where('capacity_id', $capacityId)->first()->rate;
+    }
+
+    /**
+     * | Get Septic Tank Amount regaurding ulbId, CapacityId, isResidential or Commercial
+     */
+    public function getSepticTankAmount($ulbId, $capacityId, $isResidential)
+    {
+        $mStUlbCapacityRate=new StUlbCapacityRate();
+        $septicAmount=$mStUlbCapacityRate->getAmount($ulbId, $capacityId, $isResidential);
+        return $septicAmount;
     }
 }

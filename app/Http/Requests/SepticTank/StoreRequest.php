@@ -34,8 +34,9 @@ class StoreRequest extends FormRequest
             'holdingNo' => 'required|string|max:20',
             'roadWidth' => 'required|numeric',
             'distance' => 'required|numeric',
-            'capacity' => 'required|numeric',
+            'capacityId' => 'required|integer',
             'address' => 'required|string|max:255',
+            'isResidential' => 'required|boolean',
         ];
     }
 

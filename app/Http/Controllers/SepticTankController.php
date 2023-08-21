@@ -6,6 +6,8 @@ use App\BLL\Calculations;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
+use App\Models\Septic\StCapacity;
+use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StDriver;
 use App\Models\StResource;
 use Carbon\Carbon;
@@ -45,6 +47,10 @@ class SepticTankController extends Controller
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];
             $req->merge($bookingNo);
+
+            $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->capacityId,$req->isResidential);
+            $paymentAmount = ['paymentAmount' => $payAmt];
+            $req->merge($paymentAmount);
 
             DB::beginTransaction();
             $res = $mStBooking->storeBooking($req);                                                                     // Store Booking Informations
@@ -777,32 +783,264 @@ class SepticTankController extends Controller
         }
     }
 
+    // /**
+    //  * | Payment Success or Failure of Septic Tanker
+    //  */
+    // public function paymentSuccessOrFailure(Request $req)
+    // {
+    //     if ($req->orderId != NULL && $req->paymentId != NULL) {
+    //         try {
+    //             // Variable initialization
+    //             DB::beginTransaction();
+    //             $mStBooking = StBooking::find($req->id);
+
+    //             $mStBooking->payment_date = Carbon::now();
+    //             $mStBooking->payment_mode = "Online";
+    //             $mStBooking->payment_status = 1;
+    //             $mStBooking->payment_id = $req->paymentId;
+    //             $mStBooking->payment_details = $req->all();
+    //             $mStBooking->save();
+
+    //             DB::commit();
+
+    //             $msg = "Payment Accepted Successfully !!!";
+    //             return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
+    //         } catch (Exception $e) {
+    //             DB::rollBack();
+    //             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+    //         }
+    //     }
+    // }
+
+    
     /**
-     * | Payment Success or Failure of Septic Tanker
+     * | Add Capacity
+     * | Function - 03
+     * | API - 03
      */
-    public function paymentSuccessOrFailure(Request $req)
+    public function addCapacity(Request $req)
     {
-        if ($req->orderId != NULL && $req->paymentId != NULL) {
-            try {
-                // Variable initialization
-                DB::beginTransaction();
-                $mStBooking = StBooking::find($req->id);
-
-                $mStBooking->payment_date = Carbon::now();
-                $mStBooking->payment_mode = "Online";
-                $mStBooking->payment_status = 1;
-                $mStBooking->payment_id = $req->paymentId;
-                $mStBooking->payment_details = $req->all();
-                $mStBooking->save();
-
-                DB::commit();
-
-                $msg = "Payment Accepted Successfully !!!";
-                return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
-            } catch (Exception $e) {
-                DB::rollBack();
-                return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
-            }
+        $validator = Validator::make($req->all(), [
+            'capacity' => 'required|integer|unique:st_capacities',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStCapacity = new StCapacity();
+            DB::beginTransaction();
+            $res = $mStCapacity->storeCapacity($req);                                       // Store Capacity Request
+            DB::commit();
+            return responseMsgs(true, "Capacity Added Successfully !!!", '', "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            // return $e->getMessage();
+            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+    /**
+     * | Get Capacity List
+     * | Function - 04
+     * | API - 04
+     */
+    public function listCapacity(Request $req)
+    {
+        try {
+            // Variable initialization
+            $mStCapacity = new StCapacity();
+            $list = $mStCapacity->getCapacityList();
+            $f_list = $list->map(function ($val) {
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                return $val;
+            });
+            return responseMsgs(true, "Capacity List !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Resource Details By Id
+     * | Function - 33
+     * | API - 33
+     */
+    public function getCapacityDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStCapacity = new StCapacity();
+            $list = $mStCapacity->getCapacityById($req->capacityId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "110133", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110133", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Update Details of Capacity
+     * | Function - 27
+     * | API - 27
+     */
+    public function editCapacity(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityId' => 'required|integer',
+            'capacity' => 'required|numeric|unique:st_capacities',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $mWtCapacity = StCapacity::find($req->capacityId);
+            if (!$mWtCapacity)
+                throw new Exception("No Data Found !!!");
+            $mWtCapacity->capacity = $req->capacity;
+            $mWtCapacity->save();
+            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110127", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    
+
+
+    /**
+     * | Add Capacity Rate ULB wise
+     * | Function - 05
+     * | API - 05
+     */
+    public function addCapacityRate(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityId' => 'required|integer|digits_between:1,999999',
+            'isResidential' => 'required|boolean',
+            'rate' => 'required|integer|gt:0',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            // Variable initialization
+            $mStUlbCapacityRate = new StUlbCapacityRate();
+            DB::beginTransaction();
+            $res = $mStUlbCapacityRate->storeCapacityRate($req);                                       // Store Capacity Rate Request
+            DB::commit();
+            return responseMsgs(true, "Capacity Rate Added Successfully !!!",  '', "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Capacity Rate list
+     * | Function - 06
+     * | API - 06
+     */
+    public function listCapacityRate(Request $req)
+    {
+        try {
+            // Variable initialization
+            $mStUlbCapacityRate = new StUlbCapacityRate();
+            $list = $mStUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id', $req->auth['ulb_id']);
+            $f_list = $list->map(function ($val) {
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                return $val;
+            });
+            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    
+    
+    /**
+     * | Get Resource Details By Id
+     * | Function - 34
+     * | API - 34
+     */
+    public function getCapacityRateDetailsById(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'capacityRateId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtUlbCapacityRate = new StUlbCapacityRate();
+            $list = $mWtUlbCapacityRate->getCapacityRateDetailsById($req->capacityRateId);
+            return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    /**
+     * | Update Details of Capacity Rates
+     * | Function - 28
+     * | API - 28
+     */
+    public function editCapacityRate(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            // 'ulbId' => 'required|integer',
+            'capacityId' => 'required|integer',
+            'capacityRateId' => 'required|integer',
+            'rate' => 'required|integer|gt:0',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            $mWtUlbCapacityRate = StUlbCapacityRate::find($req->capacityRateId);
+            if (!$mWtUlbCapacityRate)
+                throw new Exception("No Data Found !!!");
+            $mWtUlbCapacityRate->ulb_id = $req->ulbId;
+            $mWtUlbCapacityRate->capacity_id = $req->capacityId;
+            $mWtUlbCapacityRate->rate = $req->rate;
+            $mWtUlbCapacityRate->save();
+            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110128", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Capacity list For Booking
+     * | Function - 28
+     * | API - 28
+     */
+    public function getCapacityListForBooking(Request $req){
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer',
+            'isResidential' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtUlbCapacityRate = new StUlbCapacityRate();
+            $list = $mWtUlbCapacityRate->getCapacityListForBooking($req->ulbId,$req->isResidential);
+            return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
 }
