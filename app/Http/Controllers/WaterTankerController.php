@@ -812,7 +812,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Get Booking list
      * | Function - 23
@@ -845,7 +844,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110123", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Get Booking list
@@ -885,7 +883,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Get Booking list
      * | Function - 25
@@ -919,7 +916,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110125", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Update Details of Resource
@@ -962,7 +958,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Update Details of Capacity
      * | Function - 27
@@ -988,7 +983,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110127", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Update Details of Capacity Rates
@@ -1064,8 +1058,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
-
 
     /**
      * | Get Agency Details By Id
@@ -1183,7 +1175,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Get Resource Details By Id
      * | Function - 35
@@ -1229,7 +1220,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110136", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Get Driver Vehicle Map Details By Id
@@ -1318,7 +1308,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Agency Booking Assign for Delevery (Tanker , Driver & Hydration Center )
      * | Function - 40
@@ -1344,7 +1333,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110140", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Hydration Center Booking Assign for Delevery (Tanker , Driver & Hydration Center )
@@ -1650,7 +1638,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | List of Re-Assign Booking
      * | Function - 51
@@ -1675,7 +1662,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Get Agency List Ulb Wise
@@ -1742,7 +1728,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Generate Payment Order ID
      * | Function - 54
@@ -1793,7 +1778,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Get Applied Application 
@@ -2002,7 +1986,6 @@ class WaterTankerController extends Controller
         }
     }
 
-
     /**
      * | Get ULB Dashboard Data
      * | Function - 61
@@ -2105,6 +2088,7 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
     public function generateQRCode()
     {
         $name = "Bikash Kumar";
@@ -2121,7 +2105,6 @@ class WaterTankerController extends Controller
 
         return response($qrCode)->header('Content-Type', 'image/png');
     }
-
 
     /**
      * | Get Ulb list from juidco database from GuzzleHttp
@@ -2222,7 +2205,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "050112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     public function store($req)
     {
@@ -2336,6 +2318,7 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
+    
     /**
      * | Get Payment Details By Payment Id
      */

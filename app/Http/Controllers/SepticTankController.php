@@ -134,7 +134,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | Get Applied Application 
      * | Function - 04
@@ -165,8 +164,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
-
 
     /**
      * | Booking Assignment with vehicle and Driver
@@ -303,7 +300,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | Add Driver
      * | Function - 09
@@ -394,7 +390,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | Update Details for Driver
      * | Function - 12
@@ -435,8 +430,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
-
 
     /**
      * | Add Agency and ULB Resources
@@ -498,7 +491,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | Get Resource Details By Id
      * | Function - 15
@@ -521,7 +513,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Update Details of Resource
@@ -610,7 +601,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | List Septic Tank Cleaned Booking
      * | Function - 19
@@ -654,7 +644,6 @@ class SepticTankController extends Controller
         }
     }
 
-
     /**
      * | Get Ulb list from juidco database from GuzzleHttp
      * | Function - unknown
@@ -680,7 +669,6 @@ class SepticTankController extends Controller
         } catch (Exception $e) {
         }
     }
-
 
     /**
      * | Generate Payment Order ID
@@ -733,7 +721,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | List Applied And Cancelled Application
@@ -813,7 +800,6 @@ class SepticTankController extends Controller
     //         }
     //     }
     // }
-
     
     /**
      * | Add Capacity
@@ -912,9 +898,6 @@ class SepticTankController extends Controller
         }
     }
 
-    
-
-
     /**
      * | Add Capacity Rate ULB wise
      * | Function - 05
@@ -964,8 +947,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
-    
     
     /**
      * | Get Resource Details By Id
@@ -989,7 +970,6 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-
 
     /**
      * | Update Details of Capacity Rates
@@ -1073,5 +1053,4 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
-
 }
