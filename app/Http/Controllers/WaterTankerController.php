@@ -2161,7 +2161,7 @@ class WaterTankerController extends Controller
                 $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
                 $data1['driver'] = $listDriver;
                 if ($req->auth['user_type'] == 'UlbUser')
-                    $data1['driver'] = $listDriver->where('agency_id', NULL);
+                    $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
                     $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
 
