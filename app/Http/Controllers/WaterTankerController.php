@@ -2019,7 +2019,6 @@ class WaterTankerController extends Controller
      */
     public function listAppliedAndCancelledApplication(Request $req)
     {
-        return $req;
         try {
             if ($req->auth['user_type'] != 'Citizen')
                 throw new Exception('Unauthorized Access !!!');
