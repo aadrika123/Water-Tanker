@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
+use App\MicroServices\IdGenerator\PrefixIdGenerator;
 use App\Models\Septic\StBooking;
 use App\Models\User;
 use App\Models\WtLocation;
@@ -539,6 +540,8 @@ class WaterTankerController extends Controller
 
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];
+            // $idGeneration = new PrefixIdGenerator($this->_paramId, $req->ulbId);
+            // $applicationNo = $idGeneration->generate();
             $req->merge($bookingNo);
 
             $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);

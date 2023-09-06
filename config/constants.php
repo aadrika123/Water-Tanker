@@ -5,10 +5,10 @@
  */
 return [
     // Live Url
-    "BASE_URL" => 'http://192.168.0.202:8000/',
-    "ULB_LOGO_URL" => 'http://192.168.0.202:8000/',
-    "PAYMENT_URL" => "http://192.168.0.202:8006/",
-    "ID_GENERATE_URL" => 'http://192.168.0.202:8000/',
+    "BASE_URL" => 'http://192.168.0.95:8005/',                      // ( Authorization Service)
+    "ULB_LOGO_URL" => 'http://192.168.0.95:8000/',                  // ( property )
+    "PAYMENT_URL" => "http://192.168.0.95:8004/",                   // ( Payment Engine )
+    "ID_GENERATE_URL" => 'http://192.168.0.95:8000/',               // ( Property )
 
     // Local Url
     // "BASE_URL" => 'http://192.168.0.21:8005/',
