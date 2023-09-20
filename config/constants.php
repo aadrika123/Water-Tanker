@@ -6,7 +6,7 @@
 return [
     // Live Url
     "BASE_URL" => 'http://192.168.0.95:8005/',                      // ( Authorization Service)
-    "ULB_LOGO_URL" => 'http://192.168.0.95:8000/',                  // ( property )
+    "ULB_LOGO_URL" => 'http://203.129.217.246:8000/',                  // ( property )
     "PAYMENT_URL" => "http://192.168.0.95:8004/",                   // ( Payment Engine )
     "ID_GENERATE_URL" => 'http://192.168.0.95:8000/',               // ( Property )
 
