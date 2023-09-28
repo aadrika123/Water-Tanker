@@ -77,9 +77,9 @@ class StBooking extends Model
      */
     public function getPaymentDetails($payId)
     {
-        $details = DB::table('st_bookings as sb')
-            ->join('st_capacities as sc', 'sb.capacity_id', '=', 'sc.id')
-            ->select('sb.*', 'sc.capacity')
+        $details = DB::table('st_bookings as sb')->select('*')
+            // ->join('st_capacities as sc', 'sb.capacity_id', '=', 'sc.id')
+            // ->select('sb.*', 'sc.capacity')
             ->where('sb.payment_id', $payId)
             ->first();
 
