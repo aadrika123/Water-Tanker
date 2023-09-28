@@ -26,17 +26,18 @@ class StoreRequest extends FormRequest
         return [
             'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
+            'ulbArea' => 'required|boolean',  
             'applicantName' => 'required|string|max:255',
             'cleaningDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
-            'wardId' => 'required|integer',
-            'holdingNo' => 'required|string|max:20',
+            'wardId' => $this->ulbArea == 1 ? 'required|integer':'nullable',
+            'holdingNo' => $this->ulbArea == 1 ? 'required|string|max:20':'nullable',
             'roadWidth' => 'required|numeric',
             'distance' => 'required|numeric',
-            'capacityId' => 'required|integer',
+            'capacityId' => 'nullable|integer',
             'address' => 'required|string|max:255',
-            'isResidential' => 'required|boolean',
+            'buildingType' => 'required|integer',                                              // 1 - Within ULB, 0 - Outside ULB
         ];
     }
 

@@ -20,6 +20,8 @@ class StBooking extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
+            'is_ulb' => $req->ulbArea,
+            'building_type_id' => $req->buildingType,
             'citizen_id' => $req->citizenId,
             'applicant_name' => $req->applicantName,
             'mobile' => $req->mobile,

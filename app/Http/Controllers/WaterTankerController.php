@@ -90,11 +90,11 @@ class WaterTankerController extends Controller
                 "ulb" => $req->ulbId,
                 "userType" =>  "Water-Agency",
             ];
+            // return $reqs;
             $mWtAgency = new WtAgency();
             DB::beginTransaction();
             $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login
             $req->merge(['UId' => $userId]);
-
             $res = $mWtAgency->storeAgency($req);                                       // Store Agency Request
             DB::commit();
             return responseMsgs(true, "Agency Added Successfully !!!", '', "110101", "1.0", responseTime(), 'POST', $req->deviceId ?? "");

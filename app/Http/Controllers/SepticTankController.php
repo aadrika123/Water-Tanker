@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\BLL\Calculations;
 use App\Http\Requests\SepticTank\StoreRequest;
+use App\Models\BuildingType;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
 use App\Models\Septic\StCapacity;
@@ -50,7 +51,8 @@ class SepticTankController extends Controller
             $bookingNo = ['bookingNo' => $generatedId];
             $req->merge($bookingNo);
 
-            $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->capacityId,$req->isResidential);
+            // $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->capacityId,$req->isResidential);
+            $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->ulbArea,$req->buildingType);
             $paymentAmount = ['paymentAmount' => $payAmt];
             $req->merge($paymentAmount);
 
@@ -1050,6 +1052,19 @@ class SepticTankController extends Controller
             $payDetails->paymentAgainst = "Water Tanker";
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    /**
+     * | Get List Nuilding Type
+     */
+    public function listBuildingType(Request $req){
+        try{
+            $mBuildingType=new BuildingType();
+            $list=$mBuildingType->getAllBuildingType();
+            return responseMsgs(true, "Data Fetch Successfully !!!", $list, '050205', 01, responseTime(), 'POST', $req->deviceId);
+        }catch(Exception $e){
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
