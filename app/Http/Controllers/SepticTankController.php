@@ -1049,6 +1049,8 @@ class SepticTankController extends Controller
             $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->tollFreeNo = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
+            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("parent_website");
             $payDetails->paymentAgainst = "Water Tanker";
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {

@@ -2009,9 +2009,9 @@ class WaterTankerController extends Controller
             $data['noOfCapacity'] = WtCapacity::select('*')->count();
             $data['userName'] = $req->auth['user_name'];
             $data['userEmail'] = $req->auth['email'];
-            return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110161", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110161", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -2057,9 +2057,9 @@ class WaterTankerController extends Controller
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
-            return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency Booking List !!!", $f_list, "110164", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110155", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110164", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -2086,33 +2086,17 @@ class WaterTankerController extends Controller
                 throw new Exception("This Booking is Not Re-Assign, Because Vehicle Sent Successfully !!!");
             $mWtBooking->hydration_center_id = $req->hydrationCenterId;
             $mWtBooking->save();
-            return responseMsgs(true, "Re-Assign Hydration Center Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Re-Assign Hydration Center Successfully !!!", '', "110165", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110165", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
-    public function generateQRCode()
-    {
-        $name = "Bikash Kumar";
-        $email = "bikash@gmail.com";
-        $contact = "8271522513";
-
-        $data = [
-            'name' => $name,
-            'email' => $email,
-            'contact' => $contact,
-        ];
-
-        $qrCode = QrCode::size(300)->generate(json_encode($data));
-
-        return response($qrCode)->header('Content-Type', 'image/png');
-    }
-
+    
     /**
      * | Get Ulb list from juidco database from GuzzleHttp
-     * | Function - unknown
-     * | API - unknown
+     * | Function - 66
+     * | API - 66
      */
     public function ulbList()
     {
@@ -2134,10 +2118,11 @@ class WaterTankerController extends Controller
         }
     }
 
+    
     /**
      * | Get Master Data of Water Tanker
-     * | Function - unknown
-     * | API - unknown
+     * | Function - 67
+     * | API - 67
      */
     public function masterData(Request $req)
     {
@@ -2202,86 +2187,16 @@ class WaterTankerController extends Controller
 
                 // $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
             }
-            return responseMsgs(true, "Data Fetched !!!", $data1, "050112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $data1, "110167", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "050112", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110167", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
-    public function store($req)
-    {
-        try {
-            // Validation---@source-App\Http\Requests\AuthUserRequest
-            $user = new User;
-            $this->saving($user, $req);                     // Storing data using Auth trait
-            $user->password = Hash::make($req['password']);
-            $user->save();
-            return  $user->id;
-        } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "");
-        }
-    }
-
-    /**
-     * Saving User Credentials 
-     */
-    public function saving($user, $request)
-    {
-        // $imageRelativePath = 'Uploads/User/Photo';
-        // $signatureRelativePath = 'Uploads/User/Signature';
-        $user->name = $request['name'];
-        $user->mobile = $request['mobile'];
-        $user->email = $request['email'];
-        // $user->ulb_id = $request->ulb;
-        if ($request['ulb']) {
-            $user->ulb_id = $request['ulb'];
-        }
-        if ($request['userType']) {
-            $user->user_type = $request['userType'];
-        }
-        // if ($request['description']) {
-        //     $user->description = $request['description'];
-        // }
-        // if ($request['workflowParticipant']) {
-        //     $user->workflow_participant = $request['workflowParticipant'];
-        // }
-        // if ($request->photo) {
-        //     $filename = explode('.', $request->photo->getClientOriginalName());
-        //     $document = $request->photo;
-        //     $imageName = $this->upload($filename[0], $document, $imageRelativePath);
-        //     $user->photo_relative_path = $imageRelativePath;
-        //     $user->photo = $imageName;
-        // }
-        // if ($request->signature) {
-        //     $filename = explode('.', $request->signature->getClientOriginalName());
-        //     $document = $request->signature;
-        //     $imageName = $this->upload($filename[0], $document, $signatureRelativePath);
-        //     $user->sign_relative_path = $signatureRelativePath;
-        //     $user->signature = $imageName;
-        // }
-
-        $token = Str::random(80);                       //Generating Random Token for Initial
-        $user->remember_token = $token;
-    }
-
-    /**
-     * | Image Document Upload
-     * | @param refImageName format Image Name like SAF-geotagging-id (Pass Your Ref Image Name Here)
-     * | @param requested image (pass your request image here)
-     * | @param relativePath Image Relative Path (pass your relative path of the image to be save here)
-     * | @return imageName imagename to save (Final Image Name with time and extension)
-     */
-    public function upload($refImageName, $image, $relativePath)
-    {
-        $extention = $image->getClientOriginalExtension();
-        $imageName = time() . '-' . $refImageName . '.' . $extention;
-        $image->move($relativePath, $imageName);
-
-        return $imageName;
-    }
-
-    /**
+     /**
      * | Payment Success or Failure of Water Tanker
+     * | Function - 68
+     * | API - 68
      */
     public function paymentSuccessOrFailure(Request $req)
     {
@@ -2313,12 +2228,91 @@ class WaterTankerController extends Controller
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 DB::commit();
-                return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
+                return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
+    }
+
+
+    /**======================================   Support Function ====================================================================== */
+
+    /**
+     * | Generate QR - Code
+     * | Function - 69 
+     */
+    public function generateQRCode()
+    {
+        $name = "Bikash Kumar";
+        $email = "bikash@gmail.com";
+        $contact = "8271522513";
+
+        $data = [
+            'name' => $name,
+            'email' => $email,
+            'contact' => $contact,
+        ];
+
+        $qrCode = QrCode::size(300)->generate(json_encode($data));
+
+        return response($qrCode)->header('Content-Type', 'image/png');
+    }
+
+    /**
+     * | Store user Details For Login in Users Table
+     * | Function - 70
+     */
+    public function store($req)
+    {
+        try {
+            // Validation---@source-App\Http\Requests\AuthUserRequest
+            $user = new User;
+            $this->saving($user, $req);                     // Storing data using Auth trait
+            $user->password = Hash::make($req['password']);
+            $user->save();
+            return  $user->id;
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
+        }
+    }
+
+    /**
+     * | Saving User Credentials 
+     * | Function - 71 
+     */
+    public function saving($user, $request)
+    {
+        $user->name = $request['name'];
+        $user->mobile = $request['mobile'];
+        $user->email = $request['email'];
+        // $user->ulb_id = $request->ulb;
+        if ($request['ulb']) {
+            $user->ulb_id = $request['ulb'];
+        }
+        if ($request['userType']) {
+            $user->user_type = $request['userType'];
+        }
+
+        $token = Str::random(80);                       //Generating Random Token for Initial
+        $user->remember_token = $token;
+    }
+
+    /**
+     * | Image Document Upload
+     * | @param refImageName format Image Name like SAF-geotagging-id (Pass Your Ref Image Name Here)
+     * | @param requested image (pass your request image here)
+     * | @param relativePath Image Relative Path (pass your relative path of the image to be save here)
+     * | @return imageName imagename to save (Final Image Name with time and extension)
+     */
+    public function upload($refImageName, $image, $relativePath)
+    {
+        $extention = $image->getClientOriginalExtension();
+        $imageName = time() . '-' . $refImageName . '.' . $extention;
+        $image->move($relativePath, $imageName);
+
+        return $imageName;
     }
     
     /**
@@ -2351,4 +2345,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
+
+    /** ================================================XXXXXXXXXXXXXXXXXXXXXXXXXXX===================================================================== */
 }
