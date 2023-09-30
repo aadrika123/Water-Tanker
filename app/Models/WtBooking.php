@@ -98,8 +98,6 @@ class WtBooking extends Model
     {
         return $list = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
-            // ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
-            // ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             ->select('wb.booking_no', 'wb.applicant_name', 'wb.payment_amount', 'wb.id as applicationId', 'wb.mobile', 'wb.email', 'wc.capacity')
             ->where('wb.id', $id)
             ->first();
@@ -123,8 +121,6 @@ class WtBooking extends Model
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            // ->leftjoin('ulb_masters as um', 'wb.ulb_id', '=', 'um.id')
-            // ->select('wb.booking_no','wb.booking_date','wb.payment_date', 'wb.applicant_name', 'wb.payment_amount', 'wb.id as applicationId', 'wb.mobile', 'wb.email',  'wb.payment_details', 'wc.capacity', 'whc.name as hydration_center_name')
             ->select('wb.*', 'wc.capacity', 'whc.name as hydration_center_name')
             ->where('wb.payment_id', $payId)
             ->first();

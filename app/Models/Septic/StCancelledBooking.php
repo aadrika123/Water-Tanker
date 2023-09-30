@@ -11,11 +11,10 @@ class StCancelledBooking extends Model
     use HasFactory;
 
     /**
-     * |        
+     * | Get List of Cancelled Septic tank     
      */
     public function getCancelledBookingList()
     {
-        // return $list=StCancelledBooking::select('*');
         return DB::table('st_cancelled_bookings as stcb')
             ->select('stcb.*', 'wtl.location')
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id');

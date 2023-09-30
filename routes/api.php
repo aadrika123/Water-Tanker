@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 /**
- * | Routers for Water Tanker
+ * | Routes for Water Tanker/Septic Tanker
  * | Created On - 23 May 2023 
  * | Created By - Bikash Kumar
- * | Module - 11 (Water Tanker)
- * | Status - Open
+ * | Module - 11 (Water Tanker/Septic Tank)
+ * | Status - Closed By Bikash Kumar ( 29 Sep 2023 )
  */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -40,7 +40,7 @@ Route::group(['middleware' => ['checkToken']], function () {
     /**
      * | Controller - 01
      * | Created By - Bikash Kumar
-     * | Status - Open
+     * | Status - Closed By Bikash Kumar ( 29 Sep 2023 )
      * | Module Id - 11 (Water Tanker)
      */
     Route::controller(WaterTankerController::class)->group(function () {
@@ -103,8 +103,8 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/delivered-water', 'deliveredWater');                                                          // 57 ( Delivered Water ) 
         Route::post('water-tanker/wt-agency-dashboard', 'wtAgencyDashboard');                                                   // 58 ( Agency Dashboard ) 
         Route::post('water-tanker/list-delivered-booking', 'listDeliveredBooking');                                             // 59 ( List Delivered Booking ) 
-        Route::post('water-tanker/generate-qr', 'generateQRCode');                                                              // 59 ( Qr code generator ) 
-        Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                              // 60 ( List Ulb Wise Agency ) 
+        // Route::post('water-tanker/generate-qr', 'generateQRCode');                                                           // 59 ( Qr code generator ) 
+        Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                              // 60 ( List Ulb Wise Location ) 
         Route::post('water-tanker/ulb-dashboard', 'ulbDashboard');                                                              // 61 ( Ulb Dashboard ) 
         Route::post('water-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                        // 62 ( Generate Payment Order Id For Water Tanker Payment ) 
         Route::post('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                              // 63 ( Get Payment Details By Payment Id )  
@@ -117,7 +117,7 @@ Route::group(['middleware' => ['checkToken']], function () {
     /**
      * | Controller - 02
      * | Created By - Bikash Kumar
-     * | Status - Open
+     * | Status - Closed By Bikash Kumar ( 29 Sep 2023 )
      * | Module Id - 11 (Septic Tanker)
      */
     Route::controller(SepticTankController::class)->group(function () {
@@ -135,17 +135,17 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/edit-driver', 'editDriver');                                                                 // 12 ( Update Driver Details)
         Route::post('septic-tanker/add-resource', 'addResource');                                                               // 13 ( Add Resource )
         Route::post('septic-tanker/list-resource', 'listResource');                                                             // 14 ( list Resource )
-        Route::post('septic-tanker/get-resource-details-by-id', 'getResourceDetailsById');                                      // 15 ( Get Agency Details By Id )
+        Route::post('septic-tanker/get-resource-details-by-id', 'getResourceDetailsById');                                      // 15 ( Get Resource Details By Id )
         Route::post('septic-tanker/edit-resource', 'editResource');                                                             // 16 ( Edit Resource )
         Route::post('septic-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');                              // 17 ( Vehicle Driver Master ULB Wise )
         Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                                                  // 18 ( Septic Tank Cleaned )
         Route::post('septic-tanker/list-cleaned-booking', 'listCleanedBooking');                                                // 19 ( List Cleaned Booking)
-        Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                       // 20 ( Ulb Dashboard ) 
+        Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                       // 20 ( Generate Payment Order ID ) 
         Route::post('septic-tanker/list-applied-and-cancelled-application', 'listAppliedAndCancelledApplication');              // 21 ( List Applied and cancelled applications ) 
         Route::post('septic-tanker/add-capacity', 'addCapacity');                                                               // 22 ( Add Capacity ) 
         Route::post('septic-tanker/list-capacity', 'listCapacity');                                                             // 23 ( List Capacity )
         Route::post('septic-tanker/get-capacity-details-by-id', 'getCapacityDetailsById');                                      // 24 ( Get Capacity Details By Id )
-        Route::post('septic-tanker/edit-capacity', 'editCapacity');                                                             // 25 ( Edit Resource )
+        Route::post('septic-tanker/edit-capacity', 'editCapacity');                                                             // 25 ( Edit Capacity )
         Route::post('septic-tanker/add-capacity-rate', 'addCapacityRate');                                                      // 26 ( Add Capacity Rate )
         Route::post('septic-tanker/list-capacity-rate', 'listCapacityRate');                                                    // 27 ( List Capacity Rate )
         Route::post('septic-tanker/get-capacity-rate-details-by-id', 'getCapacityRateDetailsById');                             // 28 ( Get Capacity Rate Details By Id ) 
@@ -153,5 +153,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/get-capacity-list-for-booking', 'getCapacityListForBooking');                                // 30 ( Get Capacity List For Booking ) 
         Route::post('septic-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                             // 31 ( Get Payment Details By Payment Id )  
         Route::post('septic-tanker/list-buliding-type', 'listBuildingType');                                                    // 32 ( Get List of All Type of Building )  
+        Route::post('septic-tanker/list-ulb-wise-location', 'listUlbwiseLocation');                                             // 33 ( List ULB Wise Location )  
     });
 });

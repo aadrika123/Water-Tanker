@@ -40,7 +40,7 @@ class WaterTankerController extends Controller
     protected $_base_url;
     protected $_paramId;
     protected $_ulbs;
-    protected $_ulbLogoUrl;
+    protected $_ulbLogoUrl;             // ULB Logo URL
 
     public function __construct()
     {
@@ -298,27 +298,9 @@ class WaterTankerController extends Controller
             $list = $mWtHydrationCenter->getHydrationCenterList($req);
             $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
             $ulb = $this->_ulbs;
-            // $ulbId = "";
-            // $bearerToken = (collect(($req->headers->all())['authorization'] ?? "")->first());
-            // $contentType = (collect(($req->headers->all())['content-type'] ?? "")->first());
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->date = Carbon::createFromFormat('Y-m-d H:i:s', $val->created_at)->format('d-m-Y');
-                // if ($ulbId != $val["ulb_id"]) {
-                //     $wardRespons = Http::withHeaders(
-                //         [
-                //             "Authorization" => "Bearer $bearerToken",
-                //             "contentType" => "$contentType",
-                //         ]
-                //     )
-                //         ->post(
-                //             $this->_base_url . "api/workflow/getWardByUlb",
-                //             ["ulbId" => $val["ulb_id"]]
-                //         );
-                //     $response = collect(json_decode($wardRespons->getBody()->getContents()));
-                //     $wards = collect($response["data"] ?? []);
-                // }
-                // $val["ward_no"] = $wards->where("id", $val["agency_ward_id"])->value("ward_name");
                 return $val;
             });
             return responseMsgs(true, "Hydration Center List !!!", $f_list, "110108", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -540,8 +522,6 @@ class WaterTankerController extends Controller
 
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];
-            // $idGeneration = new PrefixIdGenerator($this->_paramId, $req->ulbId);
-            // $applicationNo = $idGeneration->generate();
             $req->merge($bookingNo);
 
             $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);
@@ -594,20 +574,12 @@ class WaterTankerController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
                     $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                     return $val;
                 }),
             ];
-
-            // $f_list =collect($list->items())->map(function ($val) use ($ulb) {
-            //     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
-            //     $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
-            //     return $val;
-            // });
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -666,7 +638,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 $val->is_ulb_vehicle = $val->is_ulb_vehicle == 1 ? 'Yes' : 'No';
                 return $val;
             });
@@ -700,8 +672,6 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtBooking = WtBooking::find($req->applicationId);
-            // if (Carbon::now()->format('Y-m-d') > $mWtBooking->delivery_date)
-            //     throw new Exception('Today Booking is Not Cancelled !!!');
             if ($mWtBooking->is_vehicle_sent > 0)
                 throw new Exception('This Booking is Not Cancel, Because Tanker is Going to Re-fill !!!');
             $cancelledBooking = $mWtBooking->replicate();                                   // Replicate Data fromm Booking to Cancel table
@@ -880,7 +850,7 @@ class WaterTankerController extends Controller
             $mWtAgency->dispatch_capacity = $req->dispatchCapacity;
             $mWtAgency->ulb_id = $req->ulbId;
             $mWtAgency->save();
-            return responseMsgs(true, "Agency Updated Successfully !!!", '', "110123", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency Updated Successfully !!!", '', "110124", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110124", "1.0", "", 'POST', $req->deviceId ?? "");
         }
@@ -896,8 +866,6 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'hydrationCenterId' => 'required|integer',
             'name' => 'required|string',
-            // 'ulbId' => 'required|integer|digits_between:1,200',
-            // 'wardId' => 'required|integer|digits_between:1,200',
             'waterCapacity' => 'required|numeric',
             'address' => 'required|string',
         ]);
@@ -929,8 +897,6 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'resourceId' => 'required|integer',
-            // 'ulbId' => 'required|integer|digits_between:1,200',
-            // 'agencyId' => 'nullable|integer',
             'vehicleName' => 'required|string|max:200',
             'vehicleNo' => 'required|string|max:16',
             'capacityId' => 'required|integer|digits_between:1,150',
@@ -995,7 +961,6 @@ class WaterTankerController extends Controller
     public function editCapacityRate(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            // 'ulbId' => 'required|integer',
             'capacityId' => 'required|integer',
             'capacityRateId' => 'required|integer',
             'rate' => 'required|integer|gt:0',
@@ -1256,7 +1221,6 @@ class WaterTankerController extends Controller
     public function editDriverVehicleMap(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            // 'ulbId' => 'required|integer|digits_between:1,200',
             'driverId' => 'required|integer',
             'vehicleId' => 'required|integer',
             'mapId' => 'required|integer',
@@ -1321,13 +1285,11 @@ class WaterTankerController extends Controller
         try {
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))->get();
-            // $list=$list->where('agency_id','!=',NULL)->get();
-            // $list=$list->where('agency_id',$agencyId)->get();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
@@ -1347,7 +1309,6 @@ class WaterTankerController extends Controller
         try {
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->get();
-            // $list=$list->where('hydration_center_id',$hydrationCenterId)->get();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -1371,13 +1332,12 @@ class WaterTankerController extends Controller
     public function addLocation(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            // 'ulbId' => 'required|integer',
             'location' => 'required|string|max:255|unique:wt_locations',
+            'isInUlb' => 'required|integer',
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
-        // return $req;
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
@@ -1405,7 +1365,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110143", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1445,6 +1405,7 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'locationId' => 'required|integer',
+            'isInUlb' => 'required|integer',
             'location' => 'required|string',
         ]);
         if ($validator->fails()) {
@@ -1457,6 +1418,7 @@ class WaterTankerController extends Controller
                 throw new Exception("No Data Found !!!");
             $mWtLocation->ulb_id = $req->ulbId;
             $mWtLocation->location = $req->location;
+            $mWtLocation->is_in_ulb = $req->isInUlb;
             $mWtLocation->save();
             return responseMsgs(true, "Update Location Successfully !!!", '', "110145", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1511,7 +1473,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location Hydration Map List !!!", $f_list, "110147", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1593,8 +1555,8 @@ class WaterTankerController extends Controller
         try {
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
-            $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d/m/Y');
-            $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d/m/Y');
+            $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
+            $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Booking Details!!!", $list, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1643,8 +1605,8 @@ class WaterTankerController extends Controller
 
     /**
      * | List of Re-Assign Booking
-     * | Function - 51
-     * | API - 51
+     * | Function - 52
+     * | API - 52
      */
     public function listReassignBooking(Request $req)
     {
@@ -1653,23 +1615,22 @@ class WaterTankerController extends Controller
             $list = $mWtReassignBooking->listReassignBooking();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
-                // $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
                 $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
                 $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
-            return responseMsgs(true, "Re-Assign Booking List !!!", $list, "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Re-Assign Booking List !!!", $list, "110152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110152", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Agency List Ulb Wise
-     * | Function - 52
-     * | API - 52
+     * | Function - 53
+     * | API - 53
      */
     public function listUlbWiseAgency(Request $req)
     {
@@ -1692,21 +1653,21 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listAgency'] = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d/m/Y');
+                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
                 return $val;
             });
             $f_list['listLocation'] = $list1;
             $f_list['listCapacity'] = $listCapacity;
-            return responseMsgs(true, "Agency List !!!",  $f_list, "110152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Agency List !!!",  $f_list, "110153", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110152", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110153", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Payment Details By Id
-     * | Function - 53
-     * | API - 53
+     * | Function - 54
+     * | API - 54
      */
     public function getPaymentDetailsById(Request $req)
     {
@@ -1725,62 +1686,12 @@ class WaterTankerController extends Controller
             if (!$data)
                 throw new Exception("Application Not Found");
 
-            return responseMsgs(true, "Booking Details for payment !!!",  $data, "110153", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
-        } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110153", "1.0", "", 'POST', $req->deviceId ?? "");
-        }
-    }
-
-    /**
-     * | Generate Payment Order ID
-     * | Function - 54
-     * | API - 54
-     */
-    public function generatePaymentOrderId(Request $req)
-    {
-        $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
-        ]);
-        if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
-        }
-        try {
-            // Variable initialization
-            $mWtBooking = WtBooking::find($req->applicationId);
-            $reqData = [
-                "id" => $mWtBooking->id,
-                'amount' => $mWtBooking->payment_amount,
-                'workflowId' => "0",
-                'ulbId' => $mWtBooking->ulb_id,
-                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
-                'auth' => $req->auth,
-            ];
-            $paymentUrl = Config::get('constants.PAYMENT_URL');
-            $refResponse = Http::withHeaders([
-                "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
-            ])
-                ->withToken($req->bearerToken())
-                ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
-
-            $data = json_decode($refResponse);
-
-            if (!$data)
-                throw new Exception("Payment Order Id Not Generate");
-            if ($data->status == false) {
-                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110154", "1.0", "", 'POST', $req->deviceId ?? "");
-            }
-
-            $data->name = $mWtBooking->applicant_name;
-            $data->email = $mWtBooking->email;
-            $data->contact = $mWtBooking->mobile;
-            $data->type = "Water Tanker";
-            $mWtBooking->order_id =  $data->data->orderId;
-            $mWtBooking->save();
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Details for payment !!!",  $data, "110154", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
 
     /**
      * | Get Applied Application 
@@ -1950,8 +1861,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
                 $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                 return $val;
             });
@@ -1976,11 +1887,11 @@ class WaterTankerController extends Controller
         }
         try {
             $mWtLocation = new WtLocation();
-            $list = $mWtLocation->listLocation($req->ulbId);
+            $list = collect($mWtLocation->listLocation($req->ulbId))->where('is_in_ulb','1')->values();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2012,6 +1923,90 @@ class WaterTankerController extends Controller
             return responseMsgs(true, "Ulb Dashboard Data !!!", $data, "110161", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110161", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Generate Payment Order ID
+     * | Function - 62
+     * | API - 62
+     */
+    public function generatePaymentOrderId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtBooking = WtBooking::find($req->applicationId);
+            $reqData = [
+                "id" => $mWtBooking->id,
+                'amount' => $mWtBooking->payment_amount,
+                'workflowId' => "0",
+                'ulbId' => $mWtBooking->ulb_id,
+                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'auth' => $req->auth,
+            ];
+            $paymentUrl = Config::get('constants.PAYMENT_URL');
+            $refResponse = Http::withHeaders([
+                "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
+            ])
+                ->withToken($req->bearerToken())
+                ->post($paymentUrl . 'api/payment/generate-orderid', $reqData);
+
+            $data = json_decode($refResponse);
+
+            if (!$data)
+                throw new Exception("Payment Order Id Not Generate");
+            if ($data->status == false) {
+                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110162", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            $data->name = $mWtBooking->applicant_name;
+            $data->email = $mWtBooking->email;
+            $data->contact = $mWtBooking->mobile;
+            $data->type = "Water Tanker";
+            $mWtBooking->order_id =  $data->data->orderId;
+            $mWtBooking->save();
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110162", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110162", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Payment Details By Payment Id
+     * | Function - 63
+     * | API - 63
+     */
+    public function getPaymentDetailsByPaymentId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'paymentId' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mWtBooking = new WtBooking();
+            $payDetails = $mWtBooking->getPaymentDetails($req->paymentId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
+            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->paymentAgainst = "Water Tanker";
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
         }
     }
 
@@ -2092,7 +2087,7 @@ class WaterTankerController extends Controller
         }
     }
 
-    
+
     /**
      * | Get Ulb list from juidco database from GuzzleHttp
      * | Function - 66
@@ -2118,7 +2113,7 @@ class WaterTankerController extends Controller
         }
     }
 
-    
+
     /**
      * | Get Master Data of Water Tanker
      * | Function - 67
@@ -2167,9 +2162,9 @@ class WaterTankerController extends Controller
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
                     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
-                    
+
                 $mWtLocation = new WtLocation();
-                $location = $mWtLocation->listLocation($req->auth['ulb_id']);
+                $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb','1')->values();
                 $data1['location'] = $location;
 
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
@@ -2193,7 +2188,7 @@ class WaterTankerController extends Controller
         }
     }
 
-     /**
+    /**
      * | Payment Success or Failure of Water Tanker
      * | Function - 68
      * | API - 68
@@ -2216,7 +2211,7 @@ class WaterTankerController extends Controller
                     $mWtBooking->save();
                     $msg = "Payment Accepted Successfully !!!";
                 }
-              $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
+                $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
@@ -2232,13 +2227,12 @@ class WaterTankerController extends Controller
             }
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(false, $e->getMessage(), "", '110168', 01, "", 'POST', $req->deviceId);
         }
     }
 
 
     /**======================================   Support Function ====================================================================== */
-
     /**
      * | Generate QR - Code
      * | Function - 69 
@@ -2313,37 +2307,6 @@ class WaterTankerController extends Controller
         $image->move($relativePath, $imageName);
 
         return $imageName;
-    }
-    
-    /**
-     * | Get Payment Details By Payment Id
-     */
-    public function getPaymentDetailsByPaymentId(Request $req)
-    {
-        $validator = Validator::make($req->all(), [
-            'paymentId' => 'required|string',
-        ]);
-        if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
-        }
-        try {
-            // Variable initialization
-            $ulb = $this->ulbList();
-            $mWtBooking = new WtBooking();
-            $payDetails = $mWtBooking->getPaymentDetails($req->paymentId);
-            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
-            if (!$payDetails)
-                throw new Exception("Payment Details Not Found !!!");
-                $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
-                $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
-                $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
-            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
-            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
-            $payDetails->paymentAgainst = "Water Tanker";
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
-        } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
-        }
     }
 
     /** ================================================XXXXXXXXXXXXXXXXXXXXXXXXXXX===================================================================== */

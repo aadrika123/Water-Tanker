@@ -69,10 +69,12 @@ class WtLocationHydrationMap extends Model
      */
     public function getLocationMapList($location)
     {
-        $list = WtLocationHydrationMap::select('*')->where('location_id', $location)->orderBy('rank', 'asc')->get();
-        return $list;
+        return WtLocationHydrationMap::select('*')->where('location_id', $location)->orderBy('rank', 'asc')->get();
     }
 
+    /**
+     * | Get List Location
+     */
     public function listLocation($ulbId)
     {
         $list = DB::table('wt_location_hydration_maps as wlhm')

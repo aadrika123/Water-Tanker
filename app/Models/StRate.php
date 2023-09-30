@@ -12,7 +12,7 @@ class StRate extends Model
     protected $guarded = [];
 
     /**
-     * | Get Septic Tank amount
+     * | Get Septic Tank amount for Booking
      */
     public function getAmount($ulbId, $ulbArea, $buildingType)
     {

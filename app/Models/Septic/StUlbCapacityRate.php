@@ -93,7 +93,6 @@ class StUlbCapacityRate extends Model
     public function getCapacityListForBooking($ulbId, $isResidential)
     {
         $capacityids = StUlbCapacityRate::select('capacity_id')->where(['ulb_id' => $ulbId, 'is_residential' => $isResidential])->get();
-        // return $capacityids;
         $cap = collect();
         $capacity = $capacityids->map(function ($capacity, $key) use ($cap) {
             $cap = StCapacity::select('id', 'capacity')->where('id', $capacity['capacity_id'])->first();

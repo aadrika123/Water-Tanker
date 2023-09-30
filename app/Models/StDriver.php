@@ -31,7 +31,6 @@ class StDriver extends Model
         ];
     }
 
-
     /**
      * | Store Driver information in Database
      */

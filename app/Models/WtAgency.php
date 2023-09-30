@@ -63,6 +63,9 @@ class WtAgency extends Model
             ->first();
     }
 
+    /**
+     * | Get All Agency For Master Data
+     */
     public function getAllAgencyForMasterData($ulbId){
         return self::select("id","agency_name")
             ->where('ulb_id',$ulbId)

@@ -11,6 +11,7 @@ use App\Models\Septic\StCapacity;
 use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StDriver;
 use App\Models\StResource;
+use App\Models\WtLocation;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -52,17 +53,17 @@ class SepticTankController extends Controller
             $req->merge($bookingNo);
 
             // $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->capacityId,$req->isResidential);
-            $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->ulbArea,$req->buildingType);
+            $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->ulbArea, $req->buildingType);
             $paymentAmount = ['paymentAmount' => $payAmt];
             $req->merge($paymentAmount);
 
             DB::beginTransaction();
             $res = $mStBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
-            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110101", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110201", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110101", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110201", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -95,9 +96,9 @@ class SepticTankController extends Controller
                 $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
-            return responseMsgs(true, "Septic Tank Booking List !!!", $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Booking List !!!", $f_list, "110202", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110102", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110202", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -130,9 +131,9 @@ class SepticTankController extends Controller
                 $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
-            return responseMsgs(true, "Septic Tank Assigned Booking List !!!", $f_list, "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Assigned Booking List !!!", $f_list, "110203", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110203", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -161,9 +162,9 @@ class SepticTankController extends Controller
                 $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Assign Successfully !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assign Successfully !!!", $f_list, "110204", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110204", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -196,9 +197,9 @@ class SepticTankController extends Controller
             $mStBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mStBooking->assign_status = '1';
             $mStBooking->save();
-            return responseMsgs(true, "Assignment Booking Successfully !!!", "", "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Assignment Booking Successfully !!!", "", "110205", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110205", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -231,9 +232,9 @@ class SepticTankController extends Controller
             $cancelledBooking->setTable('st_cancelled_bookings');
             $cancelledBooking->save();
             $mStBooking->delete();
-            return responseMsgs(true, "Booking Cancelled Successfully !!!", "", "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Cancelled Successfully !!!", "", "110206", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110206", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -266,9 +267,9 @@ class SepticTankController extends Controller
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110107", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110207", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110107", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110207", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -296,9 +297,9 @@ class SepticTankController extends Controller
             $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
             $list->cleaning_date = Carbon::createFromFormat('Y-m-d', $list->cleaning_date)->format('d-m-Y');
 
-            return responseMsgs(true, "Details Featch Successfully!!!", $list, "110108", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Details Featch Successfully!!!", $list, "110208", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110108", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110208", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -332,10 +333,10 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
             DB::commit();
-            return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Added Successfully !!!",  '', "110209", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110209", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -361,9 +362,9 @@ class SepticTankController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Driver List !!!", $f_list->values(), "110110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver List !!!", $f_list->values(), "110210", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110110", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110210", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -386,9 +387,9 @@ class SepticTankController extends Controller
             $list = $mStDriver->getDriverDetailsById($req->driverId);
             if (!$list)
                 throw new Exception("No Records Found !!!");
-            return responseMsgs(true, "Data Fetched !!!", $list, "110111", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110211", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110111", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110211", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -427,9 +428,9 @@ class SepticTankController extends Controller
             $mStDriver->driver_dob = $req->driverDob;
             $mStDriver->driver_license_no = $req->driverLicenseNo;
             $mStDriver->save();
-            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110212", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110112", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110212", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -460,10 +461,10 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStResource->storeResourceInfo($req);                                       // Store Resource Information in Model 
             DB::commit();
-            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110113", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resoure Added Successfully !!!",  '', "110213", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110113", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110213", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -487,9 +488,9 @@ class SepticTankController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110114", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource List !!!", $f_list->values(), "110214", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110114", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110214", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -510,9 +511,9 @@ class SepticTankController extends Controller
             // Variable initialization
             $mStResource = new StResource();
             $list = $mStResource->getResourceById($req->resourceId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110215", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110215", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -544,9 +545,9 @@ class SepticTankController extends Controller
             $mWtResource->capacity_id = $req->capacityId;
             $mWtResource->resource_type = $req->resourceType;
             $mWtResource->save();
-            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110216", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110216", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -568,9 +569,9 @@ class SepticTankController extends Controller
             $driver = $mStDriver->getDriverListForAssign()->where('ulb_id', $req->auth['ulb_id']);
             $f_list['listResource'] = $resource->values();
             $f_list['listDriver'] = $driver->values();
-            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110117", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110217", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110117", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110217", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -597,9 +598,9 @@ class SepticTankController extends Controller
                 throw new Exception("No Data Found !!!");
             $mStBooking->assign_status = '2';
             $mStBooking->save();
-            return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110218", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110118", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110218", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -640,35 +641,9 @@ class SepticTankController extends Controller
                 $val->cleaning_status = $val->assign_status == '2' ? "Cleaned" : 'Pending';
                 return $val;
             });
-            return responseMsgs(true, "Septic Tank Cleaned Booking List !!!", $f_list, "110119", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Septic Tank Cleaned Booking List !!!", $f_list, "110219", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110119", "1.0", "", 'POST', $req->deviceId ?? "");
-        }
-    }
-
-    /**
-     * | Get Ulb list from juidco database from GuzzleHttp
-     * | Function - unknown
-     * | API - unknown
-     */
-    public function ulbList()
-    {
-        $redis = Redis::connection();
-        try {
-            // Variable initialization
-            $data1 = json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
-            if (!$data1) {                                                   // If Cache Memory is not available
-                $data1 = array();
-
-                $client = new \GuzzleHttp\Client();
-                $request = $client->get($this->_base_url . 'api/get-all-ulb'); // Url of your choosing
-                $data1 = $request->getBody()->getContents();
-                $data1 = json_decode($data1, true)['data'];
-                $data1 = collect($data1);
-                $redis->set('ulb_masters', json_encode($data1));      // Set Key on ULB masters
-            }
-            return $data1;
-        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110219", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -708,7 +683,7 @@ class SepticTankController extends Controller
             if (!$data)
                 throw new Exception("Payment Order Id Not Generate");
             if ($data->status == false) {
-                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110154", "1.0", "", 'POST', $req->deviceId ?? "");
+                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110220", "1.0", "", 'POST', $req->deviceId ?? "");
             }
 
             $data->name = $mStBooking->applicant_name;
@@ -718,9 +693,9 @@ class SepticTankController extends Controller
 
             $mStBooking->order_id =  $data->data->orderId;
             $mStBooking->save();
-            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110154", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110220", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110220", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -768,45 +743,16 @@ class SepticTankController extends Controller
                 $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
-            return responseMsgs(true, "Data Fetch Successfully !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetch Successfully !!!", $f_list, "110221", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110221", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
-    // /**
-    //  * | Payment Success or Failure of Septic Tanker
-    //  */
-    // public function paymentSuccessOrFailure(Request $req)
-    // {
-    //     if ($req->orderId != NULL && $req->paymentId != NULL) {
-    //         try {
-    //             // Variable initialization
-    //             DB::beginTransaction();
-    //             $mStBooking = StBooking::find($req->id);
-
-    //             $mStBooking->payment_date = Carbon::now();
-    //             $mStBooking->payment_mode = "Online";
-    //             $mStBooking->payment_status = 1;
-    //             $mStBooking->payment_id = $req->paymentId;
-    //             $mStBooking->payment_details = $req->all();
-    //             $mStBooking->save();
-
-    //             DB::commit();
-
-    //             $msg = "Payment Accepted Successfully !!!";
-    //             return responseMsgs(true, $msg, "", '050205', 01, responseTime(), 'POST', $req->deviceId);
-    //         } catch (Exception $e) {
-    //             DB::rollBack();
-    //             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
-    //         }
-    //     }
-    // }
-    
     /**
      * | Add Capacity
-     * | Function - 03
-     * | API - 03
+     * | Function - 22
+     * | API - 22
      */
     public function addCapacity(Request $req)
     {
@@ -822,18 +768,18 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStCapacity->storeCapacity($req);                                       // Store Capacity Request
             DB::commit();
-            return responseMsgs(true, "Capacity Added Successfully !!!", '', "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Added Successfully !!!", '', "110222", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
             // return $e->getMessage();
-            return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110222", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Capacity List
-     * | Function - 04
-     * | API - 04
+     * | Function - 23
+     * | API - 23
      */
     public function listCapacity(Request $req)
     {
@@ -845,16 +791,16 @@ class SepticTankController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Capacity List !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity List !!!", $f_list, "110223", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110104", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110223", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Resource Details By Id
-     * | Function - 33
-     * | API - 33
+     * | Function - 24
+     * | API - 24
      */
     public function getCapacityDetailsById(Request $req)
     {
@@ -868,16 +814,16 @@ class SepticTankController extends Controller
             // Variable initialization
             $mStCapacity = new StCapacity();
             $list = $mStCapacity->getCapacityById($req->capacityId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "110133", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110224", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110133", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110224", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Update Details of Capacity
-     * | Function - 27
-     * | API - 27
+     * | Function - 25
+     * | API - 25
      */
     public function editCapacity(Request $req)
     {
@@ -894,16 +840,16 @@ class SepticTankController extends Controller
                 throw new Exception("No Data Found !!!");
             $mWtCapacity->capacity = $req->capacity;
             $mWtCapacity->save();
-            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110225", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110127", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110225", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Add Capacity Rate ULB wise
-     * | Function - 05
-     * | API - 05
+     * | Function - 26
+     * | API - 26
      */
     public function addCapacityRate(Request $req)
     {
@@ -922,17 +868,17 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStUlbCapacityRate->storeCapacityRate($req);                                       // Store Capacity Rate Request
             DB::commit();
-            return responseMsgs(true, "Capacity Rate Added Successfully !!!",  '', "110105", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate Added Successfully !!!",  '', "110226", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110105", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110226", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Capacity Rate list
-     * | Function - 06
-     * | API - 06
+     * | Function - 27
+     * | API - 27
      */
     public function listCapacityRate(Request $req)
     {
@@ -944,16 +890,16 @@ class SepticTankController extends Controller
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
             });
-            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110227", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110106", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110227", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
-    
+
     /**
      * | Get Resource Details By Id
-     * | Function - 34
-     * | API - 34
+     * | Function - 28
+     * | API - 28
      */
     public function getCapacityRateDetailsById(Request $req)
     {
@@ -967,16 +913,16 @@ class SepticTankController extends Controller
             // Variable initialization
             $mWtUlbCapacityRate = new StUlbCapacityRate();
             $list = $mWtUlbCapacityRate->getCapacityRateDetailsById($req->capacityRateId);
-            return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Data Fetched !!!", $list, "110228", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110228", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Update Details of Capacity Rates
-     * | Function - 28
-     * | API - 28
+     * | Function - 29
+     * | API - 29
      */
     public function editCapacityRate(Request $req)
     {
@@ -998,18 +944,19 @@ class SepticTankController extends Controller
             $mWtUlbCapacityRate->capacity_id = $req->capacityId;
             $mWtUlbCapacityRate->rate = $req->rate;
             $mWtUlbCapacityRate->save();
-            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110229", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110128", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110229", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
     /**
      * | Get Capacity list For Booking
-     * | Function - 28
-     * | API - 28
+     * | Function - 30
+     * | API - 30
      */
-    public function getCapacityListForBooking(Request $req){
+    public function getCapacityListForBooking(Request $req)
+    {
         $validator = Validator::make($req->all(), [
             'ulbId' => 'required|integer',
             'isResidential' => 'required|integer',
@@ -1020,15 +967,17 @@ class SepticTankController extends Controller
         try {
             // Variable initialization
             $mWtUlbCapacityRate = new StUlbCapacityRate();
-            $list = $mWtUlbCapacityRate->getCapacityListForBooking($req->ulbId,$req->isResidential);
-            return responseMsgs(true, "Data Fetched !!!", $list, "110134", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            $list = $mWtUlbCapacityRate->getCapacityListForBooking($req->ulbId, $req->isResidential);
+            return responseMsgs(true, "Data Fetched !!!", $list, "110230", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110134", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), "", "110230", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
-     /**
+    /**
      * | Get Payment Details By Payment Id
+     * | Function - 31
+     * | API - 31
      */
     public function getPaymentDetailsByPaymentId(Request $req)
     {
@@ -1052,22 +1001,80 @@ class SepticTankController extends Controller
             $payDetails->tollFreeNo = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
             $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("parent_website");
             $payDetails->paymentAgainst = "Water Tanker";
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110231', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(false, $e->getMessage(), "", '110231', 01, "", 'POST', $req->deviceId);
         }
     }
 
     /**
      * | Get List Nuilding Type
+     * | Function - 32
+     * | API - 32
      */
-    public function listBuildingType(Request $req){
-        try{
-            $mBuildingType=new BuildingType();
-            $list=$mBuildingType->getAllBuildingType();
-            return responseMsgs(true, "Data Fetch Successfully !!!", $list, '050205', 01, responseTime(), 'POST', $req->deviceId);
-        }catch(Exception $e){
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+    public function listBuildingType(Request $req)
+    {
+        try {
+            $mBuildingType = new BuildingType();
+            $list = $mBuildingType->getAllBuildingType();
+            return responseMsgs(true, "Data Fetch Successfully !!!", $list, '110232', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '110232', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    /**
+     * | Get Ulb list from juidco database from GuzzleHttp  ===================================================
+     * | Function - 33
+     */
+    public function ulbList()
+    {
+        $redis = Redis::connection();
+        try {
+            // Variable initialization
+            $data1 = json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
+            if (!$data1) {                                                   // If Cache Memory is not available
+                $data1 = array();
+
+                $client = new \GuzzleHttp\Client();
+                $request = $client->get($this->_base_url . 'api/get-all-ulb'); // Url of your choosing
+                $data1 = $request->getBody()->getContents();
+                $data1 = json_decode($data1, true)['data'];
+                $data1 = collect($data1);
+                $redis->set('ulb_masters', json_encode($data1));      // Set Key on ULB masters
+            }
+            return $data1;
+        } catch (Exception $e) {
+        }
+    }
+
+    /**
+     * | Get ULB Wise Location List
+     * | Function - 34
+     * | API - 34
+     */
+    public function listUlbWiseLocation(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'ulbId' => 'required|integer',
+            'isInUlb' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $mWtLocation = new WtLocation();
+            $list = $mWtLocation->listLocationforSepticTank($req->ulbId,$req->isInUlb);
+            // $list = collect($list)->where('inside_ulb',$req->insideUlb);
+            $ulb = $this->_ulbs;
+            $f_list = $list->map(function ($val) use ($ulb) {
+                $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                return $val;
+            });
+            return responseMsgs(true, "Location List !!!", $f_list, "110234", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110234", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 }
