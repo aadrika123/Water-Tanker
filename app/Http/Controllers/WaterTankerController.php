@@ -2016,7 +2016,7 @@ class WaterTankerController extends Controller
         }
     }
 
-    public function getPaymentDetailsByPaymentId($tranId, Request $req)
+    public function getPaymentDetailsByPaymentId(Request $req)
     {
         $validator = Validator::make($req->all(), [
             'paymentId' => 'required|string',
