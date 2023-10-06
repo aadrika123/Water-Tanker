@@ -2009,8 +2009,7 @@ class WaterTankerController extends Controller
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
-            // $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->payment_date)->format('d-m-Y');
-            // $payDetails->delivery_time = $payDetails->payment_time;
+            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
