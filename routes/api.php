@@ -108,7 +108,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/list-ulb-wise-location', 'listUlbWiseLocation');                                              // 60 ( List Ulb Wise Location ) 
         Route::post('water-tanker/ulb-dashboard', 'ulbDashboard');                                                              // 61 ( Ulb Dashboard ) 
         Route::post('water-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                        // 62 ( Generate Payment Order Id For Water Tanker Payment ) 
-        Route::get('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                              // 63 ( Get Payment Details By Payment Id )  
+        Route::post('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                              // 63 ( Get Payment Details By Payment Id )  
         Route::post('water-tanker/list-applied-and-cancelled-application', 'listAppliedAndCancelledApplication');               // 64 ( List Applied and cancelled applications ) 
         Route::post('water-tanker/re-assign-hydration-center', 'reAssignHydrationCenter');                                      // 65 ( Re-Assign Hydration Center ) 
         Route::post('water-tanker/list-ulb', 'ulbList');                                                                        // 66 ( Ulb List )
