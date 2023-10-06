@@ -527,6 +527,11 @@ class WaterTankerController extends Controller
             $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);
             $paymentAmount = ['paymentAmount' => $payAmt];
             $req->merge($paymentAmount);
+
+            $agencyId = $mCalculations->getAgency($req->ulbId);
+            $agency = ['agencyId' => $agencyId];
+            $req->merge($agency);
+
             DB::beginTransaction();
             $res = $mWtBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
@@ -1642,20 +1647,20 @@ class WaterTankerController extends Controller
         }
         try {
             // Variable initialization
-            $mWtAgency = new WtAgency();
-            $list = $mWtAgency->getAllAgency()->where('ulb_id', $req->ulbId);
+            // $mWtAgency = new WtAgency();
+            // $list = $mWtAgency->getAllAgency()->where('ulb_id', $req->ulbId);
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
             $list1 = $mWtLocationHydrationMap->listLocation($req->ulbId);
 
             $mWtCapacity = new WtCapacity();
             $listCapacity = $mWtCapacity->getCapacityList();
 
-            $ulb = $this->_ulbs;
-            $f_list['listAgency'] = $list->map(function ($val) use ($ulb) {
-                $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
-                return $val;
-            });
+            // $ulb = $this->_ulbs;
+            // $f_list['listAgency'] = $list->map(function ($val) use ($ulb) {
+            //     $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
+            //     $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
+            //     return $val;
+            // });
             $f_list['listLocation'] = $list1;
             $f_list['listCapacity'] = $listCapacity;
             return responseMsgs(true, "Agency List !!!",  $f_list, "110153", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2004,6 +2009,8 @@ class WaterTankerController extends Controller
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
+            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->payment_date)->format('d-m-Y');
+            $payDetails->delivery_time = $payDetails->payment_time;
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);

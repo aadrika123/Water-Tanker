@@ -27,7 +27,7 @@ class StoreBookingRequest extends FormRequest
             'ulbId' => 'required|integer',
             // 'citizenId' => 'required|integer',
             'applicantName' => 'required|string|max:255',
-            'agencyId' => 'required|integer',
+            // 'agencyId' => 'required|integer',
             // 'bookingDate' => 'required|date_format:Y-m-d',
             'deliveryDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
             'deliveryTime' => 'required|date_format:H:i',

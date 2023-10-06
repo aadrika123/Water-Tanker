@@ -146,4 +146,11 @@ class Calculations
         $septicAmount=$mStRate->getAmount($ulbId, $ulbArea, $buildingType);
         return $septicAmount;
     }
+
+    /**
+     * | Get Agency Id FOr ULB
+     */
+    public function getAgency($ulbId){
+        return WtAgency::select('id')->where('ulb_id',$ulbId)->first()->id;
+    }
 }
