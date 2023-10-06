@@ -1987,7 +1987,36 @@ class WaterTankerController extends Controller
      * | Function - 63
      * | API - 63
      */
-    public function getPaymentDetailsByPaymentId(Request $req)
+    public function getPaymentDetailsByPaymentId1(Request $req, $tranId)
+    {
+        // $validator = Validator::make($req->all(), [
+        //     'paymentId' => 'required|string',
+        // ]);
+        // if ($validator->fails()) {
+        //     return ['status' => false, 'message' => $validator->errors()->first()];
+        // }
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mWtBooking = new WtBooking();
+            $payDetails = $mWtBooking->getPaymentDetails1($tranId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
+            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->paymentAgainst = "Water Tanker";
+            // $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    public function getPaymentDetailsByPaymentId($tranId, Request $req)
     {
         $validator = Validator::make($req->all(), [
             'paymentId' => 'required|string',

@@ -28,12 +28,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
 Route::group(['middleware' => ['auth.citizen', 'json.response', 'expireBearerToken']], function () {
 });
 
 Route::post('water-tanker/payment-success-or-failure', [WaterTankerController::class, 'paymentSuccessOrFailure']);            // 68 ( Update Payment Status After Update )
-// Route::get('water-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                              // 63 ( Get Payment Details By Payment Id )  
+Route::get('water-tanker/get-payment-details-by-pay-id/{tranId}', [WaterTankerController::class,'getPaymentDetailsByPaymentId1']);                              // 63 ( Get Payment Details By Payment Id )  
 // Route::post('septic-tanker/get-payment-details-by-pay-id', [SepticTankController::class, 'getPaymentDetailsByPaymentId']); 
 
 Route::group(['middleware' => ['checkToken']], function () {

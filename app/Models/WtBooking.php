@@ -115,6 +115,28 @@ class WtBooking extends Model
     /**
      * | Get Payment Details By Payment Id After Payments
      */
+    public function getPaymentDetails1($payId)
+    {
+       return $details = DB::table('wt_bookings as wb')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
+            ->select('wb.*', 'wc.capacity', 'whc.name as hydration_center_name')
+            ->where('wb.id', $payId)
+            // ->where('wb.payment_id', $payId)
+            ->first();
+
+        $details->payment_details = json_decode($details->payment_details);
+        $details->towards = "Water Tanker";
+        $details->payment_date = Carbon::createFromFormat('Y-m-d', $details->payment_date)->format('d-m-Y');
+        $details->booking_date = Carbon::createFromFormat('Y-m-d',  $details->booking_date)->format('d-m-Y');
+        return $details;
+    }
+
+    
+    /**
+     * | Get Payment Details By Payment Id After Payments
+     */
     public function getPaymentDetails($payId)
     {
         $details = DB::table('wt_bookings as wb')
