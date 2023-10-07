@@ -33,7 +33,7 @@ Route::group(['middleware' => ['auth.citizen', 'json.response', 'expireBearerTok
 
 Route::post('water-tanker/payment-success-or-failure', [WaterTankerController::class, 'paymentSuccessOrFailure']);            // 68 ( Update Payment Status After Update )
 Route::get('water-tanker/get-water-tanker-reciept/{tranId}', [WaterTankerController::class,'getWaterTankerReciept']);                              // 63 ( Get Payment Details By Payment Id )  
-Route::post('septic-tanker/get-septic-tanker-reciept/{tranId}', [SepticTankController::class, 'getPaymentDetailsByPaymentId']); 
+Route::post('septic-tanker/get-septic-tanker-reciept/{tranId}', [SepticTankController::class, 'getRecieptDetailsByPaymentId']); 
 
 Route::group(['middleware' => ['checkToken']], function () {
 

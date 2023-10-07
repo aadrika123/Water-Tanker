@@ -991,7 +991,7 @@ class SepticTankController extends Controller
             // Variable initialization
             $ulb = $this->ulbList();
             $mStBooking = new StBooking();
-            $payDetails = $mStBooking->getPaymentDetails($req->paymentId);
+           $payDetails = $mStBooking->getPaymentDetails($req->paymentId);
             // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
             if (!$payDetails)
                 throw new Exception("Payment Details Not Found !!!");
@@ -1006,6 +1006,41 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", '110231', 01, "", 'POST', $req->deviceId);
         }
     }
+
+
+       /**
+     * | Get Payment Details By Payment Id
+     * | Function - 31
+     * | API - 31
+     */
+    public function getRecieptDetailsByPaymentId(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'paymentId' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mStBooking = new StBooking();
+           $payDetails = $mStBooking->getRecieptDetails($req->paymentId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->tollFreeNo = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
+            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("parent_website");
+            $payDetails->paymentAgainst = "Water Tanker";
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110231', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '110231', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
 
     /**
      * | Get List Nuilding Type

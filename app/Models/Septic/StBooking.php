@@ -87,4 +87,21 @@ class StBooking extends Model
         $details->booking_date = Carbon::createFromFormat('Y-m-d',  $details->booking_date)->format('d-m-Y');
         return $details;
     }
+
+    
+    /**
+     * | Get Payment Reciept Details By Payment Id After Payments
+     */
+    public function getRecieptDetails($payId)
+    {
+        $details = DB::table('st_bookings as sb')->select('*')
+            ->where('sb.id', $payId)
+            ->first();
+
+        $details->payment_details = json_decode($details->payment_details);
+        $details->towards = "Septic Tanker";
+        $details->payment_date = Carbon::createFromFormat('Y-m-d', $details->payment_date)->format('d-m-Y');
+        $details->booking_date = Carbon::createFromFormat('Y-m-d',  $details->booking_date)->format('d-m-Y');
+        return $details;
+    }
 }
