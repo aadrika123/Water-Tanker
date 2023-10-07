@@ -113,7 +113,7 @@ class WtBooking extends Model
 
 
     /**
-     * | Get Payment Details By Payment Id After Payments
+     * | Get Payment Reciept Details By Payment Id After Payments
      */
     public function getRecieptDetails($payId)
     {

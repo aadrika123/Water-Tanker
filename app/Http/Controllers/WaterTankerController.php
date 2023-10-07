@@ -1892,7 +1892,7 @@ class WaterTankerController extends Controller
         }
         try {
             $mWtLocation = new WtLocation();
-            $list = collect($mWtLocation->listLocation($req->ulbId))->where('is_in_ulb','1')->values();
+            $list = collect($mWtLocation->listLocation($req->ulbId))->where('is_in_ulb', '1')->values();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -1987,28 +1987,6 @@ class WaterTankerController extends Controller
      * | Function - 63
      * | API - 63
      */
-    public function getWaterTankerReciept(Request $req, $tranId)
-    {
-        try {
-            // Variable initialization
-            $ulb = $this->ulbList();
-            $mWtBooking = new WtBooking();
-            $payDetails = $mWtBooking->getRecieptDetails($tranId);
-            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
-            if (!$payDetails)
-                throw new Exception("Payment Details Not Found !!!");
-            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
-            $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
-            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
-            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
-            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
-            $payDetails->paymentAgainst = "Water Tanker";
-            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
-        } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
-        }
-    }
 
     public function getPaymentDetailsByPaymentId(Request $req)
     {
@@ -2033,9 +2011,9 @@ class WaterTankerController extends Controller
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
             $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '050205', 01, responseTime(), 'POST', $req->deviceId);
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110164', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", '050205', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(false, $e->getMessage(), "", '110163', 01, "", 'POST', $req->deviceId);
         }
     }
 
@@ -2193,7 +2171,7 @@ class WaterTankerController extends Controller
                     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
 
                 $mWtLocation = new WtLocation();
-                $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb','1')->values();
+                $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
                 $data1['location'] = $location;
 
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
@@ -2259,12 +2237,40 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", '110168', 01, "", 'POST', $req->deviceId);
         }
     }
+    /**
+     * | Get Payment Reciept
+     * | Function - 69
+     * | API - 69
+     */
+    public function getWaterTankerReciept(Request $req, $tranId)
+    {
+        try {
+            // Variable initialization
+            $ulb = $this->ulbList();
+            $mWtBooking = new WtBooking();
+            $payDetails = $mWtBooking->getRecieptDetails($tranId);
+            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
+            if (!$payDetails)
+                throw new Exception("Payment Details Not Found !!!");
+            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
+            $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
+            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
+            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
+            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
+            $payDetails->paymentAgainst = "Water Tanker";
+            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110169', 01, responseTime(), 'POST', $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
 
 
     /**======================================   Support Function ====================================================================== */
     /**
      * | Generate QR - Code
-     * | Function - 69 
+     * | Function - 70 
      */
     public function generateQRCode()
     {
@@ -2285,7 +2291,7 @@ class WaterTankerController extends Controller
 
     /**
      * | Store user Details For Login in Users Table
-     * | Function - 70
+     * | Function - 71
      */
     public function store($req)
     {
@@ -2303,7 +2309,7 @@ class WaterTankerController extends Controller
 
     /**
      * | Saving User Credentials 
-     * | Function - 71 
+     * | Function - 72 
      */
     public function saving($user, $request)
     {
