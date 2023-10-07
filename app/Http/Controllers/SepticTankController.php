@@ -1028,7 +1028,7 @@ class SepticTankController extends Controller
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->tollFreeNo = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
             $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("parent_website");
-            $payDetails->paymentAgainst = "Water Tanker Booking";
+            $payDetails->paymentAgainst = "Septic Tanker";
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110231', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110231', 01, "", 'POST', $req->deviceId);

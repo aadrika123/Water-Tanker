@@ -127,7 +127,7 @@ class WtBooking extends Model
             ->first();
 
         $details->payment_details = json_decode($details->payment_details);
-        $details->towards = "Water Tanker";
+        $details->towards = "Water Tanker Booking";
         $details->payment_date = Carbon::createFromFormat('Y-m-d', $details->payment_date)->format('d-m-Y');
         $details->booking_date = Carbon::createFromFormat('Y-m-d',  $details->booking_date)->format('d-m-Y');
         return $details;
