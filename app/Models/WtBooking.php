@@ -115,9 +115,9 @@ class WtBooking extends Model
     /**
      * | Get Payment Details By Payment Id After Payments
      */
-    public function getPaymentDetails1($payId)
+    public function getRecieptDetails($payId)
     {
-       return $details = DB::table('wt_bookings as wb')
+       $details = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')

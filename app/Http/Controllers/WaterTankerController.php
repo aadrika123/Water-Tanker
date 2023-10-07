@@ -1987,7 +1987,7 @@ class WaterTankerController extends Controller
      * | Function - 63
      * | API - 63
      */
-    public function getPaymentDetailsByPaymentId1(Request $req, $tranId)
+    public function getWaterTankerReciept(Request $req, $tranId)
     {
         // $validator = Validator::make($req->all(), [
         //     'paymentId' => 'required|string',
@@ -1999,7 +1999,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $ulb = $this->ulbList();
             $mWtBooking = new WtBooking();
-            $payDetails = $mWtBooking->getPaymentDetails1($tranId);
+            $payDetails = $mWtBooking->getRecieptDetails($tranId);
             // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
             if (!$payDetails)
                 throw new Exception("Payment Details Not Found !!!");
