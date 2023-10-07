@@ -1013,7 +1013,7 @@ class SepticTankController extends Controller
      * | Function - 31
      * | API - 31
      */
-    public function getRecieptDetailsByPaymentId(Request $req)
+    public function getRecieptDetailsByPaymentId($tranId,Request $req)
     {
         $validator = Validator::make($req->all(), [
             'paymentId' => 'required|string',
@@ -1025,7 +1025,7 @@ class SepticTankController extends Controller
             // Variable initialization
             $ulb = $this->ulbList();
             $mStBooking = new StBooking();
-           $payDetails = $mStBooking->getRecieptDetails($req->paymentId);
+          return $payDetails = $mStBooking->getRecieptDetails($tranId);
             // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
             if (!$payDetails)
                 throw new Exception("Payment Details Not Found !!!");
