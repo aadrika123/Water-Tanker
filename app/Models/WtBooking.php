@@ -108,7 +108,7 @@ class WtBooking extends Model
      */
     public function todayBookings($agencyId)
     {
-        return $list = self::select('*')->where('delivery_date', Carbon::now()->format('Y-m-d'))->where('agency_id', $agencyId);
+        return self::select('*')->where('delivery_date', Carbon::now()->format('Y-m-d'))->where('agency_id', $agencyId);
     }
 
 
