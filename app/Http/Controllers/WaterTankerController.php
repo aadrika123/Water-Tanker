@@ -1845,7 +1845,7 @@ class WaterTankerController extends Controller
     {
         $validator = Validator::make($req->all(), [
             'fromDate' => 'required|date_format:Y-m-d|before:' . date('Y-m-d'),
-            'toDate' => 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            'toDate' => 'required|date_format:Y-m-d|after:' . $req->fromDate . '|after_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
