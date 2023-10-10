@@ -1824,10 +1824,10 @@ class WaterTankerController extends Controller
             $mWtCancellation = new WtCancellation();
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
 
-            $retData['todayTotalBooking'] = $todayBookings->get()->count();
-            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->get()->count();
-            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->get()->count();
-            $retData['todayTotalCancelBooking'] = $todayCancelBookings->get()->count();
+            $retData['todayTotalBooking'] = $todayBookings->count();
+            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count();
+            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count();
+            $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
             $retData['agencyName'] =  $agencyDetails->agency_name;
             $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
             return responseMsgs(true, "Data Fetched Successfully !!!", $retData, "110158", "1.0", responseTime(), "POST", $req->deviceId ?? "");
