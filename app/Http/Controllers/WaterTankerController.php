@@ -1819,14 +1819,14 @@ class WaterTankerController extends Controller
             $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('u_id', $req->auth['id'])->first();
 
             $mWtBooking = new WtBooking();
-            $todayBookings = $mWtBooking->todayBookings($agencyDetails->id);
+            $todayBookings = $mWtBooking->todayBookings($agencyDetails->id)->get();
 
             $mWtCancellation = new WtCancellation();
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
 
-            $retData['todayTotalBooking'] = $todayBookings->count();
-            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count();
-            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count();
+            $retData['todayTotalBooking'] = $todayBookings->count('id');
+            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count('id');
+            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
             $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
             $retData['agencyName'] =  $agencyDetails->agency_name;
             $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
