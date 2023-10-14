@@ -1135,4 +1135,32 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110236", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+    /**
+     * | Get Feedback From Citizen
+     * | Function - 37
+     * | API - 37
+     */
+    public function checkFeedback(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $applicationDetails = StBooking::find($req->applicationId);
+            if (!$applicationDetails)
+                throw new Exception("Application Not Found !!!");
+            if ($applicationDetails->feedback_date === NULL)
+                throw new Exception("No Any Feedback Against Booking !!!");
+            $commentDetails = array();
+            $commentDetails['comment'] = $applicationDetails->feedback;
+            $commentDetails['comment_date'] = Carbon::parse($applicationDetails->feedback_date)->format('d-m-Y');
+            return responseMsgs(true, "Feedback !!!", $commentDetails, "110237", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110237", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 }
