@@ -112,6 +112,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/re-assign-hydration-center', 'reAssignHydrationCenter');                                      // 65 ( Re-Assign Hydration Center ) 
         Route::post('water-tanker/list-ulb', 'ulbList');                                                                        // 66 ( Ulb List )
         Route::post('water-tanker/master-data', 'masterData');                                                                  // 67 ( Water Tanker Master Data )
+        Route::post('water-tanker/water-tank-feedback', 'getFeedback');                                                         // 68 ( Get Feedback )  
     });
 
     /**
@@ -154,5 +155,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/get-payment-details-by-pay-id', 'getPaymentDetailsByPaymentId');                             // 31 ( Get Payment Details By Payment Id )  
         Route::post('septic-tanker/list-buliding-type', 'listBuildingType');                                                    // 32 ( Get List of All Type of Building )  
         Route::post('septic-tanker/list-ulb-wise-location', 'listUlbwiseLocation');                                             // 33 ( List ULB Wise Location )  
+        Route::post('septic-tanker/septic-tank-feedback', 'getFeedback');                                                       // 34 ( Get Feedback )  
     });
 });

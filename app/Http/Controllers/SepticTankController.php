@@ -597,7 +597,7 @@ class SepticTankController extends Controller
             $mStBooking = StBooking::find($req->applicationId);
             if (!$mStBooking)
                 throw new Exception("No Data Found !!!");
-            $mStBooking->assign_status = '2';
+            $mStBooking->assign_status = '3';
             $mStBooking->save();
             return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110218", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1109,4 +1109,30 @@ class SepticTankController extends Controller
         }
     }
 
+    /**
+     * | Get Feedback From Citizen
+     * | Function - 36
+     * | API - 36
+     */
+    public function getFeedback(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+            'remarks' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $applicationDetails = StBooking::find($req->applicationId);
+            if (!$applicationDetails)
+                throw new Exception("Application Not Found !!!");
+            $applicationDetails->feedback = $req->remarks;
+            $applicationDetails->feedback_date = Carbon::now();
+            $applicationDetails->save();
+            return responseMsgs(true, "Feedback Submitted Successfully !!!", '', "110236", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110236", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 }

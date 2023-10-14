@@ -2266,7 +2266,32 @@ class WaterTankerController extends Controller
         }
     }
 
-
+    /**
+     * | Get Feedback From Citizen
+     * | Function - 70
+     * | API - 70
+     */
+    public function getFeedback(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+            'remarks' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $applicationDetails = WtBooking::find($req->applicationId);
+            if (!$applicationDetails)
+                throw new Exception("Application Not Found !!!");
+            $applicationDetails->feedback = $req->remarks;
+            $applicationDetails->feedback_date = Carbon::now();
+            $applicationDetails->save();
+            return responseMsgs(true, "Feedback Submitted Successfully !!!", '', "110236", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110236", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 
     /**======================================   Support Function ====================================================================== */
     /**
