@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
 use App\MicroServices\IdGenerator\PrefixIdGenerator;
 use App\Models\Septic\StBooking;
+use App\Models\UlbWaterTankerBooking;
 use App\Models\User;
 use App\Models\WtLocation;
 use App\Models\WtLocationHydrationMap;
@@ -525,7 +526,7 @@ class WaterTankerController extends Controller
             $req->merge($bookingNo);
 
             $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);
-            $paymentAmount = ['paymentAmount' => $payAmt];
+            $paymentAmount = ['paymentAmount' => round($payAmt)];
             $req->merge($paymentAmount);
 
             $agencyId = $mCalculations->getAgency($req->ulbId);
@@ -2318,6 +2319,25 @@ class WaterTankerController extends Controller
             return responseMsgs(true, "Feedback !!!", $commentDetails, "110271", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110271", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Water Tanker Book By ULB
+     */
+    public function bookingByUlb(UlbWaterTankerBooking $req){
+        try {
+            // Variable initialization
+            $mUlbWaterTankerBooking = new UlbWaterTankerBooking();
+            $req->merge(['ulbId' => $req->auth['id']]); 
+
+            DB::beginTransaction();
+            $res = $mUlbWaterTankerBooking->storeBooking($req);                                                                     // Store Booking Informations
+            DB::commit();
+            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 

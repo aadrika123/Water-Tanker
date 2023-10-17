@@ -54,7 +54,7 @@ class SepticTankController extends Controller
 
             // $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->capacityId,$req->isResidential);
             $payAmt = $mCalculations->getSepticTankAmount($req->ulbId, $req->ulbArea, $req->buildingType);
-            $paymentAmount = ['paymentAmount' => $payAmt];
+            $paymentAmount = ['paymentAmount' => round($payAmt)];
             $req->merge($paymentAmount);
 
             DB::beginTransaction();
