@@ -597,7 +597,7 @@ class SepticTankController extends Controller
             $mStBooking = StBooking::find($req->applicationId);
             if (!$mStBooking)
                 throw new Exception("No Data Found !!!");
-            $mStBooking->assign_status = '3';
+            $mStBooking->assign_status = '2';
             $mStBooking->save();
             return responseMsgs(true, "Septic Tank Cleaned Successfully !!!", '', "110218", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
