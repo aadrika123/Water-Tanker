@@ -139,7 +139,7 @@ class SepticTankController extends Controller
     }
 
     /**
-     * | Get Applied Application 
+     * | Get List of Applied Application 
      * | Function - 04
      * | API - 04
      */
@@ -205,7 +205,7 @@ class SepticTankController extends Controller
     }
 
     /**
-     * | Booking Cancel
+     * | Booking Cancellation 
      * | Function - 06
      * | API - 06
      */
@@ -240,7 +240,7 @@ class SepticTankController extends Controller
     }
 
     /**
-     * | Booking Cancel
+     * | List of Cancelled Booking
      * | Function - 07
      * | API - 07
      */

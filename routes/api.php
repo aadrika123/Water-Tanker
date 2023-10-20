@@ -83,8 +83,8 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/get-driver-vehicle-map-by-id', 'getDriverVehicleMapById');                                    // 37 ( Get Map Driver & Vehicle Details By Id ) 
         Route::post('water-tanker/edit-driver-vehicle-map', 'editDriverVehicleMap');                                            // 38 ( Update Map Driver & Vehicle Details By Id ) 
         Route::post('water-tanker/booking-assignment', 'bookingAssignment');                                                    // 39 ( Assignment Booking for delivery in Hydartion Center, Vehicle Driver Map &  ) 
-        Route::post('water-tanker/list-assign-agency', 'listAssignAgency');                                                     // 40 (Agency Assign List ) 
-        Route::post('water-tanker/list-assign-hydration-center', 'listAssignHydrationCenter');                                  // 41 (Hydration Center Assign List ) 
+        Route::post('water-tanker/list-assign-agency', 'listAssignAgency');                                                     // 40 ( Agency Assign List ) 
+        Route::post('water-tanker/list-assign-hydration-center', 'listAssignHydrationCenter');                                  // 41 ( Hydration Center Assign List ) 
         Route::post('water-tanker/add-location', 'addLocation');                                                                // 42 ( Add Location in Master ) 
         Route::post('water-tanker/list-location', 'listLocation');                                                              // 43 ( List Locations ) 
         Route::post('water-tanker/get-location-details-by-id', 'getLocationDetailsById');                                       // 44 ( Get Location Details By Id ) 
@@ -114,6 +114,7 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/master-data', 'masterData');                                                                  // 67 ( Water Tanker Master Data )
         Route::post('water-tanker/water-tank-feedback', 'getFeedback');                                                         // 68 ( Get Feedback )  
         Route::post('water-tanker/check-feedback', 'checkFeedback');                                                            // 69 ( Check Feedback )  
+        Route::post('water-tanker/booking-by-ulb', 'bookingByUlb');                                                             // 70 ( Water Tanker Book By ULB )  
     });
 
     /**
