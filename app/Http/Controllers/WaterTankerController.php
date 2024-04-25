@@ -325,6 +325,7 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
+            // 'driverEmail'     => 'required|email',
 
         ]);
         if ($validator->fails()) {
@@ -342,6 +343,25 @@ class WaterTankerController extends Controller
             $mWtDriver = new WtDriver();
             DB::beginTransaction();
             $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
+
+            // Create User In Master Table
+            $authUrl = Config::get('constants.BASE_URL');
+            $userCreateData = new Request([
+                "name"      => $req->driverName,
+                "mobile"    => $req->driverMobile,
+                "email"     => $req->driverEmail,
+                "address"   => $req->driverAddress,
+                "ulbId"     => $req->ulbId,
+                "userType"  => "Water-Agency",
+            ]);
+            $refResponse = Http::withHeaders([
+                "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
+            ])
+                ->withToken($req->bearerToken())
+                ->post($authUrl . 'api/user-managment/v1/crud/user/create', $userCreateData);
+
+            $data = json_decode($refResponse);
+
             DB::commit();
             return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -2294,7 +2314,7 @@ class WaterTankerController extends Controller
         }
     }
 
-        /**
+    /**
      * | Get Feedback From Citizen
      * | Function - 71
      * | API - 71
@@ -2325,11 +2345,12 @@ class WaterTankerController extends Controller
     /**
      * | Water Tanker Book By ULB
      */
-    public function bookingByUlb(UlbWaterTankerBooking $req){
+    public function bookingByUlb(UlbWaterTankerBooking $req)
+    {
         try {
             // Variable initialization
             $mUlbWaterTankerBooking = new UlbWaterTankerBooking();
-            $req->merge(['ulbId' => $req->auth['id']]); 
+            $req->merge(['ulbId' => $req->auth['id']]);
 
             DB::beginTransaction();
             $res = $mUlbWaterTankerBooking->storeBooking($req);                                                                     // Store Booking Informations
