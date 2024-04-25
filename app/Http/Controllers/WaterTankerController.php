@@ -109,6 +109,32 @@ class WaterTankerController extends Controller
         }
     }
 
+    public function addAgencyNotInLocal(Request $reqs)
+    {
+        try{
+            $users=  $reqs->auth;
+            $reqs->merge([
+                'agencyName' => 'test',
+                'ownerName' => $users["name"],
+                'agencyAddress' => $users["address"],            
+                'agencyMobile' => $users["mobile"],
+                'agencyEmail' => $users["email"],
+                'dispatchCapacity' => 0,
+                "UId"=>$users["id"],
+            ]);
+            $mWtAgency = new WtAgency();
+            DB::beginTransaction();
+            $res = $mWtAgency->storeAgency($reqs);                                       // Store Agency Request
+            DB::commit();
+            return responseMsgs(true, "Agency Added Successfully !!!", '', "110101", "1.0", responseTime(), 'POST', $reqs->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110101", "1.0", "", 'POST', $reqs->deviceId ?? "");
+        }
+    }
+
     /**
      * | Get Agency List 
      * | Function - 02
@@ -590,6 +616,10 @@ class WaterTankerController extends Controller
             // Variable initialization
             if ($req->auth['user_type'] != "Water-Agency")
                 throw new Exception("Unauthorized  Access !!!");
+            $test = WtAgency::select('id')->where('u_id', $req->auth['id'])->first();
+            if(!$test){
+                $this->addAgencyNotInLocal($req);
+            }
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
                 ->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)
