@@ -20,6 +20,7 @@ class WtDriver extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
+            "u_id"=>$req->UId,
             'agency_id' => $req->agencyId,
             'driver_name' => $req->driverName,
             'driver_aadhar_no' => $req->driverAadharNo,
@@ -28,7 +29,6 @@ class WtDriver extends Model
             'driver_father' => $req->driverFather,
             'driver_dob' => $req->driverDob,
             'driver_license_no' => $req->driverLicenseNo,
-            'driver_email' => $req->driverEmail,
             'date' => Carbon::now()->format('Y-m-d'),
         ];
     }

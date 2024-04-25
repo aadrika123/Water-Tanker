@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
 use App\MicroServices\IdGenerator\PrefixIdGenerator;
+use App\Models\ForeignModels\WfRole;
+use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
 use App\Models\UlbWaterTankerBooking;
 use App\Models\User;
@@ -33,6 +35,7 @@ use App\Models\WtLocationHydrationMap;
 use App\Models\WtReassignBooking;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Nette\Utils\Random;
 use PhpParser\Node\Stmt\Return_;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -317,6 +320,7 @@ class WaterTankerController extends Controller
      */
     public function addDriver(Request $req)
     {
+        $user = new User();
         $validator = Validator::make($req->all(), [
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
@@ -325,11 +329,11 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
-            'driverEmail'     => 'required|email',
+            'driverEmail' => "required|string|email|unique:".$user->getConnectionName().".".$user->getTable().",email",
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return ['status' => false, 'message' =>"validation Error","errors"=> $validator->errors()];
         }
         try {
             if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
@@ -339,33 +343,38 @@ class WaterTankerController extends Controller
                 $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            $reqs = [
+                "name" =>  $req->driverName,
+                "email" => $req->driverEmail,
+                "password" => $req->password ? $req->password : ("Basic" . '@' . "12345"),
+                "mobile" => $req->driverMobile,
+                "address"   => $req->driverAddress,
+                "ulb" => $req->ulbId,
+                "userType" =>  "Driver",
+            ];
+            
+            $roleModle = new WfRole();
+            $dRoleRequest = new Request([
+                "wfRoleId"=> $roleModle->getDriverRoleId(),
+                "createdBy"=>$req->auth['id'],
+            ]);
             // Variable initialization
             $mWtDriver = new WtDriver();
             DB::beginTransaction();
-            $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
-
-            // Create User In Master Table
-            $authUrl = Config::get('constants.BASE_URL');
-            $userCreateData = new Request([
-                "name"      => $req->driverName,
-                "mobile"    => $req->driverMobile,
-                "email"     => $req->driverEmail,
-                "address"   => $req->driverAddress,
-                "ulbId"     => $req->ulbId,
-                "userType"  => "Water-Agency",
+            DB::connection("pgsql")->beginTransaction();
+            $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login
+            $req->merge(['UId' => $userId]);
+            $dRoleRequest->merge([
+                "userId"=>$userId,
             ]);
-            $refResponse = Http::withHeaders([
-                "api-key" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
-            ])
-                ->withToken($req->bearerToken())
-                ->post($authUrl . 'api/user-managment/v1/crud/user/create', $userCreateData);
-
-            $data = json_decode($refResponse);
-
+            $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
+            $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
             DB::commit();
+            DB::connection("pgsql")->commit();
             return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
+            DB::connection("pgsql")->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -2394,7 +2403,7 @@ class WaterTankerController extends Controller
             // Validation---@source-App\Http\Requests\AuthUserRequest
             $user = new User;
             $this->saving($user, $req);                     // Storing data using Auth trait
-            $user->password = Hash::make($req['password']);
+            $user->password = Hash::make(($req['password'])??("Basic" . '@' . "12345"));
             $user->save();
             return  $user->id;
         } catch (Exception $e) {
