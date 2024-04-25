@@ -325,7 +325,7 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
-            // 'driverEmail'     => 'required|email',
+            'driverEmail'     => 'required|email',
 
         ]);
         if ($validator->fails()) {
