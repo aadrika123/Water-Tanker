@@ -1350,9 +1350,10 @@ class WaterTankerController extends Controller
     public function listAssignAgency(Request $req)
     {
         try {
+            $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))->get();
-            $ulb = $this->_ulbs;
+            $ulb = collect($this->_ulbs)->where("wt_bookings.ulb_id",$ulbId);
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
@@ -1678,8 +1679,10 @@ class WaterTankerController extends Controller
     public function listReassignBooking(Request $req)
     {
         try {
+            $ulbId = $req->auth["ulb_id"];
             $mWtReassignBooking = new WtReassignBooking();
             $list = $mWtReassignBooking->listReassignBooking();
+            $list = $list->where("ulb_id",$ulbId);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
