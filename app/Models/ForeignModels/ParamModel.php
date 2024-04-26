@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ParamModel extends Model
 {
     use HasFactory;
-    protected $connection='pgsql';
+    protected $connection='pgsql_master';
     protected $guarded = [];
 }

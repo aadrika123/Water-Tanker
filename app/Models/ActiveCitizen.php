@@ -13,6 +13,6 @@ class ActiveCitizen extends Authenticatable
     use HasFactory;
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $connection="pgsql";
+    protected $connection="pgsql_master";
     protected $guarded=[];
 }

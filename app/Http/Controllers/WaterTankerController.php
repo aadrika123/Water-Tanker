@@ -390,7 +390,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtDriver = new WtDriver();
             DB::beginTransaction();
-            DB::connection("pgsql")->beginTransaction();
+            DB::connection("pgsql_master")->beginTransaction();
             $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login
             $req->merge(['UId' => $userId]);
             $dRoleRequest->merge([
@@ -399,11 +399,11 @@ class WaterTankerController extends Controller
             $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
             $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
             DB::commit();
-            DB::connection("pgsql")->commit();
+            DB::connection("pgsql_master")->commit();
             return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            DB::connection("pgsql")->rollBack();
+            DB::connection("pgsql_master")->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -2441,7 +2441,8 @@ class WaterTankerController extends Controller
                     ->where("wt_drivers.u_id",$user["id"])
                     ->where("wt_bookings.status",1)
                     ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                    ->where('assign_date', '!=', NULL);
+                    ->where('assign_date', '!=', NULL)
+                    ->where('is_vehicle_sent', '!=', 2);
             if($key)
             {
                 $data = $data->where(function($where) use($key){
