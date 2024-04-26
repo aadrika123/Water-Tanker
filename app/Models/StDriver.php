@@ -71,4 +71,10 @@ class StDriver extends Model
         ->orderBy('id', 'desc')
         ->get();
     }
+
+    public function getDriverListForMasterData($ulbId)
+    {
+        return self::select('id', 'driver_name')->where('ulb_id',$ulbId)
+            ->get();
+    }
 }

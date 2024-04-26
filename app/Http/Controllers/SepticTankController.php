@@ -1102,9 +1102,9 @@ class SepticTankController extends Controller
                 // if ($req->auth['user_type'] == 'Water-Agency')
                 //     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
 
-                $mWtLocation = new WtLocation();
-                $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
-                $data1['location'] = $location;
+                // $mWtLocation = new StLocation();
+                // $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
+                // $data1['location'] = $location;
 
                 // $mWtDriverVehicleMap = new StDriverVehicleMap();
                 // $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
