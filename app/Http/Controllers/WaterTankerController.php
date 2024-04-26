@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
 use App\MicroServices\DocUpload;
 use App\MicroServices\IdGenerator\PrefixIdGenerator;
+use App\Models\ForeignModels\UlbMaster;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
@@ -1354,7 +1355,8 @@ class WaterTankerController extends Controller
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))->get();
-            $ulb = collect($this->_ulbs)->where("wt_bookings.ulb_id",$ulbId);
+            $ulb = collect($this->_ulbs);
+            $list = collect($list)->where("ulb_id",$ulbId);
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
@@ -1379,6 +1381,8 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->get();
             $ulb = $this->_ulbs;
+            $ulbId = $req->auth["ulb_id"];
+            $list = collect($list)->where("ulb_id",$ulbId);
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
@@ -2186,6 +2190,11 @@ class WaterTankerController extends Controller
             }
             return $data1;
         } catch (Exception $e) {
+            $ulb= (new UlbMaster())->getAllUlb();
+            $data1 = $ulb->original['data'];
+            $data1 = collect($data1);
+            $redis->set('ulb_masters', json_encode($data1));
+            return $data1;
         }
     }
 
