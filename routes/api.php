@@ -115,6 +115,9 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('water-tanker/water-tank-feedback', 'getFeedback');                                                         // 68 ( Get Feedback )  
         Route::post('water-tanker/check-feedback', 'checkFeedback');                                                            // 69 ( Check Feedback )  
         Route::post('water-tanker/booking-by-ulb', 'bookingByUlb');                                                             // 70 ( Water Tanker Book By ULB )  
+
+        Route::post("water-tanker/driver-to-delivery-list","driverDeliveryList");
+        Route::post("water-tanker/driver-update-delivery","updateDeliveryTrackStatus");
     });
 
     /**

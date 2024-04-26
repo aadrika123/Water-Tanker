@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
+use App\MicroServices\DocUpload;
 use App\MicroServices\IdGenerator\PrefixIdGenerator;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
@@ -2398,6 +2399,90 @@ class WaterTankerController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * function added by sandeep bara
+     */
+    public function driverDeliveryList(Request $res)
+    {
+        try{
+            $user = $res->auth;
+            $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
+                    ->join("wt_drivers","wt_drivers.id","wt_bookings.driver_id")
+                    ->join("wt_resources","wt_resources.id","wt_bookings.vehicle_id")
+                    ->where("wt_drivers.u_id",$user["id"])
+                    ->where("wt_bookings.status",1)
+                    ->where("wt_bookings.ulb_id",$user["ulb_id"])
+                    ->where('assign_date', '!=', NULL)
+                    ->orderBy("delivery_date","ASC")
+                    ->orderBy("delivery_time","ASC")
+                    ->get();
+            return responseMsgs(true, "Booking list",  $data, "110115", "1.0", responseTime(), 'POST', $res->deviceId ?? "");
+        }
+        catch(Exception $e){
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $res->deviceId ?? "");
+        }
+    }
+
+    public function updateDeliveryTrackStatus(Request $request)
+    {
+        $rules = [
+            "applicationId"=>'required|digits_between:1,9223372036854775807',
+            "status"=>'required|in:1,2',
+            "comments"=>'required|string|min:10',
+            "latitude"=>'required',
+            "longitude"=>'required',
+            "document"=>'required|mimes:png,jpg,jpeg,gif',
+        ];
+        $validated = Validator::make($request->all(),$rules);
+        if ($validated->fails()){
+            return validationErrorV2($validated);
+        }        
+        try{
+            $user = $request->auth;
+            if(!$user || $user["user_type"]!="Driver"){
+                throw new Exception("You are not authorized for this");
+            }
+            $driver = WtDriver::where("u_id",$user["id"])->first();
+            $ModelWtBooking =   new WtBooking();
+            $booking = $ModelWtBooking->find($request->applicationId);
+            if(!$booking)
+            {
+                throw new Exception("booking not fund");
+            }
+            $reBooking = $booking->getLastReassignedBooking();
+            $updateData = $reBooking ? $reBooking:$booking;
+            $isReassigned = $reBooking ? true:false;
+            if($updateData->driver_id!=$driver->id)
+            {
+                throw new Exception("You have not this booking");
+            }
+            $document = new DocUpload();
+            $document = $document->severalDoc($request);
+            $document = $document->original["data"];
+            $sms = "Out of Delivery";
+            if($request->static == 2 )
+            {
+                $sms = "Delivered";
+            }
+             
+            DB::beginTransaction();
+            $updateData->delivery_track_status = $request->status;  
+            $updateData->delivery_latitude = $request->latitude;   
+            $updateData->delivery_longitude = $request->longitude;   
+            $updateData->delivery_comments = $request->comments;  
+            $updateData->unique_id = $document["document"]["data"]["uniqueId"];    
+            $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
+            $updateData->update();                                                                   // Store Booking Informations
+            DB::commit();
+            return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
 

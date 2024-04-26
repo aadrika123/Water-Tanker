@@ -20,5 +20,7 @@ return [
     "PARAM_ID" => '35',
     "PARAM_ST_ID" => '36',
     "WATER_TANKER_MODULE_ID"=>"11",
-    "API_KEY" => "eff41ef6-d430-4887-aa55-9fcf46c72c99"
+    "API_KEY" => "eff41ef6-d430-4887-aa55-9fcf46c72c99",
+    "DOC_URL"                 => env('DOC_URL'),
+    "DMS_URL"                 => env('DMS_URL'),
 ];

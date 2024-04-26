@@ -155,4 +155,17 @@ class WtBooking extends Model
         $details->booking_date = Carbon::createFromFormat('Y-m-d',  $details->booking_date)->format('d-m-Y');
         return $details;
     }
+
+    /**
+     * add function by sandeep bara
+     */
+
+     public function getReassignedBookingOrm()
+     {
+        return $this->hasMany(WtReassignBooking::class,"application_id","id");
+     }
+     public function getLastReassignedBooking()
+     {
+        return $this->getReassignedBookingOrm()->orderBy("id","DESC")->first();
+     }
 }
