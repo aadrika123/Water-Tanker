@@ -31,6 +31,8 @@ class WtBooking extends Model
             'applicant_name' => $req->applicantName,
             'booking_no' => $req->bookingNo,
             'payment_amount' => $req->paymentAmount,
+            'booking_latitude' => $req->latitude??null,
+            'booking_longitude' => $req->longitude??null,
         ];
     }
 
