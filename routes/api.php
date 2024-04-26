@@ -162,5 +162,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/list-ulb-wise-location', 'listUlbwiseLocation');                                             // 33 ( List ULB Wise Location )  
         Route::post('septic-tanker/septic-tank-feedback', 'getFeedback');                                                       // 34 ( Get Feedback )   
         Route::post('septic-tanker/check-feedback', 'checkFeedback');                                                           // 35 ( Check Feedback )  
+        Route::post('septic-tanker/master-data', 'masterData');
     });
 });

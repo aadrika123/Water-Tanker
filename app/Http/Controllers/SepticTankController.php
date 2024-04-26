@@ -1054,6 +1054,80 @@ class SepticTankController extends Controller
     }
 
     /**
+     * | Get Master Data of Water Tanker
+     * | Function - 67
+     * | API - 67
+     */
+    public function masterData(Request $req)
+    {
+        // $redis = Redis::connection();
+        try {
+            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+                throw new Exception('Unauthorized Access !!!');
+            // Variable initialization
+            // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
+            if (1) {                                                      // If Cache Memory is not available
+                $data1 = array();
+
+                // $magency = new StAgency();
+                $mWtCapacity = new StCapacity();
+                $mWtDriver = new StDriver();
+                // $mWtHydrationCenter = new WtHydrationCenter();
+
+                // $adencyList = $magency->getAllAgencyForMasterData($req->auth['ulb_id']);
+                // $data1['agency'] = $adencyList;
+
+                $listCapacity = $mWtCapacity->getCapacityList();
+                $data1['capacity'] = $listCapacity;
+
+                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+                $data1['driver'] = $listDriver;
+                if ($req->auth['user_type'] == 'UlbUser')
+                    $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
+                // if ($req->auth['user_type'] == 'Water-Agency')
+                //     $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
+
+                // $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
+                // $data1['hydrationCenter'] = $hydrationCenter;
+
+                $mWtUlbCapacityRate = new StUlbCapacityRate();
+                $capacityRate = $mWtUlbCapacityRate->getCapacityRateForMasterData($req->auth['ulb_id']);
+                $data1['capacityRate'] = $capacityRate;
+
+                $mWtResource = new StResource();
+                $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
+                // $data1['vehicle'] = $resource;
+                if ($req->auth['user_type'] == 'UlbUser')
+                    $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
+                // if ($req->auth['user_type'] == 'Water-Agency')
+                //     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+
+                $mWtLocation = new WtLocation();
+                $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
+                $data1['location'] = $location;
+
+                // $mWtDriverVehicleMap = new StDriverVehicleMap();
+                // $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
+                // if ($req->auth['user_type'] == 'Water-Agency')
+                //     $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
+
+                $ulb = $this->_ulbs;
+                // $f_list = $list->map(function ($val) use ($ulb) {
+                //     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+                //     $val->driver_vehicle = $val->vehicle_no . "( " . $val->driver_name . " )";
+                //     return $val;
+                // });
+                // $data1['driverVehicleMap'] = $f_list;
+
+                // $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
+            }
+            return responseMsgs(true, "Data Fetched !!!", $data1, "110167", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110167", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
      * | Get ULB Wise Location List
      * | Function - 34
      * | API - 34

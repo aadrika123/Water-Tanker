@@ -2231,7 +2231,7 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
 
                 $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
                 $data1['hydrationCenter'] = $hydrationCenter;
@@ -2424,6 +2424,16 @@ class WaterTankerController extends Controller
     public function driverDeliveryList(Request $res)
     {
         try{
+            $key = $res->key;
+            $formDate = $uptoDate =null;
+            if($res->fromDate)
+            {
+                $formDate =$res->fromDate;
+            }
+            if($res->uptoDate)
+            {
+                $uptoDate =$res->uptoDate;
+            }
             $user = $res->auth;
             $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
                     ->join("wt_drivers","wt_drivers.id","wt_bookings.driver_id")
@@ -2431,8 +2441,21 @@ class WaterTankerController extends Controller
                     ->where("wt_drivers.u_id",$user["id"])
                     ->where("wt_bookings.status",1)
                     ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                    ->where('assign_date', '!=', NULL)
-                    ->orderBy("delivery_date","ASC")
+                    ->where('assign_date', '!=', NULL);
+            if($key)
+            {
+                $data = $data->where(function($where) use($key){
+                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+                });
+            }
+            if($formDate && $uptoDate )
+            {
+                $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
+            }
+
+            $data = $data->orderBy("delivery_date","ASC")
                     ->orderBy("delivery_time","ASC")
                     ->get();
             return responseMsgs(true, "Booking list",  $data, "110115", "1.0", responseTime(), 'POST', $res->deviceId ?? "");
