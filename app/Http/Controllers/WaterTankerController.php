@@ -1930,6 +1930,9 @@ class WaterTankerController extends Controller
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
+                $driver = WtDriver::find($val->delivered_by_driver_id);
+                $val->delivered_by = (($driver->driver_name??"")." (".($driver->driver_license_no??"").")");
+                $val->delivered_date_time = $val->driver_delivery_date_time ?  Carbon::parse($val->driver_delivery_date_time)->format('h:i:s A d-m-Y'):"";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
                 $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
@@ -1938,6 +1941,7 @@ class WaterTankerController extends Controller
             });
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110159", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
+            $m = $e->getMessage();
             return responseMsgs(false, $e->getMessage(), "", "110159", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -2466,19 +2470,27 @@ class WaterTankerController extends Controller
             $document = $document->severalDoc($request);
             $document = $document->original["data"];
             $sms = "Out of Delivery";
-            if($request->static == 2 )
+            if($request->status == 2 )
             {
                 $sms = "Delivered";
             }
-             
-            DB::beginTransaction();
             $updateData->delivery_track_status = $request->status;  
             $updateData->delivery_latitude = $request->latitude;   
             $updateData->delivery_longitude = $request->longitude;   
             $updateData->delivery_comments = $request->comments;  
             $updateData->unique_id = $document["document"]["data"]["uniqueId"];    
             $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
-            $updateData->update();                                                                   // Store Booking Informations
+
+            if($updateData->delivery_track_status==2){
+                $booking->is_vehicle_sent = $updateData->delivery_track_status;    
+                $booking->delivered_by_driver_id = $driver->id; 
+                $booking->driver_delivery_date_time = Carbon::now();            
+            }
+             
+            DB::beginTransaction();            
+            $updateData->update(); 
+            $booking->update();
+                                                                              
             DB::commit();
             return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }

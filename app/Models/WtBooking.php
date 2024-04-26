@@ -160,12 +160,18 @@ class WtBooking extends Model
      * add function by sandeep bara
      */
 
-     public function getReassignedBookingOrm()
-     {
+    public function getReassignedBookingOrm()
+    {
         return $this->hasMany(WtReassignBooking::class,"application_id","id");
-     }
-     public function getLastReassignedBooking()
-     {
+    }
+    public function getLastReassignedBooking()
+    {
         return $this->getReassignedBookingOrm()->orderBy("id","DESC")->first();
-     }
+    }
+
+    public function getDeliveredDriver()
+    {
+        return $this->belongsTo(WtDriver::class,"delivered_by_driver_id","id")->first();
+    }
+
 }
