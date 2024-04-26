@@ -122,6 +122,7 @@ class WaterTankerController extends Controller
                 'agencyEmail' => $users["email"],
                 'dispatchCapacity' => 0,
                 "UId"=>$users["id"],
+                "ulbId"=>$users["ulb_id"],
             ]);
             $mWtAgency = new WtAgency();
             DB::beginTransaction();
@@ -367,7 +368,7 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
-                $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
+                $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $reqs = [
@@ -422,7 +423,7 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'UlbUser')
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id',  DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id',  DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -460,7 +461,7 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
-                $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
+                $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
@@ -489,7 +490,7 @@ class WaterTankerController extends Controller
             $mWtResource = new WtResource();
             $list = $mWtResource->getResourceList($req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('*')->where('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -617,13 +618,13 @@ class WaterTankerController extends Controller
             // Variable initialization
             if ($req->auth['user_type'] != "Water-Agency")
                 throw new Exception("Unauthorized  Access !!!");
-            $test = WtAgency::select('id')->where('u_id', $req->auth['id'])->first();
+            $test = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first();
             if(!$test){
                 $this->addAgencyNotInLocal($req);
             }
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
-                ->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)
+                ->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
                 ->where('is_vehicle_sent', '<=', '1')
                 ->where('payment_status', '=', '1')
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))
@@ -671,7 +672,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             if ($req->auth['user_type'] == 'Water-Agency')
-                $req->merge(['agencyId' => WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id]);
+                $req->merge(['agencyId' => WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
 
             $mWtResource = WtResource::find($req->vehicleId);
             $isUlbVehicle = ['isUlbVehicle' => $mWtResource->is_ulb_resource];
@@ -701,7 +702,7 @@ class WaterTankerController extends Controller
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
             $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
@@ -726,7 +727,7 @@ class WaterTankerController extends Controller
         if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser')
             $cancelById = $req->auth['id'];
         if ($cancelledBy == 'Water-Agency')
-            $cancelById = WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
+            $cancelById = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id;
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer',
             'remarks' => 'required|string',
@@ -778,7 +779,7 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'UlbUser')
                 $list = $list->where('ulb_id', $req->auth['id']);                            // Get ULB Cancel Application List
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('id')->wehere('ulb_id', $req->auth['ulb_id'])->first()->id);
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -839,7 +840,7 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'UlbUser')
                 $list = $list->where('ulb_id', $req->auth['id']);                            // Get ULB Refund Application List
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('id')->wehere('ulb_id', $req->auth['ulb_id'])->first()->id);
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -975,7 +976,7 @@ class WaterTankerController extends Controller
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         if ($req->auth['user_type'] == 'Water-Agency')
-            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
+            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
         try {
             $mWtResource = WtResource::find($req->resourceId);
             if (!$mWtResource)
@@ -1073,7 +1074,7 @@ class WaterTankerController extends Controller
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         if ($req->auth['user_type'] == 'Water-Agency')
-            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('u_id', $req->auth['id'])->first()->id]);
+            $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
         try {
             $mWtDriver = WtDriver::find($req->driverId);
             if (!$mWtDriver)
@@ -1880,7 +1881,7 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] != 'Water-Agency')
                 throw new Exception("Unauthorized Access !!!");
             // Variable initialization
-            $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('u_id', $req->auth['id'])->first();
+            $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('ulb_id', $req->auth['ulb_id'])->first();
 
             $mWtBooking = new WtBooking();
             $todayBookings = $mWtBooking->todayBookings($agencyDetails->id)->get();
@@ -1926,7 +1927,7 @@ class WaterTankerController extends Controller
                 ->get();
 
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
 
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -1941,7 +1942,6 @@ class WaterTankerController extends Controller
             });
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110159", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            $m = $e->getMessage();
             return responseMsgs(false, $e->getMessage(), "", "110159", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -2119,7 +2119,7 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'UlbUser')
                 $list = $list->where('ulb_id', $req->auth['id']);                            // Get ULB Cancel Application List
             if ($req->auth['user_type'] == 'Water-Agency')
-                $list = $list->where('agency_id', WtAgency::select('id')->wehere('u_id', $req->auth['id'])->first()->id);
+                $list = $list->where('agency_id', WtAgency::select('id')->wehere('ulb_id', $req->auth['ulb_id'])->first()->id);
 
             $ulb = $this->_ulbs;
             $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
@@ -2246,7 +2246,7 @@ class WaterTankerController extends Controller
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
                 $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $list = $list->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+                    $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
 
                 $ulb = $this->_ulbs;
                 $f_list = $list->map(function ($val) use ($ulb) {
