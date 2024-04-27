@@ -118,6 +118,8 @@ Route::group(['middleware' => ['checkToken']], function () {
 
         Route::post("water-tanker/driver-to-delivery-list","driverDeliveryList");
         Route::post("water-tanker/driver-update-delivery","updateDeliveryTrackStatus");
+        Route::post("water-tanker/driver-cancel-list","driverCanceledList");
+        Route::post("water-tanker/driver-updated-list","updatedListDeliveryByDriver");
     });
 
     /**

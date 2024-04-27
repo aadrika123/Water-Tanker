@@ -2517,7 +2517,7 @@ class WaterTankerController extends Controller
         }
     }
 
-    public function outBox(Request $request)
+    public function updatedListDeliveryByDriver(Request $request)
     {
         try{
             $user = $request->auth;
@@ -2532,7 +2532,11 @@ class WaterTankerController extends Controller
                 $formDate = $request->fromDate;
                 $uptoDate = $request->uptoData;
             }
-            $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
+            $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type",
+                    "wt_bookings.delivery_track_status","wt_bookings.delivery_comments", "wt_bookings.delivery_latitude",
+                    "wt_bookings.delivery_longitude",
+                    "wt_bookings.driver_delivery_update_date_time","assign_date AS assign_date","wt_bookings.driver_delivery_update_date_time AS update_date_time"
+                    )
                     ->join("wt_drivers","wt_drivers.id","wt_bookings.driver_id")
                     ->join("wt_resources","wt_resources.id","wt_bookings.vehicle_id")
                     ->where("wt_drivers.u_id",$user["id"])
@@ -2545,7 +2549,8 @@ class WaterTankerController extends Controller
             $reassign = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type",
                         "wt_reassign_bookings.delivery_track_status","wt_reassign_bookings.delivery_comments", "wt_reassign_bookings.delivery_latitude",
                         "wt_reassign_bookings.delivery_longitude",
-                        "wt_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date"
+                        "wt_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
+                        "wt_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
                         )
                         ->join("wt_reassign_bookings","wt_reassign_bookings.application_id","wt_bookings.id")
                         ->join("wt_drivers","wt_drivers.id","wt_reassign_bookings.driver_id")
@@ -2572,19 +2577,36 @@ class WaterTankerController extends Controller
             }
             if($formDate && $uptoDate )
             {
-                $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
-                $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
+                $data = $data->whereBetween(DB::raw("cast(wt_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+                $reassign = $reassign->whereBetween(DB::raw("cast(wt_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
             }
 
             $data = $data->union($reassign);
-            $data = $data->orderBy("driver_delivery_update_date_time","DESC")
-                    ->get();
-            return responseMsgs(true, "Booking Delivered/Canceled list",  $data, "110115", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+            $data = $data->orderBy("update_date_time","DESC");
+            $perPage = $request->perPage ? $request->perPage : 10;
+            $data = $data->paginate($perPage);
+            $f_list = [
+                "currentPage" => $data->currentPage(),
+                "lastPage" => $data->lastPage(),
+                "total" => $data->total(),
+                "data" => collect($data->items())->map(function ($val) {
+                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->assign_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+            return responseMsgs(true, "Booking Delivered/Canceled list",  $f_list, "110115", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
         }
         catch(Exception $e)
         {
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
+    }
+
+    public function driverCanceledList()
+    {
+        
     }
 
     public function updateDeliveryTrackStatus(Request $request)
