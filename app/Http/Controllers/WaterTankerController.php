@@ -2554,7 +2554,6 @@ class WaterTankerController extends Controller
                     ->where("wt_bookings.status",1)
                     ->where("wt_bookings.ulb_id",$user["ulb_id"])
                     ->where('assign_date', '!=', NULL)
-                    ->where('is_vehicle_sent', '!=', 0)
                     ->whereIn('delivery_track_status',[1,2] );
             
             $reassign = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type",
@@ -2570,7 +2569,6 @@ class WaterTankerController extends Controller
                         ->where("wt_bookings.status",1)
                         ->where("wt_bookings.ulb_id",$user["ulb_id"])
                         ->where('assign_date', '!=', NULL)
-                        ->where('is_vehicle_sent', '!=', 0)
                         ->whereIn('wt_reassign_bookings.delivery_track_status',[1,2] );
 
             if($key)
