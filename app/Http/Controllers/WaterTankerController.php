@@ -625,10 +625,10 @@ class WaterTankerController extends Controller
             }
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
-                ->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
-                ->where('is_vehicle_sent', '<=', '1')
-                ->where('payment_status', '=', '1')
-                ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+                ->where('wb.agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
+                ->where('wb.is_vehicle_sent', '<=', '1')
+                ->where('wb.payment_status', '=', '1')
+                ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id');
 
             if ($req->date != NULL)
@@ -1649,7 +1649,7 @@ class WaterTankerController extends Controller
             $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
             $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d-m-Y');
             $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
-            
+
             $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
             $vehicle = $reassign ? $reassign->getAssignedVehicle() : $data->getAssignedVehicle();
 

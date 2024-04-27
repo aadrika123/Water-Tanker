@@ -76,7 +76,7 @@ class SepticTankController extends Controller
     {
         try {
             // Variable initialization
-            if ($req->auth['user_type'] != "UlbUser")
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
