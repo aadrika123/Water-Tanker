@@ -2442,10 +2442,28 @@ class WaterTankerController extends Controller
                     ->where("wt_bookings.status",1)
                     ->where("wt_bookings.ulb_id",$user["ulb_id"])
                     ->where('assign_date', '!=', NULL)
-                    ->where('is_vehicle_sent', '!=', 2);
+                    ->where('is_vehicle_sent', '!=', 2)
+                    ->where('delivery_track_status', 0 );
+            
+            $reassign = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
+                        ->join("wt_reassign_bookings","wt_reassign_bookings.application_id","wt_bookings.id")
+                        ->join("wt_drivers","wt_drivers.id","wt_reassign_bookings.driver_id")
+                        ->join("wt_resources","wt_resources.id","wt_reassign_bookings.vehicle_id")
+                        ->where("wt_drivers.u_id",$user["id"])
+                        ->where("wt_bookings.status",1)
+                        ->where("wt_bookings.ulb_id",$user["ulb_id"])
+                        ->where('assign_date', '!=', NULL)
+                        ->where('is_vehicle_sent', '!=', 2)
+                        ->where('wt_reassign_bookings.delivery_track_status', 0 );
+
             if($key)
             {
                 $data = $data->where(function($where) use($key){
+                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+                });
+                $reassign = $reassign->where(function($where) use($key){
                     $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
                     ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
                     ->orWhere("wt_bookings.mobile","LIKE","%$key%");
@@ -2454,8 +2472,10 @@ class WaterTankerController extends Controller
             if($formDate && $uptoDate )
             {
                 $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
+                $reassign = $reassign->whereBetween("assign_date",[$formDate,$uptoDate]);
             }
 
+            $data = $data->union($reassign);
             $data = $data->orderBy("delivery_date","ASC")
                     ->orderBy("delivery_time","ASC")
                     ->get();
