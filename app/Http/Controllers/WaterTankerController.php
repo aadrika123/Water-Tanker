@@ -2604,9 +2604,63 @@ class WaterTankerController extends Controller
         }
     }
 
-    public function driverCanceledList()
+    public function driverCanceledList(Request $request)
     {
-        
+        try{
+            $user = $request->auth;
+            $key = $request->key;
+            $formDate = $uptoDate =  null;
+            if(!$key)
+            {
+                $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            }
+            if($request->fromDate && $request->uptoDate)
+            {
+                $formDate = $request->fromDate;
+                $uptoDate = $request->uptoData;
+            }
+            $ulbId = $user["ulb_id"];
+            $mWtBooking = new WtBooking();
+            $mWtReassignBooking = new WtReassignBooking();
+            $data = $mWtBooking->getBookingList()
+                    ->leftJoin(
+                        DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                        function($join){
+                            $join->on("reassign.application_id","wb.id");
+                        }
+                        )
+                    ->where("delivery_track_status",1)
+                    ->where("is_vehicle_sent","<",2)
+                    ->where("wb.ulb_id",$ulbId)
+                    ->whereNull("reassign.application_id");
+
+            $perPage = $request->perPage ? $request->perPage : 10;
+            $list = $data->paginate($perPage);
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) use($mWtReassignBooking) {
+                    $reassign = $mWtReassignBooking->select("wt_reassign_bookings.*","dr.driver_name","res.vehicle_no")
+                                ->leftjoin('wt_drivers as dr', 'wt_reassign_bookings.driver_id', '=', 'dr.id')
+                                ->leftjoin('wt_resources as res', 'wt_reassign_bookings.vehicle_id', '=', 'res.id')
+                                ->where("wt_reassign_bookings.application_id",$val->id)
+                                ->orderBy("wt_reassign_bookings.id","DESC")
+                                ->first();
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    $val->assign_date = $reassign ? $reassign->re_assign_date : $val->assign_date;
+                    $val->assign_date  = Carbon::parse($val->assign_date )->format('d-m-Y');
+                    $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )": $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    return $val;
+                }),
+            ];
+            return responseMsgs(true, "Driver Cancel Booking List !!!", $f_list, "110152", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
     }
 
     public function updateDeliveryTrackStatus(Request $request)
