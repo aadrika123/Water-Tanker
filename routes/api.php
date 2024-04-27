@@ -165,5 +165,10 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/septic-tank-feedback', 'getFeedback');                                                       // 34 ( Get Feedback )   
         Route::post('septic-tanker/check-feedback', 'checkFeedback');                                                           // 35 ( Check Feedback )  
         Route::post('septic-tanker/master-data', 'masterData');
+
+        Route::post("septic-tanker/driver-to-delivery-list","driverDeliveryList");
+        Route::post("septic-tanker/driver-update-delivery","updateDeliveryTrackStatus");
+        Route::post("septic-tanker/driver-cancel-list","driverCanceledList");
+        Route::post("septic-tanker/driver-updated-list","updatedListDeliveryByDriver");
     });
 });

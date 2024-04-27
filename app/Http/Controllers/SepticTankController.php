@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\BLL\Calculations;
 use App\Http\Requests\SepticTank\StoreRequest;
+use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
@@ -1235,6 +1236,280 @@ class SepticTankController extends Controller
             return responseMsgs(true, "Feedback !!!", $commentDetails, "110237", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110237", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * function added by sandeep bara
+     */
+    public function driverDeliveryList(Request $res)
+    {
+        try{
+            $key = $res->key;
+            $formDate = $uptoDate =null;
+            if($res->fromDate)
+            {
+                $formDate =$res->fromDate;
+            }
+            if($res->uptoDate)
+            {
+                $uptoDate =$res->uptoDate;
+            }
+            $user = $res->auth;
+            $data = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type")
+                    ->join("st_drivers","st_drivers.id","st_bookings.driver_id")
+                    ->join("st_resources","st_resources.id","st_bookings.vehicle_id")
+                    ->where("st_drivers.u_id",$user["id"])
+                    ->where("st_bookings.status",1)
+                    ->where("st_bookings.ulb_id",$user["ulb_id"])
+                    ->where('assign_date', '!=', NULL)
+                    ->where('is_vehicle_sent', '!=', 2)
+                    ->where('delivery_track_status', 0 );
+            
+            $reassign = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type")
+                        ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
+                        ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
+                        ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
+                        ->where("st_drivers.u_id",$user["id"])
+                        ->where("st_bookings.status",1)
+                        ->where("st_bookings.ulb_id",$user["ulb_id"])
+                        ->where('assign_date', '!=', NULL)
+                        ->where('is_vehicle_sent', '!=', 2)
+                        ->where('st_reassign_bookings.delivery_track_status', 0 );
+
+            if($key)
+            {
+                $data = $data->where(function($where) use($key){
+                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                });
+                $reassign = $reassign->where(function($where) use($key){
+                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                });
+            }
+            if($formDate && $uptoDate )
+            {
+                $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
+                $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
+            }
+
+            $data = $data->union($reassign);
+            $data = $data->orderBy("delivery_date","ASC")
+                    ->orderBy("delivery_time","ASC")
+                    ->get();
+            return responseMsgs(true, "Booking list",  $data, "110115", "1.0", responseTime(), 'POST', $res->deviceId ?? "");
+        }
+        catch(Exception $e){
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $res->deviceId ?? "");
+        }
+    }
+
+    public function updatedListDeliveryByDriver(Request $request)
+    {
+        try{
+            $user = $request->auth;
+            $key = $request->key;
+            $formDate = $uptoDate =  null;
+            if(!$key)
+            {
+                $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            }
+            if($request->fromDate && $request->uptoDate)
+            {
+                $formDate = $request->fromDate;
+                $uptoDate = $request->uptoData;
+            }
+            $data = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
+                    "st_bookings.delivery_track_status","st_bookings.delivery_comments", "st_bookings.delivery_latitude",
+                    "st_bookings.delivery_longitude",
+                    "st_bookings.driver_delivery_update_date_time","assign_date AS assign_date","st_bookings.driver_delivery_update_date_time AS update_date_time"
+                    )
+                    ->join("st_drivers","st_drivers.id","st_bookings.driver_id")
+                    ->join("st_resources","st_resources.id","st_bookings.vehicle_id")
+                    ->where("st_drivers.u_id",$user["id"])
+                    ->where("st_bookings.status",1)
+                    ->where("st_bookings.ulb_id",$user["ulb_id"])
+                    ->where('assign_date', '!=', NULL)
+                    ->whereIn('delivery_track_status',[1,2] );
+            
+            $reassign = StBooking::select("wt_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
+                        "st_reassign_bookings.delivery_track_status","st_reassign_bookings.delivery_comments", "st_reassign_bookings.delivery_latitude",
+                        "st_reassign_bookings.delivery_longitude",
+                        "st_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
+                        "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+                        )
+                        ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
+                        ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
+                        ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
+                        ->where("st_drivers.u_id",$user["id"])
+                        ->where("st_bookings.status",1)
+                        ->where("st_bookings.ulb_id",$user["ulb_id"])
+                        ->where('assign_date', '!=', NULL)
+                        ->whereIn('st_reassign_bookings.delivery_track_status',[1,2] );
+
+            if($key)
+            {
+                $data = $data->where(function($where) use($key){
+                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                });
+                $reassign = $reassign->where(function($where) use($key){
+                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                });
+            }
+            if($formDate && $uptoDate )
+            {
+                $data = $data->whereBetween(DB::raw("cast(st_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+                $reassign = $reassign->whereBetween(DB::raw("cast(st_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+            }
+
+            $data = $data->union($reassign);
+            $data = $data->orderBy("update_date_time","DESC");
+            $perPage = $request->perPage ? $request->perPage : 10;
+            $data = $data->paginate($perPage);
+            $f_list = [
+                "currentPage" => $data->currentPage(),
+                "lastPage" => $data->lastPage(),
+                "total" => $data->total(),
+                "data" => collect($data->items())->map(function ($val) {
+                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->assign_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+            return responseMsgs(true, "Booking Delivered/Canceled list",  $f_list, "110115", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
+    public function driverCanceledList(Request $request)
+    {
+        try{
+            $user = $request->auth;
+            $key = $request->key;
+            $formDate = $uptoDate =  null;
+            if(!$key)
+            {
+                $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            }
+            if($request->fromDate && $request->uptoDate)
+            {
+                $formDate = $request->fromDate;
+                $uptoDate = $request->uptoData;
+            }
+            $ulbId = $user["ulb_id"];
+            $mWtBooking = new StBooking();
+            $data = $mWtBooking->getBookingList()
+                    ->leftJoin(
+                        DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                        function($join){
+                            $join->on("reassign.application_id","wb.id");
+                        }
+                        )
+                    ->where("delivery_track_status",1)
+                    ->where("is_vehicle_sent","<",2)
+                    ->where("wb.ulb_id",$ulbId)
+                    ->whereNull("reassign.application_id");
+
+            $perPage = $request->perPage ? $request->perPage : 10;
+            $list = $data->paginate($perPage);
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val)  {                    
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    $val->assign_date =  $val->assign_date;
+                    $val->assign_date  = Carbon::parse($val->assign_date )->format('d-m-Y');
+                    $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    return $val;
+                }),
+            ];
+            return responseMsgs(true, "Driver Cancel Booking List !!!", $f_list, "110152", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
+    public function updateDeliveryTrackStatus(Request $request)
+    {
+        $rules = [
+            "applicationId"=>'required|digits_between:1,9223372036854775807',
+            "status"=>'required|in:1,2',
+            "comments"=>'required|string|min:10',
+            "latitude"=>'required',
+            "longitude"=>'required',
+            "document"=>'required|mimes:png,jpg,jpeg,gif',
+        ];
+        $validated = Validator::make($request->all(),$rules);
+        if ($validated->fails()){
+            return validationErrorV2($validated);
+        }        
+        try{
+            $user = $request->auth;
+            if(!$user || $user["user_type"]!="Driver"){
+                throw new Exception("You are not authorized for this");
+            }
+            $driver = StDriver::where("u_id",$user["id"])->first();
+            $ModelWtBooking =   new StBooking();
+            $booking = $ModelWtBooking->find($request->applicationId);
+            if(!$booking)
+            {
+                throw new Exception("booking not fund");
+            }
+            $reBooking = $booking->getLastReassignedBooking();
+            $updateData = $reBooking ? $reBooking:$booking;
+            $isReassigned = $reBooking ? true:false;
+            if($updateData->driver_id!=$driver->id)
+            {
+                throw new Exception("You have not this booking");
+            }
+            $document = new DocUpload();
+            $document = $document->severalDoc($request);
+            $document = $document->original["data"];
+            $sms = "Out of Delivery";
+            if($request->status == 2 )
+            {
+                $sms = "Delivered";
+            }
+            $updateData->delivery_track_status = $request->status;  
+            $updateData->delivery_latitude = $request->latitude;   
+            $updateData->delivery_longitude = $request->longitude;   
+            $updateData->delivery_comments = $request->comments; 
+            $updateData->driver_delivery_update_date_time = Carbon::now();
+            $updateData->unique_id = $document["document"]["data"]["uniqueId"];    
+            $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
+
+            if($updateData->delivery_track_status==2){
+                $booking->is_vehicle_sent = $updateData->delivery_track_status;    
+                $booking->delivered_by_driver_id = $driver->id; 
+                $booking->driver_delivery_date_time = Carbon::now();            
+            }
+             
+            DB::beginTransaction();            
+            $updateData->update(); 
+            $booking->update();
+                                                                              
+            DB::commit();
+            return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+        catch(Exception $e)
+        {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
 }
