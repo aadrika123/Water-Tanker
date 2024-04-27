@@ -178,4 +178,13 @@ class WtBooking extends Model
         return $this->belongsTo(WtDriver::class,"delivered_by_driver_id","id")->first();
     }
 
+    public function getAssignedVehicle()
+    {
+        return $this->hasOne(WtResource::class,"id","vehicle_id")->first();
+    }
+    public function getAssignedDriver()
+    {
+        return $this->hasOne(WtDriver::class,"id","driver_id")->first();
+    }
+
 }

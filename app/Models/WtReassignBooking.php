@@ -36,4 +36,13 @@ class WtReassignBooking extends Model
                 ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.delivery_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile','wd.driver_name','wd.driver_mobile','wr.vehicle_name','wr.vehicle_no','wc.capacity','hc.name as hydration_center_name'
                     ,"wrb.delivery_track_status","wrb.delivery_comments");
     }
+
+    public function getAssignedVehicle()
+    {
+        return $this->hasOne(WtResource::class,"id","vehicle_id")->first();
+    }
+    public function getAssignedDriver()
+    {
+        return $this->hasOne(WtDriver::class,"id","driver_id")->first();
+    }
 }

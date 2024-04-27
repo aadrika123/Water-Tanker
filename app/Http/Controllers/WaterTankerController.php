@@ -1633,18 +1633,29 @@ class WaterTankerController extends Controller
      * | API - 50
      */
     public function getBookingDetailById(Request $req)
-    {
+    {        
+        $mWtBooking = new WtBooking();
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
+            'applicationId' => 'required|integer|exists:'.$mWtBooking->getTable().",id",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            $mWtBooking = new WtBooking();
+            $data = $mWtBooking->find($req->applicationId);
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
+            $reassign = $data->getLastReassignedBooking();
+
             $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
             $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d-m-Y');
+            $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
+            
+            $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
+            $vehicle = $reassign ? $reassign->getAssignedVehicle() : $data->getAssignedVehicle();
+
+            $list->driver_name = $driver ? $driver->driver_name : "";
+            $list->driver_mobile = $driver ? $driver->driver_mobile : "";
+            $list->vehicle_no = $vehicle ? $vehicle->vehicle_no : "";
             return responseMsgs(true, "Booking Details!!!", $list, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
