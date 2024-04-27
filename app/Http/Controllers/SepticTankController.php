@@ -112,7 +112,7 @@ class SepticTankController extends Controller
     {
         try {
             // Variable initialization
-            if ($req->auth['user_type'] != "UlbUser")
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
@@ -185,7 +185,7 @@ class SepticTankController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Anothorished Access !!!');
             // Variable initialization
             $mStBooking = StBooking::find($req->applicationId);
@@ -247,7 +247,7 @@ class SepticTankController extends Controller
     public function listCancelBooking(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'Citizen' && $req->auth['user_type'] != 'UlbUser')
+            if ($req->auth['user_type'] != 'Citizen' && in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mStCancelledBooking = new StCancelledBooking();
@@ -257,7 +257,7 @@ class SepticTankController extends Controller
                 ->get();
             if ($req->auth['user_type'] == 'Citizen')
                 $list = $list->where('citizen_id', $req->auth['id']);
-            if ($req->auth['user_type'] == 'UlbUser')
+            if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
 
             $ulb = $this->_ulbs;
@@ -325,7 +325,7 @@ class SepticTankController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -354,7 +354,7 @@ class SepticTankController extends Controller
             // Variable initialization
             $mStDriver = new StDriver();
             $list = $mStDriver->getDriverList();
-            if ($req->auth['user_type'] == 'UlbUser')
+            if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
@@ -453,7 +453,7 @@ class SepticTankController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -477,7 +477,7 @@ class SepticTankController extends Controller
     public function listResource(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mStResource = new StResource();
@@ -560,7 +560,7 @@ class SepticTankController extends Controller
     public function vehicleDriverMasterUlbWise(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Initialize Variable
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -591,7 +591,7 @@ class SepticTankController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Initialize Variable
             $mStBooking = StBooking::find($req->applicationId);
@@ -621,7 +621,7 @@ class SepticTankController extends Controller
         }
         try {
             // Variable initialization
-            if ($req->auth['user_type'] != "UlbUser")
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
@@ -708,7 +708,7 @@ class SepticTankController extends Controller
     public function listAppliedAndCancelledApplication(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'Citizen' && $req->auth['user_type'] != 'UlbUser')
+            if ($req->auth['user_type'] != 'Citizen' && !in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mStBooking = new StBooking();
@@ -733,7 +733,7 @@ class SepticTankController extends Controller
                 ->get();
             if ($req->auth['user_type'] == 'Citizen')
                 $list = $list->where('citizen_id', $req->auth['id']);
-            if ($req->auth['user_type'] == 'UlbUser')
+            if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
 
             $ulb = $this->_ulbs;
@@ -1082,7 +1082,7 @@ class SepticTankController extends Controller
 
                 $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
                 $data1['driver'] = $listDriver;
-                if ($req->auth['user_type'] == 'UlbUser')
+                if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
                 // if ($req->auth['user_type'] == 'Water-Agency')
                 //     $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
@@ -1097,7 +1097,7 @@ class SepticTankController extends Controller
                 $mWtResource = new StResource();
                 $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
                 // $data1['vehicle'] = $resource;
-                if ($req->auth['user_type'] == 'UlbUser')
+                if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 // if ($req->auth['user_type'] == 'Water-Agency')
                 //     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
