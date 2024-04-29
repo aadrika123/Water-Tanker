@@ -352,7 +352,7 @@ class SepticTankController extends Controller
             
             $roleModle = new WfRole();
             $dRoleRequest = new Request([
-                "wfRoleId"=> $roleModle->getDriverRoleId(),
+                "wfRoleId"=> $roleModle->getSepticTankDriverRoleId(),
                 "createdBy"=>$req->auth['id'],
             ]);
 

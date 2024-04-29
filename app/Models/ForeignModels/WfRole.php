@@ -13,4 +13,9 @@ class WfRole extends ParamModel
         $data= self::where(DB::raw("upper(role_name)"),"=","DRIVER")->where("is_suspended",false)->orderBy("id","DESC")->first();
         return ($data? $data->id:0);
     }
+    public Function getSepticTankDriverRoleId()
+    {
+        $data= self::where(DB::raw("upper(role_name)"),"=","SEPTIC TANKER DRIVER")->where("is_suspended",false)->orderBy("id","DESC")->first();
+        return ($data? $data->id:0);
+    }
 }
