@@ -1683,21 +1683,39 @@ class WaterTankerController extends Controller
             $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
             if (!$mWtDriverVehicleMap)
                 throw new Exception("Driver Vehicle Map Not Found !!!");
-            $mWtBookingForReplicate = WtBooking::select('id', 'vdm_id', 'vehicle_id', 'driver_id')->where('id', $req->applicationId)->first();
+            $mWtBookingForReplicate = WtBooking::select('id', 'vdm_id', 'vehicle_id', 'driver_id',"assign_date as re_assign_date",
+                                        "delivery_track_status","delivery_comments","delivery_latitude","delivery_longitude",
+                                        "unique_id","reference_no","driver_delivery_update_date_time"
+                                    )
+                                    ->where('id', $req->applicationId)->first();
             $mWtBooking->vdm_id = $req->vdmId;
             $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
             $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+
+            $mWtBooking->delivery_track_status = 0;
+            $mWtBooking->delivery_comments = null;
+            $mWtBooking->delivery_latitude = null;
+            $mWtBooking->delivery_longitude = null;
+
+            $mWtBooking->unique_id = null;
+            $mWtBooking->reference_no = null;
+            $mWtBooking->driver_delivery_update_date_time = null;
+
             $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
-            $mWtBooking->save();
+            
 
             // Re-Assign booking on Re-assign Table
             $reassign = $mWtBookingForReplicate->replicate();
             $reassign->setTable('wt_reassign_bookings');
             $reassign->application_id =  $mWtBookingForReplicate->id;
-            $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
+            // $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
+            DB::beginTransaction();
+            $mWtBooking->save();
             $reassign->save();
+            DB::commit();
             return responseMsgs(true, "Booking Assignent Successfully !!!", '', "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
+            DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -2517,7 +2535,7 @@ class WaterTankerController extends Controller
                 $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
             }
 
-            $data = $data->union($reassign);
+            $data = $data;
             $data = $data->orderBy("delivery_date","ASC")
                     ->orderBy("delivery_time","ASC")
                     ->get();
@@ -2632,16 +2650,16 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $mWtReassignBooking = new WtReassignBooking();
             $data = $mWtBooking->getBookingList()
-                    ->leftJoin(
-                        DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
-                        function($join){
-                            $join->on("reassign.application_id","wb.id");
-                        }
-                        )
+                    // ->leftJoin(
+                    //     DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                    //     function($join){
+                    //         $join->on("reassign.application_id","wb.id");
+                    //     }
+                    //     )
                     ->where("delivery_track_status",1)
                     ->where("is_vehicle_sent","<",2)
-                    ->where("wb.ulb_id",$ulbId)
-                    ->whereNull("reassign.application_id");
+                    ->where("wb.ulb_id",$ulbId);
+                    // ->whereNull("reassign.application_id");
 
             $perPage = $request->perPage ? $request->perPage : 10;
             $list = $data->paginate($perPage);
@@ -2699,7 +2717,7 @@ class WaterTankerController extends Controller
                 throw new Exception("booking not fund");
             }
             $reBooking = $booking->getLastReassignedBooking();
-            $updateData = $reBooking ? $reBooking:$booking;
+            $updateData = $booking;
             $isReassigned = $reBooking ? true:false;
             if($updateData->driver_id!=$driver->id)
             {

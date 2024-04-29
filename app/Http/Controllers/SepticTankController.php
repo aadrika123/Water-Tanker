@@ -6,12 +6,15 @@ use App\BLL\Calculations;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
+use App\Models\ForeignModels\WfRole;
+use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
 use App\Models\Septic\StCapacity;
 use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StDriver;
 use App\Models\StResource;
+use App\Models\User;
 use App\Models\WtLocation;
 use Carbon\Carbon;
 use Exception;
@@ -312,6 +315,7 @@ class SepticTankController extends Controller
      */
     public function addDriver(Request $req)
     {
+        $user = new User();
         $validator = Validator::make($req->all(), [
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
@@ -320,9 +324,12 @@ class SepticTankController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
+            'driverEmail' => "required|string|email|unique:".$user->getConnectionName().".".$user->getTable().",email",
+
 
         ]);
         if ($validator->fails()) {
+            return validationErrorV2($validator);
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
@@ -331,13 +338,41 @@ class SepticTankController extends Controller
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
+
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            $reqs = [
+                "name" =>  $req->driverName,
+                "email" => $req->driverEmail,
+                "password" => $req->password ? $req->password : ("Basic" . '@' . "12345"),
+                "mobile" => $req->driverMobile,
+                "address"   => $req->driverAddress,
+                "ulb" => $req->ulbId,
+                "userType" =>  "Septic-Driver",
+            ];
+            
+            $roleModle = new WfRole();
+            $dRoleRequest = new Request([
+                "wfRoleId"=> $roleModle->getDriverRoleId(),
+                "createdBy"=>$req->auth['id'],
+            ]);
+
             $mStDriver = new StDriver();
+            $waterTankerController = new WaterTankerController();
             DB::beginTransaction();
+            DB::connection("pgsql_master")->beginTransaction();
+            $userId = $waterTankerController->store($reqs);                                                // Create User in User Table for own Dashboard and Login
+            $req->merge(['UId' => $userId]);
+            $dRoleRequest->merge([
+                "userId"=>$userId,
+            ]);
+            $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
             $res = $mStDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
             DB::commit();
+            DB::connection("pgsql_master")->commit();
             return responseMsgs(true, "Driver Added Successfully !!!",  '', "110209", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
+            DB::connection("pgsql_master")->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110209", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -1260,22 +1295,22 @@ class SepticTankController extends Controller
                     ->join("st_drivers","st_drivers.id","st_bookings.driver_id")
                     ->join("st_resources","st_resources.id","st_bookings.vehicle_id")
                     ->where("st_drivers.u_id",$user["id"])
-                    ->where("st_bookings.status",1)
+                    // ->where("st_bookings.status",1)
                     ->where("st_bookings.ulb_id",$user["ulb_id"])
                     ->where('assign_date', '!=', NULL)
-                    ->where('is_vehicle_sent', '!=', 2)
+                    ->where('assign_status', 1)
                     ->where('delivery_track_status', 0 );
             
-            $reassign = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type")
-                        ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
-                        ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
-                        ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
-                        ->where("st_drivers.u_id",$user["id"])
-                        ->where("st_bookings.status",1)
-                        ->where("st_bookings.ulb_id",$user["ulb_id"])
-                        ->where('assign_date', '!=', NULL)
-                        ->where('is_vehicle_sent', '!=', 2)
-                        ->where('st_reassign_bookings.delivery_track_status', 0 );
+            // $reassign = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type")
+            //             ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
+            //             ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
+            //             ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
+            //             ->where("st_drivers.u_id",$user["id"])
+            //             ->where("st_bookings.status",1)
+            //             ->where("st_bookings.ulb_id",$user["ulb_id"])
+            //             ->where('assign_date', '!=', NULL)
+            //             ->where('assign_status', 1)
+            //             ->where('st_reassign_bookings.delivery_track_status', 0 );
 
             if($key)
             {
@@ -1284,21 +1319,22 @@ class SepticTankController extends Controller
                     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
                     ->orWhere("st_bookings.mobile","LIKE","%$key%");
                 });
-                $reassign = $reassign->where(function($where) use($key){
-                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
-                });
+                // $reassign = $reassign->where(function($where) use($key){
+                //     $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                //     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                //     ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                // });
             }
             if($formDate && $uptoDate )
             {
                 $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
-                $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
+                // $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
             }
 
-            $data = $data->union($reassign);
-            $data = $data->orderBy("delivery_date","ASC")
-                    ->orderBy("delivery_time","ASC")
+            // $data = $data->union($reassign);
+            
+            $data = $data->orderBy("cleaning_date","ASC")
+                    // ->orderBy("delivery_time","ASC")
                     ->get();
             return responseMsgs(true, "Booking list",  $data, "110115", "1.0", responseTime(), 'POST', $res->deviceId ?? "");
         }
@@ -1330,25 +1366,23 @@ class SepticTankController extends Controller
                     ->join("st_drivers","st_drivers.id","st_bookings.driver_id")
                     ->join("st_resources","st_resources.id","st_bookings.vehicle_id")
                     ->where("st_drivers.u_id",$user["id"])
-                    ->where("st_bookings.status",1)
                     ->where("st_bookings.ulb_id",$user["ulb_id"])
                     ->where('assign_date', '!=', NULL)
                     ->whereIn('delivery_track_status',[1,2] );
             
-            $reassign = StBooking::select("wt_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
-                        "st_reassign_bookings.delivery_track_status","st_reassign_bookings.delivery_comments", "st_reassign_bookings.delivery_latitude",
-                        "st_reassign_bookings.delivery_longitude",
-                        "st_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
-                        "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
-                        )
-                        ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
-                        ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
-                        ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
-                        ->where("st_drivers.u_id",$user["id"])
-                        ->where("st_bookings.status",1)
-                        ->where("st_bookings.ulb_id",$user["ulb_id"])
-                        ->where('assign_date', '!=', NULL)
-                        ->whereIn('st_reassign_bookings.delivery_track_status',[1,2] );
+            // $reassign = StBooking::select("wt_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
+            //             "st_reassign_bookings.delivery_track_status","st_reassign_bookings.delivery_comments", "st_reassign_bookings.delivery_latitude",
+            //             "st_reassign_bookings.delivery_longitude",
+            //             "st_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
+            //             "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+            //             )
+            //             ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
+            //             ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
+            //             ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
+            //             ->where("st_drivers.u_id",$user["id"])
+            //             ->where("st_bookings.ulb_id",$user["ulb_id"])
+            //             ->where('assign_date', '!=', NULL)
+            //             ->whereIn('st_reassign_bookings.delivery_track_status',[1,2] );
 
             if($key)
             {
@@ -1357,21 +1391,22 @@ class SepticTankController extends Controller
                     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
                     ->orWhere("st_bookings.mobile","LIKE","%$key%");
                 });
-                $reassign = $reassign->where(function($where) use($key){
-                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
-                });
+                // $reassign = $reassign->where(function($where) use($key){
+                //     $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                //     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                //     ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                // });
             }
             if($formDate && $uptoDate )
             {
                 $data = $data->whereBetween(DB::raw("cast(st_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
-                $reassign = $reassign->whereBetween(DB::raw("cast(st_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+                // $reassign = $reassign->whereBetween(DB::raw("cast(st_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
             }
 
-            $data = $data->union($reassign);
+            // $data = $data->union($reassign);
             $data = $data->orderBy("update_date_time","DESC");
             $perPage = $request->perPage ? $request->perPage : 10;
+            DB::enableQueryLog();
             $data = $data->paginate($perPage);
             $f_list = [
                 "currentPage" => $data->currentPage(),
@@ -1379,7 +1414,7 @@ class SepticTankController extends Controller
                 "total" => $data->total(),
                 "data" => collect($data->items())->map(function ($val) {
                     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
                     $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
@@ -1411,14 +1446,14 @@ class SepticTankController extends Controller
             $mWtBooking = new StBooking();
             $data = $mWtBooking->getBookingList()
                     ->leftJoin(
-                        DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                        DB::raw("(SELECT DISTINCT application_id FROM st_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
                         function($join){
-                            $join->on("reassign.application_id","wb.id");
+                            $join->on("reassign.application_id","stb.id");
                         }
                         )
                     ->where("delivery_track_status",1)
-                    ->where("is_vehicle_sent","<",2)
-                    ->where("wb.ulb_id",$ulbId)
+                    ->where("assign_status","<",2)
+                    ->where("stb.ulb_id",$ulbId)
                     ->whereNull("reassign.application_id");
 
             $perPage = $request->perPage ? $request->perPage : 10;
@@ -1429,7 +1464,7 @@ class SepticTankController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val)  {                    
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
                     $val->assign_date =  $val->assign_date;
                     $val->assign_date  = Carbon::parse($val->assign_date )->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
@@ -1460,7 +1495,7 @@ class SepticTankController extends Controller
         }        
         try{
             $user = $request->auth;
-            if(!$user || $user["user_type"]!="Driver"){
+            if(!$user || $user["user_type"]!="Septic-Driver"){
                 throw new Exception("You are not authorized for this");
             }
             $driver = StDriver::where("u_id",$user["id"])->first();
@@ -1470,7 +1505,8 @@ class SepticTankController extends Controller
             {
                 throw new Exception("booking not fund");
             }
-            $reBooking = $booking->getLastReassignedBooking();
+            $reBooking = null;
+            #$booking->getLastReassignedBooking();
             $updateData = $reBooking ? $reBooking:$booking;
             $isReassigned = $reBooking ? true:false;
             if($updateData->driver_id!=$driver->id)
@@ -1494,7 +1530,7 @@ class SepticTankController extends Controller
             $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
 
             if($updateData->delivery_track_status==2){
-                $booking->is_vehicle_sent = $updateData->delivery_track_status;    
+                $booking->assign_status = $updateData->delivery_track_status;    
                 $booking->delivered_by_driver_id = $driver->id; 
                 $booking->driver_delivery_date_time = Carbon::now();            
             }

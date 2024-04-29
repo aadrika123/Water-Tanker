@@ -20,6 +20,7 @@ class StDriver extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
+            "u_id"=>$req->UId,
             'driver_name' => $req->driverName,
             'driver_aadhar_no' => $req->driverAadharNo,
             'driver_mobile' => $req->driverMobile,
