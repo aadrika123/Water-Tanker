@@ -1517,10 +1517,10 @@ class SepticTankController extends Controller
             $document = new DocUpload();
             $document = $document->severalDoc($request);
             $document = $document->original["data"];
-            $sms = "Delivery Canceled";
+            $sms = "Canceled";
             if($request->status == 2 )
             {
-                $sms = "Delivered Successfully";
+                $sms = "Successfully";
             }
             $updateData->delivery_track_status = $request->status;  
             $updateData->delivery_latitude = $request->latitude;   
