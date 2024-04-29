@@ -13,6 +13,7 @@ use App\Models\Septic\StCancelledBooking;
 use App\Models\Septic\StCapacity;
 use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StDriver;
+use App\Models\StReassignBooking;
 use App\Models\StResource;
 use App\Models\User;
 use App\Models\WtLocation;
@@ -1602,6 +1603,48 @@ class SepticTankController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | List of Re-Assign Booking
+     * | Function - 52
+     * | API - 52
+     */
+    public function listReassignBooking(Request $req)
+    {
+        try {
+            $ulbId = $req->auth["ulb_id"];
+            $mWtReassignBooking = new StReassignBooking();
+            $list = $mWtReassignBooking->listReassignBookingOrm();
+            $list = $list->where("wb.ulb_id",$ulbId);
+            $ulb = $this->_ulbs;
+            // $f_list = $list->map(function ($val) use ($ulb) {
+            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+            //     $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
+            //     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
+            //     return $val;
+            // });
+
+            $perPage = $req->perPage ? $req->perPage : 10;
+            $list = $list->paginate($perPage);
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) use ($ulb) {
+                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
+                    $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    return $val;
+                }),
+            ];
+            
+            return responseMsgs(true, "Re-Assign Booking List !!!", $f_list, "110152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110152", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
