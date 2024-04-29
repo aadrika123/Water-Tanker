@@ -365,7 +365,7 @@ class WaterTankerController extends Controller
             return ['status' => false, 'message' =>"validation Error","errors"=> $validator->errors()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
@@ -458,7 +458,7 @@ class WaterTankerController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
@@ -485,7 +485,7 @@ class WaterTankerController extends Controller
     public function listResource(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtResource = new WtResource();
@@ -617,7 +617,7 @@ class WaterTankerController extends Controller
         }
         try {
             // Variable initialization
-            if ($req->auth['user_type'] != "Water-Agency")
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception("Unauthorized  Access !!!");
             $test = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first();
             if(!$test){
@@ -697,7 +697,7 @@ class WaterTankerController extends Controller
     public function listMapDriverVehicle(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
@@ -1942,7 +1942,7 @@ class WaterTankerController extends Controller
     public function wtAgencyDashboard(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception("Unauthorized Access !!!");
             // Variable initialization
             $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('ulb_id', $req->auth['ulb_id'])->first();
@@ -1980,7 +1980,7 @@ class WaterTankerController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtBooking = new WtBooking();
@@ -2268,7 +2268,7 @@ class WaterTankerController extends Controller
     {
         // $redis = Redis::connection();
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
