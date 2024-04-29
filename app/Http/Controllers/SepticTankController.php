@@ -926,7 +926,7 @@ class SepticTankController extends Controller
             $f_list = $list->map(function ($val) {
                 $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
                 return $val;
-            });
+            })->values();
             return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110227", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110227", "1.0", "", 'POST', $req->deviceId ?? "");
