@@ -1618,14 +1618,6 @@ class SepticTankController extends Controller
             $mWtReassignBooking = new StReassignBooking();
             $list = $mWtReassignBooking->listReassignBookingOrm();
             $list = $list->where("wb.ulb_id",$ulbId);
-            $ulb = $this->_ulbs;
-            // $f_list = $list->map(function ($val) use ($ulb) {
-            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
-            //     $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
-            //     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
-            //     return $val;
-            // });
 
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
@@ -1633,10 +1625,10 @@ class SepticTankController extends Controller
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
-                "data" => collect($list->items())->map(function ($val) use ($ulb) {
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
-                    $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
+                "data" => collect($list->items())->map(function ($val) {
+                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::parse($val->re_assign_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),

@@ -19,7 +19,7 @@ class StReassignBooking extends Model
                 ->join('st_resources as wr','wr.id','=','wrb.vehicle_id')
                 ->join('st_drivers as wd','wd.id','=','wrb.driver_id')
                 ->join('st_capacities as wc','wc.id','=','wb.capacity_id')
-                ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.delivery_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
+                ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.cleaning_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
                     'wd.driver_name','wd.driver_mobile','wr.vehicle_name','wr.vehicle_no','wc.capacity' ,
                     "wrb.delivery_track_status","wrb.delivery_comments")
                 ->get();
@@ -30,8 +30,8 @@ class StReassignBooking extends Model
                 ->join('st_bookings as wb','wb.id','=','wrb.application_id')
                 ->join('st_resources as wr','wr.id','=','wrb.vehicle_id')
                 ->join('st_drivers as wd','wd.id','=','wrb.driver_id')
-                ->join('st_capacities as wc','wc.id','=','wb.capacity_id')
-                ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.delivery_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
+                ->leftJoin('st_capacities as wc','wc.id','=','wb.capacity_id')
+                ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.cleaning_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
                     'wd.driver_name','wd.driver_mobile','wr.vehicle_name','wr.vehicle_no','wc.capacity' ,
                     "wrb.delivery_track_status","wrb.delivery_comments");
     }
