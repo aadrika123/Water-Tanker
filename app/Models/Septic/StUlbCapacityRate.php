@@ -47,10 +47,10 @@ class StUlbCapacityRate extends Model
             'st_ulb_capacity_rates.ulb_id',
             'st_ulb_capacity_rates.rate',
             'st_ulb_capacity_rates.is_residential',
-            DB::raw('(CASE 
-                    WHEN st_ulb_capacity_rates.is_residential = 1 THEN "Residential" 
-                    ELSE "Commercial" 
-                    END) AS building_type'),
+            DB::raw("(CASE 
+                    WHEN st_ulb_capacity_rates.is_residential = 1 THEN 'Residential' 
+                    ELSE 'Commercial' 
+                    END) AS building_type"),
             'sc.capacity'
         )
             ->join('st_capacities as sc', 'sc.id', '=', 'st_ulb_capacity_rates.capacity_id')

@@ -1548,4 +1548,61 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
+
+    /**
+     * | Re-Assign Booking
+     * | Function - 51
+     * | API - 51
+     */
+    public function reassignBooking(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+            'vehicleId' => 'required|integer',
+            'driverId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $mWtBooking = StBooking::find($req->applicationId);
+            if (!$mWtBooking)
+                throw new Exception("No Data Found !!!");
+            
+            $mWtBookingForReplicate = StBooking::select('id',  'vehicle_id', 'driver_id',"assign_date as re_assign_date",
+                                        "delivery_track_status","delivery_comments","delivery_latitude","delivery_longitude",
+                                        "unique_id","reference_no","driver_delivery_update_date_time"
+                                    )
+                                    ->where('id', $req->applicationId)->first();
+            $mWtBooking->vdm_id = $req->vdmId;
+            $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
+            $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+
+            $mWtBooking->delivery_track_status = 0;
+            $mWtBooking->delivery_comments = null;
+            $mWtBooking->delivery_latitude = null;
+            $mWtBooking->delivery_longitude = null;
+
+            $mWtBooking->unique_id = null;
+            $mWtBooking->reference_no = null;
+            $mWtBooking->driver_delivery_update_date_time = null;
+
+            $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
+            
+
+            // Re-Assign booking on Re-assign Table
+            $reassign = $mWtBookingForReplicate->replicate();
+            $reassign->setTable('wt_reassign_bookings');
+            $reassign->application_id =  $mWtBookingForReplicate->id;
+            // $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
+            DB::beginTransaction();
+            $mWtBooking->save();
+            $reassign->save();
+            DB::commit();
+            return responseMsgs(true, "Booking Assignent Successfully !!!", '', "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 }
