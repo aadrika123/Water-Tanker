@@ -155,7 +155,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-                $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
+                $val['date'] = Carbon::parse( $val['date'])->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency List !!!",  $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -203,7 +203,7 @@ class WaterTankerController extends Controller
             $mWtCapacity = new WtCapacity();
             $list = $mWtCapacity->getCapacityList();
             $f_list = $list->map(function ($val) {
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Capacity List !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -253,7 +253,7 @@ class WaterTankerController extends Controller
             $mWtUlbCapacityRate = new WtUlbCapacityRate();
             $list = $mWtUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id', $req->auth['ulb_id']);
             $f_list = $list->map(function ($val) {
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::parse($val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110106", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -428,8 +428,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->driver_dob = Carbon::createFromFormat('Y-m-d', $val->driver_dob)->format('d/m/Y');
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->driver_dob = Carbon::parse( $val->driver_dob)->format('d/m/Y');
+                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Driver List !!!", $f_list->values(), "110110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -495,7 +495,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d/m/Y');
+                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Resource List !!!", $f_list->values(), "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -643,8 +643,8 @@ class WaterTankerController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                     $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                     return $val;
                 }),
@@ -707,7 +707,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 $val->is_ulb_vehicle = $val->is_ulb_vehicle == 1 ? 'Yes' : 'No';
                 return $val;
             });
@@ -785,8 +785,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse( $val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Booking List !!!", $f_list, "110120", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1366,16 +1366,16 @@ class WaterTankerController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
             ];
             // $f_list = $list->map(function ($val) use ($ulb) {
             //     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+            //     $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+            //     $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
             //     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
             //     return $val;
             // });
@@ -1400,8 +1400,8 @@ class WaterTankerController extends Controller
             $list = collect($list)->where("ulb_id",$ulbId);
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d/m/Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d/m/Y');
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
@@ -1453,7 +1453,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110143", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1561,7 +1561,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location Hydration Map List !!!", $f_list, "110147", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1646,8 +1646,8 @@ class WaterTankerController extends Controller
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
 
-            $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
-            $list->delivery_date = Carbon::createFromFormat('Y-m-d', $list->delivery_date)->format('d-m-Y');
+            $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
+            $list->delivery_date = Carbon::parse( $list->delivery_date)->format('d-m-Y');
             $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
 
             $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
@@ -1734,9 +1734,9 @@ class WaterTankerController extends Controller
             $list = $list->where("wb.ulb_id",$ulbId);
             $ulb = $this->_ulbs;
             // $f_list = $list->map(function ($val) use ($ulb) {
-            //     $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-            //     $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
-            //     $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
+            //     $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+            //     $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+            //     $val->re_assign_date = Carbon::parse( $val->re_assign_date)->format('d-m-Y');
             //     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
             //     return $val;
             // });
@@ -1748,9 +1748,9 @@ class WaterTankerController extends Controller
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
-                    $val->re_assign_date = Carbon::createFromFormat('Y-m-d', $val->re_assign_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::parse( $val->re_assign_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
@@ -1788,7 +1788,7 @@ class WaterTankerController extends Controller
             // $ulb = $this->_ulbs;
             // $f_list['listAgency'] = $list->map(function ($val) use ($ulb) {
             //     $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-            //     $val['date'] = Carbon::createFromFormat('Y-m-d', $val['date'])->format('d-m-Y');
+            //     $val['date'] = Carbon::parse( $val['date'])->format('d-m-Y');
             //     return $val;
             // });
             $f_list['listLocation'] = $list1;
@@ -1848,8 +1848,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1999,8 +1999,8 @@ class WaterTankerController extends Controller
                 $val->delivered_by = (($driver->driver_name??"")." (".($driver->driver_license_no??"").")");
                 $val->delivered_date_time = $val->driver_delivery_date_time ?  Carbon::parse($val->driver_delivery_date_time)->format('h:i:s A d-m-Y'):"";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                 $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                 return $val;
             });
@@ -2029,7 +2029,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2143,7 +2143,7 @@ class WaterTankerController extends Controller
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
-            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
+            $payDetails->delivery_date = Carbon::parse(  $payDetails->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110164', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110163', 01, "", 'POST', $req->deviceId);
@@ -2170,8 +2170,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listApplied'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                 return $val;
             });
 
@@ -2188,8 +2188,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse( $val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Agency Booking List !!!", $f_list, "110164", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2396,7 +2396,7 @@ class WaterTankerController extends Controller
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
-            $payDetails->delivery_date = Carbon::createFromFormat('Y-m-d',  $payDetails->delivery_date)->format('d-m-Y');
+            $payDetails->delivery_date = Carbon::parse(  $payDetails->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110169', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
@@ -2617,9 +2617,9 @@ class WaterTankerController extends Controller
                 "lastPage" => $data->lastPage(),
                 "total" => $data->total(),
                 "data" => collect($data->items())->map(function ($val) {
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::createFromFormat('Y-m-d', $val->delivery_date)->format('d-m-Y');
-                    $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->assign_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];

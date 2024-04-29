@@ -94,8 +94,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
@@ -129,8 +129,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
@@ -164,8 +164,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Assign Successfully !!!", $f_list, "110204", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -268,9 +268,9 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse( $val->cancel_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Cancelled Booking List !!!", $f_list->values(), "110207", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -300,8 +300,8 @@ class SepticTankController extends Controller
             if (!$list)
                 throw new Exception("No Application Found !!!");
             $list->ulb_name = (collect($ulb)->where("id", $list->ulb_id))->value("ulb_name");
-            $list->booking_date = Carbon::createFromFormat('Y-m-d', $list->booking_date)->format('d-m-Y');
-            $list->cleaning_date = Carbon::createFromFormat('Y-m-d', $list->cleaning_date)->format('d-m-Y');
+            $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
+            $list->cleaning_date = Carbon::parse( $list->cleaning_date)->format('d-m-Y');
 
             return responseMsgs(true, "Details Featch Successfully!!!", $list, "110208", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -396,8 +396,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->driver_dob = Carbon::createFromFormat('Y-m-d', $val->driver_dob)->format('d-m-Y');
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->driver_dob = Carbon::parse( $val->driver_dob)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Driver List !!!", $f_list->values(), "110210", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -523,7 +523,7 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Resource List !!!", $f_list->values(), "110214", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -671,8 +671,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 $val->vehicle_no = $val->vehicle_id === NULL ? "Not Assign" : $val->vehicle_no;
                 $val->driver_name = $val->driver_name === NULL ? "Not Assign" : $val->driver_name;
                 $val->driver_mobile = $val->driver_mobile === NULL ? "Not Assign" : $val->driver_mobile;
@@ -758,8 +758,8 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listApplied'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 return $val;
             })->values();
 
@@ -776,9 +776,9 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::createFromFormat('Y-m-d', $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse($val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Data Fetch Successfully !!!", $f_list, "110221", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -826,7 +826,7 @@ class SepticTankController extends Controller
             $mStCapacity = new StCapacity();
             $list = $mStCapacity->getCapacityList();
             $f_list = $list->map(function ($val) {
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Capacity List !!!", $f_list, "110223", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -925,7 +925,7 @@ class SepticTankController extends Controller
             $mStUlbCapacityRate = new StUlbCapacityRate();
             $list = $mStUlbCapacityRate->getUlbCapacityRateList()->where('ulb_id', $req->auth['ulb_id']);
             $f_list = $list->map(function ($val) {
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Capacity Rate List !!!", $f_list, "110227", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1185,7 +1185,7 @@ class SepticTankController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::createFromFormat('Y-m-d', $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110234", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1414,9 +1414,9 @@ class SepticTankController extends Controller
                 "lastPage" => $data->lastPage(),
                 "total" => $data->total(),
                 "data" => collect($data->items())->map(function ($val) {
-                    $val->booking_date = Carbon::createFromFormat('Y-m-d', $val->booking_date)->format('d-m-Y');
-                    $val->cleaning_date = Carbon::createFromFormat('Y-m-d', $val->cleaning_date)->format('d-m-Y');
-                    $val->assign_date = Carbon::createFromFormat('Y-m-d', $val->assign_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];
