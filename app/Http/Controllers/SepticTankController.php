@@ -1574,9 +1574,8 @@ class SepticTankController extends Controller
                                         "unique_id","reference_no","driver_delivery_update_date_time"
                                     )
                                     ->where('id', $req->applicationId)->first();
-            $mWtBooking->vdm_id = $req->vdmId;
-            $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
-            $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+            $mWtBooking->vehicle_id = $req->vehicleId;
+            $mWtBooking->driver_id = $req->driverId;
 
             $mWtBooking->delivery_track_status = 0;
             $mWtBooking->delivery_comments = null;
@@ -1592,7 +1591,7 @@ class SepticTankController extends Controller
 
             // Re-Assign booking on Re-assign Table
             $reassign = $mWtBookingForReplicate->replicate();
-            $reassign->setTable('wt_reassign_bookings');
+            $reassign->setTable('st_reassign_bookings');
             $reassign->application_id =  $mWtBookingForReplicate->id;
             // $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
             DB::beginTransaction();
@@ -1603,6 +1602,40 @@ class SepticTankController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110151", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    /**
+     * | Get Location Details By Id
+     * | Function - 50
+     * | API - 50
+     */
+    public function getBookingDetailById(Request $req)
+    {        
+        $mWtBooking = new StBooking();
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer|exists:'.$mWtBooking->getTable().",id",
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            $data = $mWtBooking->find($req->applicationId);
+            $reassign = $data->getLastReassignedBooking();
+
+            $data->booking_date = Carbon::parse($data->booking_date)->format('d-m-Y');
+            $data->cleaning_date = Carbon::parse($data->cleaning_date)->format('d-m-Y');
+            $data->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $data->assign_date)->format('d-m-Y');
+
+            $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
+            $vehicle = $reassign ? $reassign->getAssignedVehicle() : $data->getAssignedVehicle();
+
+            $data->driver_name = $driver ? $driver->driver_name : "";
+            $data->driver_mobile = $driver ? $driver->driver_mobile : "";
+            $data->vehicle_no = $vehicle ? $vehicle->vehicle_no : "";
+            return responseMsgs(true, "Booking Details!!!", $data, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 }
