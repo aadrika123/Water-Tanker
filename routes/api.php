@@ -166,6 +166,9 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post('septic-tanker/check-feedback', 'checkFeedback');                                                           // 35 ( Check Feedback )  
         Route::post('septic-tanker/master-data', 'masterData');
 
+        Route::post('septic-tanker/re-assign-booking', 'reassignBooking');                                                       // 51 ( Re-Assign Booking ) 
+        Route::post('septic-tanker/list-re-assign-booking', 'listReassignBooking');
+
         Route::post('septic-tanker/get-booking-details-by-id', 'getBookingDetailById'); 
         Route::post("septic-tanker/driver-to-delivery-list","driverDeliveryList");
         Route::post("septic-tanker/driver-update-delivery","updateDeliveryTrackStatus");

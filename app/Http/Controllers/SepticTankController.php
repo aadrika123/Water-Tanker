@@ -1370,19 +1370,19 @@ class SepticTankController extends Controller
                     ->where('assign_date', '!=', NULL)
                     ->whereIn('delivery_track_status',[1,2] );
             
-            // $reassign = StBooking::select("wt_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
-            //             "st_reassign_bookings.delivery_track_status","st_reassign_bookings.delivery_comments", "st_reassign_bookings.delivery_latitude",
-            //             "st_reassign_bookings.delivery_longitude",
-            //             "st_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
-            //             "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
-            //             )
-            //             ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
-            //             ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
-            //             ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
-            //             ->where("st_drivers.u_id",$user["id"])
-            //             ->where("st_bookings.ulb_id",$user["ulb_id"])
-            //             ->where('assign_date', '!=', NULL)
-            //             ->whereIn('st_reassign_bookings.delivery_track_status',[1,2] );
+            $reassign = StBooking::select("st_bookings.*","st_resources.vehicle_name","st_resources.vehicle_no","st_resources.resource_type",
+                        "st_reassign_bookings.delivery_track_status","st_reassign_bookings.delivery_comments", "st_reassign_bookings.delivery_latitude",
+                        "st_reassign_bookings.delivery_longitude",
+                        "st_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
+                        "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+                        )
+                        ->join("st_reassign_bookings","st_reassign_bookings.application_id","st_bookings.id")
+                        ->join("st_drivers","st_drivers.id","st_reassign_bookings.driver_id")
+                        ->join("st_resources","st_resources.id","st_reassign_bookings.vehicle_id")
+                        ->where("st_drivers.u_id",$user["id"])
+                        ->where("st_bookings.ulb_id",$user["ulb_id"])
+                        ->where('assign_date', '!=', NULL)
+                        ->whereIn('st_reassign_bookings.delivery_track_status',[1,2] );
 
             if($key)
             {
@@ -1391,19 +1391,19 @@ class SepticTankController extends Controller
                     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
                     ->orWhere("st_bookings.mobile","LIKE","%$key%");
                 });
-                // $reassign = $reassign->where(function($where) use($key){
-                //     $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
-                //     ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
-                //     ->orWhere("st_bookings.mobile","LIKE","%$key%");
-                // });
+                $reassign = $reassign->where(function($where) use($key){
+                    $where->orWhere("st_bookings.booking_no","LIKE","%$key%")
+                    ->orWhere("st_bookings.applicant_name","LIKE","%$key%")
+                    ->orWhere("st_bookings.mobile","LIKE","%$key%");
+                });
             }
             if($formDate && $uptoDate )
             {
                 $data = $data->whereBetween(DB::raw("cast(st_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
-                // $reassign = $reassign->whereBetween(DB::raw("cast(st_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+                $reassign = $reassign->whereBetween(DB::raw("cast(st_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
             }
 
-            // $data = $data->union($reassign);
+            $data = $data->union($reassign);
             $data = $data->orderBy("update_date_time","DESC");
             $perPage = $request->perPage ? $request->perPage : 10;
             DB::enableQueryLog();
