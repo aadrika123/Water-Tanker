@@ -115,8 +115,9 @@ class WaterTankerController extends Controller
     {
         try{
             $users=  $reqs->auth;
+            $ulb = UlbMaster::find($users["ulb_id"]);
             $reqs->merge([
-                'agencyName' => 'test',
+                'agencyName' =>  ($ulb->ulb_name??"test")." Water Agency",
                 'ownerName' => $users["name"],
                 'agencyAddress' => $users["address"],            
                 'agencyMobile' => $users["mobile"],
