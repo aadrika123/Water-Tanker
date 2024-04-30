@@ -627,6 +627,7 @@ class WaterTankerController extends Controller
             $list = $mWtBooking->getBookingList()
                 ->where('wb.agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
                 ->where('wb.is_vehicle_sent', '<=', '1')
+                ->where('wb.assign_date', NULL)
                 ->where('wb.payment_status', '=', '1')
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id');
