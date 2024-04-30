@@ -1673,4 +1673,27 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+    public function sentVehicle(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mWtBooking = StBooking::find($req->applicationId);
+            if (!$mWtBooking)
+                throw new Exception("Application Not Found !!!");            
+            if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
+                throw new Exception("This Booking is Not Delivery Date Today !!!");
+            $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
+            $mWtBooking->save();
+            return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
 }

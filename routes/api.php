@@ -174,5 +174,6 @@ Route::group(['middleware' => ['checkToken']], function () {
         Route::post("septic-tanker/driver-update-delivery","updateDeliveryTrackStatus");
         Route::post("septic-tanker/driver-cancel-list","driverCanceledList");
         Route::post("septic-tanker/driver-updated-list","updatedListDeliveryByDriver");
+        Route::post('septic-tanker/sent-vehicle', 'sentVehicle'); 
     });
 });
