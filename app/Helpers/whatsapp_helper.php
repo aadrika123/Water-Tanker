@@ -85,7 +85,7 @@ if(!function_exists('Whatsapp_Send'))
     function Whatsapp_Send($mobileno,$templateid,array $message=[])
     {
         $test = Config::get("whatsapp-constants.WHATSAPP_TEST");
-        $res=WHATSAPPJHGOVT($test?"8002158818":$mobileno, $templateid,$message);
+        $res=WHATSAPPJHGOVT($test?"9153975142":$mobileno, $templateid,$message);
         return $res;
     }
 }
