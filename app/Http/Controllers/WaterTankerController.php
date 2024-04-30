@@ -730,7 +730,7 @@ class WaterTankerController extends Controller
         if ($cancelledBy == 'Water-Agency')
             $cancelById = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id;
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
+            'applicationId' => 'required|integer|exists:'.(new WtBooking())->getTable().",id",
             'remarks' => 'required|string',
             'cancelDetails' => 'nullable|string',
         ]);

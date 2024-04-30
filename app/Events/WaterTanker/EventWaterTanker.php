@@ -11,7 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class EventWaterTankerBooked
+class EventWaterTanker
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,9 +19,11 @@ class EventWaterTankerBooked
      * Create a new event instance.
      */
     public $booking;
-    public function __construct(WtBooking $booking)
+    public $eventName;
+    public function __construct(WtBooking $booking,$eventName=null)
     {
         $this->booking = $booking;
+        $this->eventName = $eventName;
     }
 
     /**

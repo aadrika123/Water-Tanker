@@ -2,7 +2,7 @@
 
 namespace App\Observers\WaterTanker;
 
-use App\Events\WaterTanker\EventWaterTankerBooked;
+use App\Events\WaterTanker\EventWaterTanker;
 use App\Models\WtBooking;
 
 class WtBookingObserver
@@ -12,7 +12,8 @@ class WtBookingObserver
      */
     public function created(WtBooking $wtBooking): void
     {
-        event(new EventWaterTankerBooked($wtBooking));
+        if($wtBooking->getTable()==(new WtBooking())->getTable())
+            event(new EventWaterTanker($wtBooking,"created"));        
     }
 
     /**
@@ -20,7 +21,27 @@ class WtBookingObserver
      */
     public function updated(WtBooking $wtBooking): void
     {
-        //
+        if ($wtBooking->isDirty('driver_id')) 
+        {
+            event(new EventWaterTanker($wtBooking,"updated"));
+        }
+
+        if ($wtBooking->isDirty('is_vehicle_sent')) 
+        {
+            event(new EventWaterTanker($wtBooking,"updated"));
+        }
+        if ($wtBooking->isDirty('payment_status')) 
+        {
+            event(new EventWaterTanker($wtBooking,"updated"));
+        }
+    }
+
+    public function updating(WtBooking $wtBooking): void
+    {
+        // if ($wtBooking->isDirty('driver_id')) 
+        // {
+        //     event(new EventWaterTanker($wtBooking,"updating"));
+        // }
     }
 
     /**
@@ -28,7 +49,7 @@ class WtBookingObserver
      */
     public function deleted(WtBooking $wtBooking): void
     {
-        //
+        event(new EventWaterTanker($wtBooking,"deleted"));
     }
 
     /**
