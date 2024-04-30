@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\WtBooking;
+use App\Observers\WaterTanker\WtBookingObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -18,6 +20,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        'App\Events\WaterTanker\EventWaterTankerBooked' => [
+            'App\Listeners\WaterTanker\SendBookingWhatsAppMessage',
+        ],
     ];
 
     /**
@@ -25,7 +30,7 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        WtBooking::observe(WtBookingObserver::class);
     }
 
     /**
