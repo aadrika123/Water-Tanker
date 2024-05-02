@@ -2310,8 +2310,13 @@ class WaterTankerController extends Controller
 
                 $listCapacity = $mWtCapacity->getCapacityList();
                 $data1['capacity'] = $listCapacity;
+                $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
 
-                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id'])->map(function($val) use($users){
+                    $user = $users->where("id",$val->u_id)->first();
+                    $val->email = $user ? $user->email:"";
+                    return $val;
+                });
                 $data1['driver'] = $listDriver;
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();

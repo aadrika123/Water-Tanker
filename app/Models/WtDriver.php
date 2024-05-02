@@ -59,7 +59,7 @@ class WtDriver extends Model
      */
     public function getDriverListForMasterData($ulbId)
     {
-        return WtDriver::select('id', 'driver_name','agency_id')->where('ulb_id',$ulbId)
+        return WtDriver::select("*")->where('ulb_id',$ulbId)
             ->where("status",1)
             ->get();
     }
