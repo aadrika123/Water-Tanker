@@ -1117,7 +1117,13 @@ class SepticTankController extends Controller
                 $listCapacity = $mWtCapacity->getCapacityList();
                 $data1['capacity'] = $listCapacity;
 
-                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+                $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
+
+                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id'])->map(function($val) use($users){
+                    $user = $users->where("id",$val->u_id)->first();
+                    $val->email = $user ? $user->email:"";
+                    return $val;
+                });
                 $data1['driver'] = $listDriver;
                 if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();

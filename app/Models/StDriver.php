@@ -75,7 +75,7 @@ class StDriver extends Model
 
     public function getDriverListForMasterData($ulbId)
     {
-        return self::select('id', 'driver_name')->where('ulb_id',$ulbId)
+        return self::select("*")->where('ulb_id',$ulbId)
             ->get();
     }
 }
