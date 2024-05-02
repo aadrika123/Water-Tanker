@@ -1321,25 +1321,33 @@ class WaterTankerController extends Controller
      */
     public function bookingAssignment(Request $req)
     {
+        $ulbId = $req->auth["ulb_id"]??null;
+        $mWtResource = new WtResource();
+        $mWtBooking = new WtBooking();
+        $mWtDriver = new WtDriver();
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
-            'vdmId' => 'required|integer',
+            'applicationId' => "required|integer|exists:".$mWtBooking->getConnectionName().".".$mWtBooking->getTable().",id,status,1,ulb_id,".$ulbId,
+            // 'vdmId' => 'required|integer',
+            'vehicleId' => "required|integer|exists:".$mWtResource->getConnectionName().".".$mWtResource->getTable().",id,status,1,ulb_id,".$ulbId,
+            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id,status,1,ulb_id,".$ulbId,
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = WtBooking::find($req->applicationId);
             if (!$mWtBooking)
                 throw new Exception("No Data Found !!!");
-            $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
-            if (!$mWtDriverVehicleMap)
-                throw new Exception("Driver Vehicle Map Not Found !!!");
-            $mWtBooking->vdm_id = $req->vdmId;
-            $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
-            $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+            // $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
+            // if (!$mWtDriverVehicleMap)
+            //     throw new Exception("Driver Vehicle Map Not Found !!!");
+            // $mWtBooking->vdm_id = $req->vdmId;
+            // $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
+            // $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+            $mWtBooking->vehicle_id = $req->vehicleId;
+            $mWtBooking->driver_id = $req->driverId;
             $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
-            $mWtBooking->save();
+            $mWtBooking->update();
             return responseMsgs(true, "Booking Assignment Successfully !!!", '', "110139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110139", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1671,28 +1679,44 @@ class WaterTankerController extends Controller
      */
     public function reassignBooking(Request $req)
     {
+        // $validator = Validator::make($req->all(), [
+        //     'applicationId' => 'required|integer',
+        //     'vdmId' => 'required|integer',
+        // ]);
+        // if ($validator->fails()) {
+        //     return ['status' => false, 'message' => $validator->errors()->first()];
+        // }
+
+        $ulbId = $req->auth["ulb_id"]??null;
+        $mWtResource = new WtResource();
+        $mWtBooking = new WtBooking();
+        $mWtDriver = new WtDriver();DB::enableQueryLog();
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer',
-            'vdmId' => 'required|integer',
+            'applicationId' => "required|integer|exists:".$mWtBooking->getConnectionName().".".$mWtBooking->getTable().",id,status,1,ulb_id,".$ulbId,
+            // 'vdmId' => 'required|integer',
+            'vehicleId' => "required|integer|exists:".$mWtResource->getConnectionName().".".$mWtResource->getTable().",id,status,1,ulb_id,".$ulbId,
+            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id,status,1,ulb_id,".$ulbId,
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = WtBooking::find($req->applicationId);
             if (!$mWtBooking)
                 throw new Exception("No Data Found !!!");
-            $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
-            if (!$mWtDriverVehicleMap)
-                throw new Exception("Driver Vehicle Map Not Found !!!");
+            // $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
+            // if (!$mWtDriverVehicleMap)
+            //     throw new Exception("Driver Vehicle Map Not Found !!!");
             $mWtBookingForReplicate = WtBooking::select('id', 'vdm_id', 'vehicle_id', 'driver_id',"assign_date as re_assign_date",
                                         "delivery_track_status","delivery_comments","delivery_latitude","delivery_longitude",
                                         "unique_id","reference_no","driver_delivery_update_date_time"
                                     )
                                     ->where('id', $req->applicationId)->first();
-            $mWtBooking->vdm_id = $req->vdmId;
-            $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
-            $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+            // $mWtBooking->vdm_id = $req->vdmId;
+            // $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
+            // $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
+            $mWtBooking->vehicle_id = $req->vehicleId;
+            $mWtBooking->driver_id = $req->driverId;
 
             $mWtBooking->delivery_track_status = 0;
             $mWtBooking->delivery_comments = null;
@@ -1712,7 +1736,7 @@ class WaterTankerController extends Controller
             $reassign->application_id =  $mWtBookingForReplicate->id;
             // $reassign->re_assign_date =  Carbon::now()->format('Y-m-d');
             DB::beginTransaction();
-            $mWtBooking->save();
+            $mWtBooking->update();
             $reassign->save();
             DB::commit();
             return responseMsgs(true, "Booking Assignent Successfully !!!", '', "110151", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1878,9 +1902,8 @@ class WaterTankerController extends Controller
             $mWtBooking = WtBooking::find($req->applicationId);
             if (!$mWtBooking)
                 throw new Exception("Application Not Found !!!");
-            if ($mWtBooking->vdm_id == NULL)
+            if (!$mWtBooking->vehicle_id || !$mWtBooking->driver_id)
                 throw new Exception("First Assign Driver & Vehicle !!!");
-            // echo Carbon::now()->format('Y-m-d') ; die;
             if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
                 throw new Exception("This Booking is Not Delivery Date Today !!!");
             $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
@@ -2483,6 +2506,25 @@ class WaterTankerController extends Controller
     /**
      * function added by sandeep bara
      */
+
+     public function vehicleDriverMasterUlbWise(Request $req)
+     {
+         try {
+             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+                 throw new Exception('Unauthorized Access !!!');
+             // Initialize Variable
+             $req->merge(['ulbId' => $req->auth['ulb_id']]);
+             $mWtResource = new WtResource();
+             $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
+             $mWtDriver = new WtDriver();
+             $driver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+             $f_list['listResource'] = $resource->values();
+             $f_list['listDriver'] = $driver->values();
+             return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110217", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+         } catch (Exception $e) {
+             return responseMsgs(false, $e->getMessage(), "", "110217", "1.0", "", 'POST', $req->deviceId ?? "");
+         }
+     }
     public function driverDeliveryList(Request $res)
     {
         try{

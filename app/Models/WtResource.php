@@ -76,6 +76,7 @@ class WtResource extends Model
             ->leftjoin('wt_agencies as wa', 'wr.agency_id', '=', 'wa.id')
             ->select('wr.*', 'wc.capacity', 'wa.agency_name')
             ->where('wr.ulb_id', $ulbId)
+            ->where("wr.status",1)
             ->get();
     }
 }

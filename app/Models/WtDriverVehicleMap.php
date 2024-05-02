@@ -49,6 +49,7 @@ class WtDriverVehicleMap extends Model
             ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
             ->select('wdvm.*', 'wd.driver_name','wd.driver_license_no','wd.driver_address','wd.driver_mobile', 'wr.vehicle_name','wr.vehicle_no','wc.capacity','wa.agency_name')
             ->where('wdvm.ulb_id',$ulbId)
+            ->where('wdvm.status',1)
             ->get();
     }
 

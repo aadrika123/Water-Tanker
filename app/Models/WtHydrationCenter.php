@@ -55,6 +55,6 @@ class WtHydrationCenter extends Model
      */
     public function getHydrationCeenterForMasterData($ulbId)
     {
-        return self::select('id', 'name')->where('ulb_id',$ulbId)->get();
+        return self::select('id', 'name')->where('ulb_id',$ulbId)->where("status",1)->get();
     }
 }

@@ -71,11 +71,11 @@ class WtBooking extends Model
     {
         return DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->join('wt_resources as wr', 'wr.id', '=', 'wb.vehicle_id')
+            ->join('wt_drivers as wd', 'wd.id', '=', 'wb.driver_id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
-            ->join('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
-            ->join('wt_resources as wr', 'wr.id', '=', 'dvm.vehicle_id')
-            ->join('wt_drivers as wd', 'wd.id', '=', 'dvm.driver_id')
+            ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
+            // ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
             ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile')
             ->where('assign_date', '!=', NULL);
     }
