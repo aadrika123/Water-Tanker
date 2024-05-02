@@ -17,7 +17,7 @@ if(!function_exists('WHATSAPPJHGOVT'))
             "template" => [
                 "name" => "$templateid",
                 "language" => [
-                    "code" => "en_US"
+                    "code" => "en"
                 ],
                 "components" => [
                     ($message
