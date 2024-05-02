@@ -65,7 +65,7 @@ class SendWhatsAppMessage
 
     private function updated()
     {
-        if($this->booking->isDirty('driver_id'))
+        if($this->booking->isDirty('driver_id') && $this->booking->driver_id)
         {
             return (Whatsapp_Send( $this->booking->mobile,"trn_2_var",
                     ["content_type"=>"text",
@@ -85,7 +85,7 @@ class SendWhatsAppMessage
                     ]));
         }
         
-        if($this->booking->isDirty('payment_status'))
+        if($this->booking->isDirty('payment_status') && $this->booking->payment_status==1)
         {
             return (Whatsapp_Send( $this->booking->mobile,"trn_2_var",
                     ["content_type"=>"text",

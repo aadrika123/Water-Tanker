@@ -62,7 +62,7 @@ class SendWhatsAppMessage
 
     private function updated()
     {
-        if($this->booking->isDirty('driver_id'))
+        if($this->booking->isDirty('driver_id') && $this->booking->driver_id)
         {
             return (Whatsapp_Send( $this->booking->mobile,"trn_2_var",
                     ["content_type"=>"text",
