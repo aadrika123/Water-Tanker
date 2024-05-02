@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\SepticTank;
 
+use App\Models\ForeignModels\PropProperty;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -23,7 +24,8 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $propProperty = new PropProperty();
+        $rules= [
             'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
             'ulbArea' => 'required|boolean',  
@@ -31,14 +33,15 @@ class StoreRequest extends FormRequest
             'cleaningDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
-            'wardId' => $this->ulbArea == 1 ? 'required|integer':'nullable',
-            'holdingNo' => $this->ulbArea == 1 ? 'required|string|max:20':'nullable',
+            'wardId' => $this->ulbArea == 1 ? "required|integer":'nullable',
+            'holdingNo' => $this->ulbArea == 1 ? ("required|string|max:20|"):'nullable',
             'roadWidth' => 'required|numeric',
             'distance' => 'required|numeric',
             'capacityId' => 'nullable|integer',
             'address' => 'required|string|max:255',
             'buildingType' => 'required|integer',                                              // 1 - Within ULB, 0 - Outside ULB
         ];
+        return $rules;
     }
 
     public function failedValidation(Validator $validator)

@@ -2193,12 +2193,14 @@ class WaterTankerController extends Controller
                 ->get();
 
             $ulb = $this->_ulbs;
-            $f_list['listApplied'] = $list->map(function ($val) use ($ulb) {
+            $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                 $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
                 return $val;
             });
+            $f_list['listApplied'] =  $list->where("is_vehicle_sent","<>",2)->values();
+            $f_list['listDelivered'] = $list->where("is_vehicle_sent",2)->values();
 
 
             $mWtCancellation = new WtCancellation();

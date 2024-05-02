@@ -32,11 +32,13 @@ class SepticTankController extends Controller
     protected $_base_url;
     protected $_ulbs;
     protected $_ulbLogoUrl;
+    protected $_propertyModuleUrl ;
     public function __construct()
     {
         $this->_base_url = Config::get('constants.BASE_URL');
         $this->_paramId = Config::get('constants.PARAM_ST_ID');
         $this->_ulbLogoUrl = Config::get('constants.ULB_LOGO_URL');
+        $this->_propertyModuleUrl = Config::get("constants.ID_GENERATE_URL");
         $this->_ulbs = $this->ulbList();
     }
 
@@ -48,6 +50,14 @@ class SepticTankController extends Controller
     public function addBooking(StoreRequest $req)
     {
         try {
+            $refResponse = Http::post($this->_propertyModuleUrl . 'api/trade/property/by-holding', $req->all());
+            $refResponse = json_decode($refResponse);
+            dd($refResponse);
+            if($req->holdingNo)
+            {
+                $refResponse = Http::post($this->_propertyModuleUrl . 'api/trade/property/by-holding', $req->all());
+                $idGenerateData = json_decode($refResponse);
+            }
             // Variable initialization
             $mStBooking = new StBooking();
             $mCalculations = new Calculations();
@@ -748,20 +758,23 @@ class SepticTankController extends Controller
             if ($req->auth['user_type'] != 'Citizen' && !in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
-            $mStBooking = new StBooking();
+            $mStBooking = new StBooking();DB::enableQueryLog();
             $list = $mStBooking->getBookingList()
-                ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+                // ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->where('citizen_id', $req->auth['id'])
                 ->orderByDesc('id')
                 ->get();
 
             $ulb = $this->_ulbs;
-            $f_list['listApplied'] = $list->map(function ($val) use ($ulb) {
+            $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                 $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                 return $val;
-            })->values();
+            });
+            $f_list['listApplied'] = $list->where("is_vehicle_sent","<>",2)->values();
+
+            $f_list['listDelivered'] = $list->where("is_vehicle_sent",2)->values();
 
             $mStCancelledBooking = new StCancelledBooking();
             $list = $mStCancelledBooking->getCancelledBookingList()
