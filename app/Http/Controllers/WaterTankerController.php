@@ -1284,7 +1284,7 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtDriver = new WtDriver();
             $list = $mWtDriver->getDriverDetailsById($req->driverId);
-            $user  = User::where("ulb_id",$req->auth["ulb_id"])->first();
+            $user  = User::where("id",$list->u_id)->first();
             $list ? ($list->email = $user ? $user->email:""):"";
             return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {

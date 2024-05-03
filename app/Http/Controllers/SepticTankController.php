@@ -438,7 +438,7 @@ class SepticTankController extends Controller
             $list = $mStDriver->getDriverDetailsById($req->driverId);
             if (!$list)
                 throw new Exception("No Records Found !!!");
-            $user  = User::where("ulb_id",$req->auth["ulb_id"])->first();
+            $user  = User::where("id",$list->u_id)->first();
             $list->email = $user ? $user->email:"";
             return responseMsgs(true, "Data Fetched !!!", $list, "110211", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
