@@ -1111,6 +1111,7 @@ class WaterTankerController extends Controller
             $mWtDriver = WtDriver::find($req->driverId);
             if (!$mWtDriver)
                 throw new Exception("No Data Found !!!");
+            $user = User::find($mWtDriver->u_id);
             $mWtDriver->ulb_id = $req->ulbId;
             $mWtDriver->agency_id = $req->agencyId;
             $mWtDriver->driver_name = $req->driverName;
@@ -1124,7 +1125,12 @@ class WaterTankerController extends Controller
             {
                 $mWtDriver->status = $req->status;
             }
+            if(isset($req->driverEmail) && $user)
+            {
+                $user->email = $req->driverEmail;
+            }
             $mWtDriver->save();
+            $user ? $user->update():"";
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");

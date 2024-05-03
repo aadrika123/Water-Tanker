@@ -473,6 +473,7 @@ class SepticTankController extends Controller
             $mStDriver = StDriver::find($req->driverId);
             if (!$mStDriver)
                 throw new Exception("No Data Found !!!");
+            $user = User::find($mStDriver->u_id);
             $mStDriver->ulb_id = $req->ulbId;
             $mStDriver->driver_name = $req->driverName;
             $mStDriver->driver_aadhar_no = $req->driverAadharNo;
@@ -485,7 +486,12 @@ class SepticTankController extends Controller
             {
                 $mStDriver->status = $req->status;
             }
+            if(isset($req->driverEmail) && $user)
+            {
+                $user->email = $req->driverEmail;
+            }
             $mStDriver->save();
+            $user ? $user->update():"";
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110212", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110212", "1.0", "", 'POST', $req->deviceId ?? "");
