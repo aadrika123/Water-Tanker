@@ -404,7 +404,10 @@ class SepticTankController extends Controller
             if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
             $ulb = $this->_ulbs;
-            $f_list = $list->map(function ($val) use ($ulb) {
+            $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
+            $f_list = $list->map(function ($val) use ($ulb,$users) {
+                $user = $users->where("id",$val->u_id)->first();
+                $val->email = $user ? $user->email:"";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->driver_dob = Carbon::parse( $val->driver_dob)->format('d-m-Y');
                 $val->date = Carbon::parse( $val->date)->format('d-m-Y');
@@ -435,6 +438,8 @@ class SepticTankController extends Controller
             $list = $mStDriver->getDriverDetailsById($req->driverId);
             if (!$list)
                 throw new Exception("No Records Found !!!");
+            $user  = User::where("ulb_id",$req->auth["ulb_id"])->first();
+            $list->email = $user ? $user->email:"";
             return responseMsgs(true, "Data Fetched !!!", $list, "110211", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110211", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -457,6 +462,7 @@ class SepticTankController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
+            "status"    => "nullable|integer|in:1,0",
 
         ]);
         if ($validator->fails()) {
@@ -475,6 +481,10 @@ class SepticTankController extends Controller
             $mStDriver->driver_father = $req->driverFather;
             $mStDriver->driver_dob = $req->driverDob;
             $mStDriver->driver_license_no = $req->driverLicenseNo;
+            if(isset($req->status))
+            {
+                $mStDriver->status = $req->status;
+            }
             $mStDriver->save();
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110212", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -578,6 +588,7 @@ class SepticTankController extends Controller
             'vehicleNo' => 'required|string|max:16',
             'capacityId' => 'required|integer|digits_between:1,150',
             'resourceType' => 'required|string|max:200',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -592,6 +603,10 @@ class SepticTankController extends Controller
             $mWtResource->vehicle_no = $req->vehicleNo;
             $mWtResource->capacity_id = $req->capacityId;
             $mWtResource->resource_type = $req->resourceType;
+            if(isset($req->status))
+            {
+                $mWtResource->status = $req->status;
+            }
             $mWtResource->save();
             return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110216", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -881,6 +896,7 @@ class SepticTankController extends Controller
         $validator = Validator::make($req->all(), [
             'capacityId' => 'required|integer',
             'capacity' => 'required|numeric|unique:st_capacities',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -890,6 +906,10 @@ class SepticTankController extends Controller
             if (!$mWtCapacity)
                 throw new Exception("No Data Found !!!");
             $mWtCapacity->capacity = $req->capacity;
+            if(isset($req->status))
+            {
+                $mWtCapacity->status = $req->status;
+            }
             $mWtCapacity->save();
             return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110225", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -982,6 +1002,7 @@ class SepticTankController extends Controller
             'capacityId' => 'required|integer',
             'capacityRateId' => 'required|integer',
             'rate' => 'required|integer|gt:0',
+            "status"=>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -994,6 +1015,10 @@ class SepticTankController extends Controller
             $mWtUlbCapacityRate->ulb_id = $req->ulbId;
             $mWtUlbCapacityRate->capacity_id = $req->capacityId;
             $mWtUlbCapacityRate->rate = $req->rate;
+            if(isset($req->status))
+            {
+                $mWtUlbCapacityRate->status = $req->status;
+            }
             $mWtUlbCapacityRate->save();
             return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110229", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {

@@ -427,7 +427,10 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id',  DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
             $ulb = $this->_ulbs;
-            $f_list = $list->map(function ($val) use ($ulb) {
+            $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
+            $f_list = $list->map(function ($val) use ($ulb,$users) {
+                $user = $users->where("id",$val->u_id)->first();
+                $val->email = $user ? $user->email:"";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->driver_dob = Carbon::parse( $val->driver_dob)->format('d/m/Y');
                 $val->date = Carbon::parse( $val->date)->format('d/m/Y');
@@ -905,6 +908,7 @@ class WaterTankerController extends Controller
             'ownerName' => 'required|string|max:255',
             'dispatchCapacity' => 'required|numeric',
             'ulbId' => 'required|integer',
+            "status"=> "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -920,6 +924,10 @@ class WaterTankerController extends Controller
             $mWtAgency->owner_name = $req->ownerName;
             $mWtAgency->dispatch_capacity = $req->dispatchCapacity;
             $mWtAgency->ulb_id = $req->ulbId;
+            if(isset($req->status))
+            {
+                $mWtAgency->status = $req->status;
+            }
             $mWtAgency->save();
             return responseMsgs(true, "Agency Updated Successfully !!!", '', "110124", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -939,6 +947,7 @@ class WaterTankerController extends Controller
             'name' => 'required|string',
             'waterCapacity' => 'required|numeric',
             'address' => 'required|string',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -952,6 +961,10 @@ class WaterTankerController extends Controller
             $mWtHydrationCenter->ulb_id = $req->ulbId;
             $mWtHydrationCenter->water_capacity = $req->waterCapacity;
             $mWtHydrationCenter->address = $req->address;
+            if(isset($req->status))
+            {
+                $mWtHydrationCenter->status = $req->status;
+            }
             $mWtHydrationCenter->save();
             return responseMsgs(true, "Hydration Center Details Updated Successfully !!!", '', "110125", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -973,6 +986,7 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer|digits_between:1,150',
             'resourceType' => 'required|string|max:200',
             'isUlbResource' => 'required|boolean',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -991,6 +1005,10 @@ class WaterTankerController extends Controller
             $mWtResource->capacity_id = $req->capacityId;
             $mWtResource->resource_type = $req->resourceType;
             $mWtResource->is_ulb_resource = $req->isUlbResource;
+            if(isset($req->status))
+            {
+                $mWtResource->status = $req->status;
+            }
             $mWtResource->save();
             return responseMsgs(true, "Resource Details Updated Successfully !!!", '', "110126", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1008,6 +1026,7 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'capacityId' => 'required|integer',
             'capacity' => 'required|numeric|unique:wt_capacities',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -1017,6 +1036,10 @@ class WaterTankerController extends Controller
             if (!$mWtCapacity)
                 throw new Exception("No Data Found !!!");
             $mWtCapacity->capacity = $req->capacity;
+            if(isset($req->status))
+            {
+                $mWtCapacity->status = $req->status;
+            }
             $mWtCapacity->save();
             return responseMsgs(true, "Capacity Details Updated Successfully !!!", '', "110127", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1035,6 +1058,7 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer',
             'capacityRateId' => 'required|integer',
             'rate' => 'required|integer|gt:0',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -1047,6 +1071,10 @@ class WaterTankerController extends Controller
             $mWtUlbCapacityRate->ulb_id = $req->ulbId;
             $mWtUlbCapacityRate->capacity_id = $req->capacityId;
             $mWtUlbCapacityRate->rate = $req->rate;
+            if(isset($req->status))
+            {
+                $mWtUlbCapacityRate->status = $req->status;
+            }
             $mWtUlbCapacityRate->save();
             return responseMsgs(true, "Capacity Rate Updated Successfully !!!", '', "110128", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1070,6 +1098,7 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
+            "status"=>"nullable|integer|in:1,0",
 
         ]);
         if ($validator->fails()) {
@@ -1091,6 +1120,10 @@ class WaterTankerController extends Controller
             $mWtDriver->driver_father = $req->driverFather;
             $mWtDriver->driver_dob = $req->driverDob;
             $mWtDriver->driver_license_no = $req->driverLicenseNo;
+            if(isset($req->status))
+            {
+                $mWtDriver->status = $req->status;
+            }
             $mWtDriver->save();
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1231,6 +1264,8 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtDriver = new WtDriver();
             $list = $mWtDriver->getDriverDetailsById($req->driverId);
+            $user  = User::where("ulb_id",$req->auth["ulb_id"])->first();
+            $list ? ($list->email = $user ? $user->email:""):"";
             return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110135", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1505,6 +1540,7 @@ class WaterTankerController extends Controller
             'locationId' => 'required|integer',
             'isInUlb' => 'required|integer',
             'location' => 'required|string',
+            "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
@@ -1517,6 +1553,10 @@ class WaterTankerController extends Controller
             $mWtLocation->ulb_id = $req->ulbId;
             $mWtLocation->location = $req->location;
             $mWtLocation->is_in_ulb = $req->isInUlb;
+            if(isset($req->status))
+            {
+                $mWtLocation->status = $req->status;
+            }
             $mWtLocation->save();
             return responseMsgs(true, "Update Location Successfully !!!", '', "110145", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
