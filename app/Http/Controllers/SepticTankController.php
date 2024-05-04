@@ -466,7 +466,7 @@ class SepticTankController extends Controller
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
             "status"    => "nullable|integer|in:1,0",
-            'driverEmail' => "nullable|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):"")
+            'driverEmail' => "required|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):"")
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
