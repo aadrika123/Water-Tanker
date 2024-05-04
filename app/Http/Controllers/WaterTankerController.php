@@ -24,8 +24,11 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 use App\BLL\Calculations;
+use App\Http\Requests\PaymentCounter;
+use App\Http\Requests\PaymentCounterReq;
 use App\MicroServices\DocUpload;
 use App\MicroServices\IdGenerator\PrefixIdGenerator;
+use App\Models\ForeignModels\TempTransaction;
 use App\Models\ForeignModels\UlbMaster;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
@@ -35,6 +38,8 @@ use App\Models\User;
 use App\Models\WtLocation;
 use App\Models\WtLocationHydrationMap;
 use App\Models\WtReassignBooking;
+use App\Repository\Payment\Concrete\PaymentRepository;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Nette\Utils\Random;
@@ -730,9 +735,9 @@ class WaterTankerController extends Controller
     public function cancelBooking(Request $req)
     {
         $cancelledBy = $req->auth['user_type'];
-        if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser')
+        if ($cancelledBy == 'Citizen' )
             $cancelById = $req->auth['id'];
-        if ($cancelledBy == 'Water-Agency')
+        if ($cancelledBy == 'Water-Agency' || $cancelledBy == 'UlbUser')
             $cancelById = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id;
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer|exists:'.(new WtBooking())->getTable().",id",
@@ -2361,7 +2366,7 @@ class WaterTankerController extends Controller
     {
         // $redis = Redis::connection();
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency","JSK"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
@@ -2471,6 +2476,105 @@ class WaterTankerController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", '110168', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    public function offlinePayment(PaymentCounterReq $req)
+    {       
+        try{
+            
+            $user = Auth()->user();
+            $userType = $user->user_type;
+            $mergData = [
+                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                "moduleId" =>Config::get('constants.WATER_TANKER_MODULE_ID'),
+                "gatewayType"   =>"",
+                "id"=>$req->applicationId,
+                "orderId"=>"",
+                "paymentId"=>"",
+                "paymentMode"=>$req->paymentMode,
+                "tranDate"=>Carbon::parse(),
+                "ulbId"=>$user->ulb_id,
+                "userId"=>$user->id,
+                "workflowId"=>0,
+                "chequeNo"=>$req->chequeNo,
+                "bankName"=>$req->bankName,
+                "chequeDate"=>$req->chequeDate,
+            ];
+            if($user->getTable()!="users")
+            {
+                throw new Exception("Citizen Not Allowed");
+            }
+            if($userType!="JSK")
+            {
+                throw new Exception("Only jsk allow");
+            }
+            $booking = WtBooking::find($req->applicationId);
+            if($booking->ulb_id != $user->ulb_id)
+            {
+                throw new Exception("this application related to another ulb");
+            }
+            if(in_array($booking->payment_status,[1,2]))
+            {
+                throw new Exception("Payment Already Don");
+            }
+            
+            $idGenrater = new PaymentRepository();
+            $tranNo = $idGenrater->generatingTransactionId($booking->ulb_id);
+            $mergData["transactionNo"] = $tranNo;
+            $mergData["amount"] = $booking->payment_amount;
+            $mergData["applicationNo"]=$booking->booking_no;
+            $mergData["paidAmount"]=$booking->payment_amount;
+            $mergData["empDtlId"]=$user->id;
+            $mergData["ulbId"]=$booking->ulb_id;
+            $req->merge($mergData);
+
+            $booking->payment_date = Carbon::now();
+            $booking->payment_mode = $req->paymentMode;
+            $booking->payment_status = $req->paymentMode=="CASH" ? 1 : 2;
+            $booking->payment_id = "";
+            $booking->payment_details = json_encode($mergData);
+            
+
+            DB::beginTransaction();
+            DB::connection("pgsql_master")->beginTransaction();            
+            $booking->update();
+            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d")]);
+            $this->postTempTransection($req);
+            DB::commit();
+            DB::connection("pgsql_master")->commit();
+            $msg = "Payment Accepted Successfully !!!";
+            return responseMsgs(true, $msg, $req->applicationId, '110169', 01, "", 'POST', $req->deviceId);
+        }
+        catch(Exception $e)
+        {
+            DB::rollBack();
+            DB::connection("pgsql_master")->rollBack();
+            return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    protected function postTempTransection(Request $req)
+    {
+        $tranReqs = [
+            'transaction_id' => $req->applicationId,
+            'application_id' => $req->applicationId,
+            'module_id' => $req->moduleId,
+            'workflow_id' => $req->workflowId,
+            'transaction_no' => $req->transactionNo,
+            'application_no' => $req->applicationNo,
+            'amount' => $req->paidAmount,
+            'payment_mode' => $req->paymentMode,
+            'tran_date' => $req->tranDate,
+            'user_id' => $req->empDtlId,
+            'ulb_id' => $req->ulbId,
+            'cheque_dd_no' => $req->chequeNo,
+            'bank_name' => $req->bankName,
+            "ward_no" => null,
+        ];
+        if ($req->payment_mode != 'ONLINE') {   
+            $mTempTransaction = new TempTransaction();         
+            $mTempTransaction->tempTransaction($tranReqs);
         }
     }
     /**

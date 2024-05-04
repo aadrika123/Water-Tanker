@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\BLL\Calculations;
+use App\Http\Controllers\Payment\RazorpayPaymentController;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
@@ -17,6 +18,7 @@ use App\Models\StReassignBooking;
 use App\Models\StResource;
 use App\Models\User;
 use App\Models\WtLocation;
+use App\Repository\Payment\Interfaces\iPayment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Validator;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\App;
 
 class SepticTankController extends Controller
 {
@@ -226,6 +229,8 @@ class SepticTankController extends Controller
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            $user = $req->auth;
+            $req->merge(['cancelledById' =>$user["id"], 'cancelledBy' =>$user['user_type']]);
             // Variable initialization
             $mStBooking = StBooking::find($req->applicationId);
             if (!$mStBooking)
@@ -237,6 +242,8 @@ class SepticTankController extends Controller
             $cancelledBooking->remarks = $req->remarks;
             $cancelledBooking->cancel_date = Carbon::now()->format('Y-m-d');
             $cancelledBooking->id =  $mStBooking->id;
+            $cancelledBooking->cancelled_by = $req->cancelledBy;
+            $cancelledBooking->cancelled_by_id = $req->cancelledById;
             $cancelledBooking->setTable('st_cancelled_bookings');
             $cancelledBooking->save();
             $mStBooking->delete();
@@ -782,6 +789,49 @@ class SepticTankController extends Controller
         }
     }
 
+    public function generatePaymentOrderIdV2(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'applicationId' => 'required|integer',
+        ]);
+        if ($validator->fails()) {
+            return ['status' => false, 'message' => $validator->errors()->first()];
+        }
+        try {
+            // Variable initialization
+            $mStBooking = StBooking::find($req->applicationId);
+            $reqData = [
+                "id" => $mStBooking->id,
+                'amount' => $mStBooking->payment_amount,
+                'workflowId' => "0",
+                'ulbId' => $mStBooking->ulb_id,
+                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'auth' => $req->auth,
+            ];
+            $RazorpayPaymentController = App::makeWith(RazorpayPaymentController::class);
+            $refResponse = $RazorpayPaymentController->generateOrderid(new Request($reqData));
+
+            $data = $refResponse->original;
+
+            if (!$data)
+                throw new Exception("Payment Order Id Not Generate");
+            if ($data["status"] == false) {
+                return responseMsgs(false, collect($data->message)->first()[0] ?? $data->message, json_decode($refResponse), "110220", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            $data["data"]["name"] = $mStBooking->applicant_name;
+            $data["data"]["email"] = $mStBooking->email;
+            $data["data"]["contact"] = $mStBooking->mobile;
+            $data["data"]["type"] = "Septic Tanker";
+
+            $mStBooking->order_id =  $data["data"]["orderId"];
+            $mStBooking->save();
+            return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data["data"], "110220", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, [$e->getMessage(),$e->getFile(),$e->getLine()], "", "110220", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
     /**
      * | List Applied And Cancelled Application
      * | Function - 21
@@ -1157,20 +1207,15 @@ class SepticTankController extends Controller
     {
         // $redis = Redis::connection();
         try {
-            if ($req->auth['user_type'] != 'UlbUser' && $req->auth['user_type'] != 'Water-Agency')
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency","JSK"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
             if (1) {                                                      // If Cache Memory is not available
                 $data1 = array();
-
-                // $magency = new StAgency();
                 $mWtCapacity = new StCapacity();
                 $mWtDriver = new StDriver();
-                // $mWtHydrationCenter = new WtHydrationCenter();
-
-                // $adencyList = $magency->getAllAgencyForMasterData($req->auth['ulb_id']);
-                // $data1['agency'] = $adencyList;
+                
 
                 $listCapacity = $mWtCapacity->getCapacityList();
                 $data1['capacity'] = $listCapacity;
@@ -1185,42 +1230,18 @@ class SepticTankController extends Controller
                 $data1['driver'] = $listDriver;
                 if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
-                // if ($req->auth['user_type'] == 'Water-Agency')
-                //     $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
-
-                // $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
-                // $data1['hydrationCenter'] = $hydrationCenter;
-
+               
                 $mWtUlbCapacityRate = new StUlbCapacityRate();
                 $capacityRate = $mWtUlbCapacityRate->getCapacityRateForMasterData($req->auth['ulb_id']);
                 $data1['capacityRate'] = $capacityRate;
 
                 $mWtResource = new StResource();
                 $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
-                // $data1['vehicle'] = $resource;
                 if (in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
-                    $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
-                // if ($req->auth['user_type'] == 'Water-Agency')
-                //     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
-
-                // $mWtLocation = new StLocation();
-                // $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
-                // $data1['location'] = $location;
-
-                // $mWtDriverVehicleMap = new StDriverVehicleMap();
-                // $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
-                // if ($req->auth['user_type'] == 'Water-Agency')
-                //     $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
+                    $data1['vehicle'] = $resource->where('agency_id', NULL)->values();                
 
                 $ulb = $this->_ulbs;
-                // $f_list = $list->map(function ($val) use ($ulb) {
-                //     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                //     $val->driver_vehicle = $val->vehicle_no . "( " . $val->driver_name . " )";
-                //     return $val;
-                // });
-                // $data1['driverVehicleMap'] = $f_list;
-
-                // $redis->set('wt_masters', json_encode($data1));                 // Set Key on Water Tanker masters
+                
             }
             return responseMsgs(true, "Data Fetched !!!", $data1, "110167", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {

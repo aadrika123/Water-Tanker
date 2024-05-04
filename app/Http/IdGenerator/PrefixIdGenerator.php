@@ -1,10 +1,10 @@
 <?php
 
-namespace App\MicroServices\IdGenerator;
+namespace App\Http\IdGenerator;
 
-use App\Models\IdGenerationParam as ModelsIdGenerationParam;
-use App\Models\Masters\IdGenerationParam;
-use App\Models\UlbMaster;
+use App\Models\ForeignModels\UlbMaster ;
+// use App\Models\IdGenerationParam ;
+use App\Models\ForeignModels\IdGenerationParam;
 
 /**
  * | Created On-04/09/2023 
@@ -32,7 +32,7 @@ class PrefixIdGenerator implements iIdGenerator
     public function generate(): string
     {
         $paramId = $this->paramId;
-        $mIdGenerationParams = new ModelsIdGenerationParam();
+        $mIdGenerationParams = new IdGenerationParam();
         $mUlbMaster = new UlbMaster();
         $ulbDtls = $mUlbMaster::findOrFail($this->ulbId);
 

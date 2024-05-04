@@ -66,9 +66,10 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'json.response' => \App\Http\Middleware\ForceJsonResponse::class,
+        // 'json.response' => \App\Http\Middleware\ForceJsonResponse::class,
         'auth.citizen' => ApiAuthentication::class,
         'expireBearerToken' => ExpireBearerToken::class,
-        'checkToken' => CheckToken::class
+        'checkToken' => CheckToken::class,
+        'auth_maker' => \App\Http\Middleware\AuthMaker::class
     ];
 }

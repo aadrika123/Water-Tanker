@@ -1,6 +1,6 @@
 <?php
 
-namespace App\MicroServices\IdGenerator;
+namespace App\Http\IdGenerator;
 
 /**
  * | Created On-04-09-2023 
