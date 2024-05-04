@@ -1970,8 +1970,8 @@ class WaterTankerController extends Controller
                 throw new Exception("Application Not Found !!!");
             if (!$mWtBooking->vehicle_id || !$mWtBooking->driver_id)
                 throw new Exception("First Assign Driver & Vehicle !!!");
-            if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
-                throw new Exception("This Booking is Not Delivery Date Today !!!");
+            // if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
+            //     throw new Exception("This Booking is Not Delivery Date Today !!!");
             $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
             $mWtBooking->save();
             return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");

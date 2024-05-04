@@ -6,6 +6,7 @@ use App\Models\ForeignModels\PropProperty;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
 
 class StoreRequest extends FormRequest
 {
@@ -24,7 +25,6 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        $propProperty = new PropProperty();
         $rules= [
             'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
@@ -34,7 +34,30 @@ class StoreRequest extends FormRequest
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
             'wardId' => $this->ulbArea == 1 ? "required|integer":'nullable',
-            'holdingNo' => $this->ulbArea == 1 ? ("required|string|max:20|"):'nullable',
+            'holdingNo' => $this->ulbArea == 1 ? (
+                                                [
+                                                   "required" ,
+                                                   "string",
+                                                   "max:20",
+                                                   function ($attribute, $value, $fail) {
+                                                        // Custom validation logic to check if the value exists
+                                                        // You can use the OR condition here
+                                                        $existsInTable1 = PropProperty::where('status', 1)
+                                                            ->where("ulb_id",$this->ulbId)
+                                                            ->where(function($where) use($value){
+                                                                $where->orWhere("new_holding_no",$value)
+                                                                ->orWhere("holding_no",$value);
+                                                            })
+                                                            ->exists();                                        
+                                                        if (!$existsInTable1) {
+                                                            $fail('The '.$attribute.' is invalid.');
+                                                        }
+                                                    },
+                                                ]
+                                                // "required|string|max:20"
+                                                )
+                                                    
+                                                :'nullable',
             'roadWidth' => 'required|numeric',
             'distance' => 'required|numeric',
             'capacityId' => 'nullable|integer',
@@ -50,6 +73,6 @@ class StoreRequest extends FormRequest
             'success'   => false,
             'message'   => 'Validation errors',
             'data'      => $validator->errors()
-        ], 422),);
+        ], 200),);
     }
 }

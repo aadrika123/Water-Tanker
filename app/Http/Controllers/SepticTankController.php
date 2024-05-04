@@ -50,14 +50,6 @@ class SepticTankController extends Controller
     public function addBooking(StoreRequest $req)
     {
         try {
-            $refResponse = Http::post($this->_propertyModuleUrl . 'api/trade/property/by-holding', $req->all());
-            $refResponse = json_decode($refResponse);
-            dd($refResponse);
-            if($req->holdingNo)
-            {
-                $refResponse = Http::post($this->_propertyModuleUrl . 'api/trade/property/by-holding', $req->all());
-                $idGenerateData = json_decode($refResponse);
-            }
             // Variable initialization
             $mStBooking = new StBooking();
             $mCalculations = new Calculations();
@@ -1759,8 +1751,8 @@ class SepticTankController extends Controller
             $mWtBooking = StBooking::find($req->applicationId);
             if (!$mWtBooking)
                 throw new Exception("Application Not Found !!!");            
-            if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
-                throw new Exception("This Booking is Not Delivery Date Today !!!");
+            // if ($mWtBooking->delivery_date > Carbon::now()->format('Y-m-d'))
+            //     throw new Exception("This Booking is Not Delivery Date Today !!!");
             $mWtBooking->is_vehicle_sent = '1';                                                           // 1 - for Vehicle sent
             $mWtBooking->save();
             return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
