@@ -1089,8 +1089,11 @@ class WaterTankerController extends Controller
      */
     public function editDriver(Request $req)
     {
+        $mUser = new User();
+        $mWtDriver = new WtDriver();
+        $WtDriver = $mWtDriver->find($req->driverId);
         $validator = Validator::make($req->all(), [
-            'driverId' => 'required|integer',
+            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id",
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
             'driverMobile' => 'required|digits:10',
@@ -1099,31 +1102,31 @@ class WaterTankerController extends Controller
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
             "status"=>"nullable|integer|in:1,0",
+            'driverEmail' => "nullable|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):""),
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         if ($req->auth['user_type'] == 'Water-Agency')
             $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
         try {
-            $mWtDriver = WtDriver::find($req->driverId);
-            if (!$mWtDriver)
+            if (!$WtDriver)
                 throw new Exception("No Data Found !!!");
-            $user = User::find($mWtDriver->u_id);
-            $mWtDriver->ulb_id = $req->ulbId;
-            $mWtDriver->agency_id = $req->agencyId;
-            $mWtDriver->driver_name = $req->driverName;
-            $mWtDriver->driver_aadhar_no = $req->driverAadharNo;
-            $mWtDriver->driver_mobile = $req->driverMobile;
-            $mWtDriver->driver_address = $req->driverAddress;
-            $mWtDriver->driver_father = $req->driverFather;
-            $mWtDriver->driver_dob = $req->driverDob;
-            $mWtDriver->driver_license_no = $req->driverLicenseNo;
+            $user = User::find($WtDriver->u_id);
+            $WtDriver->ulb_id = $req->ulbId;
+            $WtDriver->agency_id = $req->agencyId;
+            $WtDriver->driver_name = $req->driverName;
+            $WtDriver->driver_aadhar_no = $req->driverAadharNo;
+            $WtDriver->driver_mobile = $req->driverMobile;
+            $WtDriver->driver_address = $req->driverAddress;
+            $WtDriver->driver_father = $req->driverFather;
+            $WtDriver->driver_dob = $req->driverDob;
+            $WtDriver->driver_license_no = $req->driverLicenseNo;
             if(isset($req->status))
             {
-                $mWtDriver->status = $req->status;
+                $WtDriver->status = $req->status;
             }
             if(!$user)
             {
@@ -1137,7 +1140,7 @@ class WaterTankerController extends Controller
                     "userType" =>  "Driver",
                 ];
                 $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
-                $mWtDriver->u_id = $userId;
+                $WtDriver->u_id = $userId;
             }
             if($user)
             {
@@ -1146,7 +1149,7 @@ class WaterTankerController extends Controller
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
             }
-            $mWtDriver->save();
+            $WtDriver->save();
             $user ? $user->update():"";
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {

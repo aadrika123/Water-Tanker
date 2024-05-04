@@ -453,8 +453,11 @@ class SepticTankController extends Controller
      */
     public function editDriver(Request $req)
     {
+        $mUser = new User();
+        $mWtDriver = new StDriver();
+        $WtDriver = $mWtDriver->find($req->driverId);
         $validator = Validator::make($req->all(), [
-            'driverId' => 'required|integer',
+            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id",
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
             'driverMobile' => 'required|digits:10',
@@ -463,7 +466,7 @@ class SepticTankController extends Controller
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
             "status"    => "nullable|integer|in:1,0",
-
+            'driverEmail' => "nullable|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):"")
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
