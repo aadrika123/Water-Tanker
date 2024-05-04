@@ -83,7 +83,7 @@ class SendWhatsAppMessage
         } 
         
         
-        if($this->booking->isDirty('payment_status') && $this->booking->payment_status==1)
+        if($this->booking->isDirty('payment_status') && in_array($this->booking->payment_status,[1,2]))
         {
             return (Whatsapp_Send( $this->booking->mobile,"wt_booking_initiated",
                     ["content_type"=>"text",
