@@ -2592,6 +2592,10 @@ class WaterTankerController extends Controller
             // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
             if (!$payDetails)
                 throw new Exception("Payment Details Not Found !!!");
+            if($payDetails->payment_status==0)
+            {
+                throw new Exception("Payment not Done");
+            }
             $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
             $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
             $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");

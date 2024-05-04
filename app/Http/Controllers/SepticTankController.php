@@ -1295,6 +1295,10 @@ class SepticTankController extends Controller
             // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
             if (!$payDetails)
                 throw new Exception("Payment Details Not Found !!!");
+            if($payDetails->payment_status==0)
+            {
+                throw new Exception("Payment not Done");
+            }
             $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
