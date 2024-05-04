@@ -1139,9 +1139,12 @@ class WaterTankerController extends Controller
                 $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
                 $mWtDriver->u_id = $userId;
             }
-            if(isset($req->driverEmail) && $user)
+            if($user)
             {
-                $user->email = $req->driverEmail;
+                isset($req->driverEmail) ? $user->email = $req->driverEmail : "";
+                $user->name = $req->driverName;
+                $user->mobile = $req->driverMobile;
+                $user->address = $req->driverAddress;
             }
             $mWtDriver->save();
             $user ? $user->update():"";
