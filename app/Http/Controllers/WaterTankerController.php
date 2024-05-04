@@ -2534,13 +2534,13 @@ class WaterTankerController extends Controller
             $booking->payment_status = $req->paymentMode=="CASH" ? 1 : 2;
             $booking->payment_id = "";
             $booking->payment_details = json_encode($mergData);
-            
+            $booking->payment_by_user_id = $user->id;
 
             DB::beginTransaction();
             DB::connection("pgsql_master")->beginTransaction();            
             $booking->update();
             $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d")]);
-            $this->postTempTransection($req);
+            $this->postTempTransaction($req);
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
@@ -2554,7 +2554,7 @@ class WaterTankerController extends Controller
         }
     }
 
-    protected function postTempTransection(Request $req)
+    public function postTempTransaction(Request $req)
     {
         $tranReqs = [
             'transaction_id' => $req->applicationId,

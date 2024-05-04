@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\BLL\Calculations;
 use App\Http\Controllers\Payment\RazorpayPaymentController;
+use App\Http\Requests\PaymentCounterReq;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
@@ -18,6 +19,7 @@ use App\Models\StReassignBooking;
 use App\Models\StResource;
 use App\Models\User;
 use App\Models\WtLocation;
+use App\Repository\Payment\Concrete\PaymentRepository;
 use App\Repository\Payment\Interfaces\iPayment;
 use Carbon\Carbon;
 use Exception;
@@ -758,7 +760,7 @@ class SepticTankController extends Controller
                 'amount' => $mStBooking->payment_amount,
                 'workflowId' => "0",
                 'ulbId' => $mStBooking->ulb_id,
-                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'departmentId' => Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
                 'auth' => $req->auth,
             ];
             $paymentUrl = Config::get('constants.PAYMENT_URL');
@@ -805,7 +807,7 @@ class SepticTankController extends Controller
                 'amount' => $mStBooking->payment_amount,
                 'workflowId' => "0",
                 'ulbId' => $mStBooking->ulb_id,
-                'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                'departmentId' => Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
                 'auth' => $req->auth,
             ];
             $RazorpayPaymentController = App::makeWith(RazorpayPaymentController::class);
@@ -1779,6 +1781,83 @@ class SepticTankController extends Controller
             return responseMsgs(true, "Vehicle Sent Updation Successfully !!!", '', "110156", "1.0", responseTime(), "POST", $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110156", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    public function offlinePayment(PaymentCounterReq $req)
+    {       
+        try{
+            
+            $user = Auth()->user();
+            $userType = $user->user_type;
+            $mergData = [
+                'departmentId' => Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
+                "moduleId" =>Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
+                "gatewayType"   =>"",
+                "id"=>$req->applicationId,
+                "orderId"=>"",
+                "paymentId"=>"",
+                "paymentMode"=>$req->paymentMode,
+                "tranDate"=>Carbon::parse(),
+                "ulbId"=>$user->ulb_id,
+                "userId"=>$user->id,
+                "workflowId"=>0,
+                "chequeNo"=>$req->chequeNo,
+                "bankName"=>$req->bankName,
+                "chequeDate"=>$req->chequeDate,
+            ];
+            if($user->getTable()!="users")
+            {
+                throw new Exception("Citizen Not Allowed");
+            }
+            if($userType!="JSK")
+            {
+                throw new Exception("Only jsk allow");
+            }
+            $booking = StBooking::find($req->applicationId);
+            if($booking->ulb_id != $user->ulb_id)
+            {
+                throw new Exception("this application related to another ulb");
+            }
+            if(in_array($booking->payment_status,[1,2]))
+            {
+                throw new Exception("Payment Already Don");
+            }
+            
+            $idGenrater = new PaymentRepository();
+            $waterTankerController = new WaterTankerController();
+            $tranNo = $idGenrater->generatingTransactionId($booking->ulb_id);
+            $mergData["transactionNo"] = $tranNo;
+            $mergData["amount"] = $booking->payment_amount;
+            $mergData["applicationNo"]=$booking->booking_no;
+            $mergData["paidAmount"]=$booking->payment_amount;
+            $mergData["empDtlId"]=$user->id;
+            $mergData["ulbId"]=$booking->ulb_id;
+            $req->merge($mergData);
+
+            $booking->payment_date = Carbon::now();
+            $booking->payment_mode = $req->paymentMode;
+            $booking->payment_status = $req->paymentMode=="CASH" ? 1 : 2;
+            $booking->payment_id = "";
+            $booking->payment_details = json_encode($mergData);
+            $booking->payment_by_user_id = $user->id;
+            
+
+            DB::beginTransaction();
+            DB::connection("pgsql_master")->beginTransaction();            
+            $booking->update();
+            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d")]);
+            $waterTankerController->postTempTransaction($req);
+            DB::commit();
+            DB::connection("pgsql_master")->commit();
+            $msg = "Payment Accepted Successfully !!!";
+            return responseMsgs(true, $msg, $req->applicationId, '110169', 01, "", 'POST', $req->deviceId);
+        }
+        catch(Exception $e)
+        {
+            DB::rollBack();
+            DB::connection("pgsql_master")->rollBack();
+            return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
         }
     }
 }
