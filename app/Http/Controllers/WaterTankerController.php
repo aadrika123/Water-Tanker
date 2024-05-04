@@ -2336,7 +2336,7 @@ class WaterTankerController extends Controller
         $redis = Redis::connection();
         try {
             // Variable initialization
-            $data1 = json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
+            $data1 = null;#json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
             if (!$data1) {                                                   // If Cache Memory is not available
                 $data1 = array();
                 $client = new \GuzzleHttp\Client();
