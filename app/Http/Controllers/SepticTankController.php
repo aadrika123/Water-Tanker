@@ -1749,6 +1749,7 @@ class SepticTankController extends Controller
             $data = $mWtBooking->find($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
 
+            $data->payment_details = json_decode($data->payment_details);
             $data->booking_date = Carbon::parse($data->booking_date)->format('d-m-Y');
             $data->cleaning_date = Carbon::parse($data->cleaning_date)->format('d-m-Y');
             $data->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $data->assign_date)->format('d-m-Y');
@@ -1906,6 +1907,7 @@ class SepticTankController extends Controller
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                     $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');

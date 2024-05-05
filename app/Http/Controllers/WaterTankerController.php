@@ -1726,7 +1726,8 @@ class WaterTankerController extends Controller
             $data = $mWtBooking->find($req->applicationId);
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
-
+            
+            $list->payment_details = json_decode($list->payment_details);
             $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
             $list->delivery_date = Carbon::parse( $list->delivery_date)->format('d-m-Y');
             $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
@@ -3025,6 +3026,7 @@ class WaterTankerController extends Controller
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
                     $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
