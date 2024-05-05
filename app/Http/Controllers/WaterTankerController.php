@@ -784,7 +784,7 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtCancellation = new WtCancellation();
-            $list = $mWtCancellation->getCancelBookingList()->where('refund_status', '0');    // 0 - Booking Cancel Success
+            $list = $mWtCancellation->getCancelBookingList();    // 0 - Booking Cancel Success
             if ($req->auth['user_type'] == 'Citizen')
                 $list = $list->where('citizen_id', $req->auth['id']);                        // Get Citizen Cancel Application List
             if ($req->auth['user_type'] == 'UlbUser')
@@ -2981,6 +2981,17 @@ class WaterTankerController extends Controller
         {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
+    public function searchApp(Request $req)
+    {
+        try{
+
+        }
+        catch(Exception $e)
+        {
+            
         }
     }
 
