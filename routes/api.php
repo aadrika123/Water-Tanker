@@ -123,6 +123,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post("water-tanker/driver-updated-list","updatedListDeliveryByDriver");
             Route::post('water-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');
             Route::post('water-tanker/offline-payment', 'offlinePayment');
+            Route::post('water-tanker/search-booking', 'searchApp');
         });
 
         /**
@@ -180,6 +181,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post("septic-tanker/driver-updated-list","updatedListDeliveryByDriver");
             Route::post('septic-tanker/sent-vehicle', 'sentVehicle'); 
             Route::post('septic-tanker/offline-payment', 'offlinePayment');
+            Route::post('septic-tanker/search-booking', 'searchApp');
         });
     });
 });

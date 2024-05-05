@@ -2987,11 +2987,56 @@ class WaterTankerController extends Controller
     public function searchApp(Request $req)
     {
         try{
-
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id??null;
+            $key = $req->key;
+            $fromDate = $uptoDate = null;
+            if($req->fromDate)
+            {
+                $fromDate = $req->fromDate;
+            }
+            if($req->uptoDate)
+            {
+                $uptoDate = $req->uptoDate;
+            }
+            $list = WtBooking::select("*");
+            if($key)
+            {
+                $list=$list->where(function($where)use($key){
+                    $where->orWhere("booking_no","ILIKE","%$key%")
+                    ->orWhere("applicant_name","ILIKE","%$key%")
+                    ->orWhere("mobile","ILIKE","%$key%");
+                    // ->orWhere("holding_no","ILIKE","%$key%");                        
+                });
+            }
+            if($ulbId)
+            {
+                $list=$list->where("ulb_id",$ulbId);
+            }
+            if($fromDate && $uptoDate)
+            {
+                $list=$list->whereBetween("booking_date",[$fromDate,$uptoDate]);
+            }
+            $list = $list->orderBy("id","DESC");
+            $perPage = $req->perPage ? $req->perPage:10;
+            $list = $list->paginate($perPage);
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) {
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+            return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        
         }
         catch(Exception $e)
         {
-            
+            return responseMsgs(false,$e->getMessage(),"","POST",$req->deviceId??"");
         }
     }
 
