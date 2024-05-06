@@ -1749,7 +1749,7 @@ class WaterTankerController extends Controller
                 $data = WtCancellation::find($req->applicationId);
             }
             $tranDtls = $data->getAllTrans()->map(function($val){
-                $chequeDtls = $val->getChequeDtls;
+                $chequeDtls = $val->getChequeDtls();
                 $val->tran_date = Carbon::parse($val->tran_date)->format("d-m-Y");
                 $val->cheque_no = $chequeDtls->cheque_no;
                 $val->cheque_date = $chequeDtls->cheque_date;
