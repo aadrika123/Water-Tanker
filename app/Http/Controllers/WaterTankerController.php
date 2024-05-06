@@ -2582,7 +2582,7 @@ class WaterTankerController extends Controller
             $mTransaction->save();
             $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d"),"tranId"=>$mTransaction->id]);
             $this->postTempTransaction($req);
-            DB::enableQueryLog();
+
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
