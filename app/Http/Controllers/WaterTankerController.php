@@ -1748,10 +1748,20 @@ class WaterTankerController extends Controller
                 $mWtBooking = new WtCancellation();
                 $data = WtCancellation::find($req->applicationId);
             }
+            $tranDtls = $data->getAllTrans()->map(function($val){
+                $chequeDtls = $val->getChequeDtls;
+                $val->tran_date = Carbon::parse($val->tran_date)->format("d-m-Y");
+                $val->cheque_no = $chequeDtls->cheque_no;
+                $val->cheque_date = $chequeDtls->cheque_date;
+                $val->bank_name = $chequeDtls->bank_name;
+                $val->branch_name = $chequeDtls->branch_name;
+                return $val;
+            });
             $appStatus = $this->getAppStatus($req->applicationId);
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
             $list->booking_status = $appStatus;
+            $list->tran_dtls = $tranDtls;
             
             $list->payment_details = json_decode($list->payment_details);
             $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');

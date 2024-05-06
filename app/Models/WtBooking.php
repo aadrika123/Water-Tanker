@@ -187,4 +187,9 @@ class WtBooking extends Model
         return $this->hasOne(WtDriver::class,"id","driver_id")->first();
     }
 
+    public function getAllTrans()
+    {
+        return $this->hasMany(WtTransaction::class,"booking_id","id")->whereIn("status",[1,2])->orderBy("tran_date","ASC")->orderBy("id","ASC")->get();
+    }
+
 }

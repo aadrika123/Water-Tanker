@@ -45,4 +45,8 @@ class StCancelledBooking extends Model
     {
         return $this->hasOne(StDriver::class,"id","driver_id")->first();
     }
+    public function getAllTrans()
+    {
+        return $this->hasMany(StTransaction::class,"booking_id","id")->whereIn("status",[1,2])->orderBy("tran_date","ASC")->orderBy("id","ASC")->get();
+    }
 }

@@ -1782,9 +1782,19 @@ class SepticTankController extends Controller
                 $mWtBooking = new StCancelledBooking();
                 $data = $mWtBooking->find($req->applicationId);
             }
+            $tranDtls = $data->getAllTrans()->map(function($val){
+                $chequeDtls = $val->getChequeDtls;
+                $val->tran_date = Carbon::parse($val->tran_date)->format("d-m-Y");
+                $val->cheque_no = $chequeDtls->cheque_no;
+                $val->cheque_date = $chequeDtls->cheque_date;
+                $val->bank_name = $chequeDtls->bank_name;
+                $val->branch_name = $chequeDtls->branch_name;
+                return $val;
+            });
             $appStatus = $this->getAppStatus($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
             $data->booking_status = $appStatus;
+            $data->tran_dtls = $tranDtls;
             $data->payment_details = json_decode($data->payment_details);
             $data->booking_date = Carbon::parse($data->booking_date)->format('d-m-Y');
             $data->cleaning_date = Carbon::parse($data->cleaning_date)->format('d-m-Y');
