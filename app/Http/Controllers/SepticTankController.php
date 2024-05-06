@@ -1828,7 +1828,7 @@ class SepticTankController extends Controller
                 "id"=>$req->applicationId,
                 "orderId"=>"",
                 "paymentId"=>"",
-                "paymentMode"=>$req->paymentMode,
+                "paymentModes"=>$req->paymentModes,
                 "tranDate"=>Carbon::parse(),
                 "ulbId"=>$user->ulb_id,
                 "userId"=>$user->id,
@@ -1837,11 +1837,11 @@ class SepticTankController extends Controller
                 "bankName"=>$req->bankName,
                 "chequeDate"=>$req->chequeDate,
             ];
-            if($user->getTable()!="users")
+            if($req->isNotWebHook && $user->getTable()!="users")
             {
                 throw new Exception("Citizen Not Allowed");
             }
-            if($userType!="JSK")
+            if($req->isNotWebHook && $userType!="JSK")
             {
                 throw new Exception("Only jsk allow");
             }
@@ -1867,13 +1867,13 @@ class SepticTankController extends Controller
 
             $booking->payment_date = Carbon::now();
             $booking->payment_mode = $req->paymentMode;
-            $booking->payment_status = $req->paymentMode=="CASH" ? 1 : 2;
+            $booking->payment_status = in_array($req->paymentMode,["CASH"],"ONLINE") ? 1 : 2;
             $booking->payment_id = "";
             $booking->payment_details = json_encode($mergData);
             $booking->payment_by_user_id = $user->id;
 
             $mTransaction->booking_id = $booking->id;
-            $mTransaction->ward_id = $booking->ward_id;
+            $mTransaction->ward_id = $booking->ward_id??0;
             $mTransaction->ulb_id = $booking->ulb_id;
             $mTransaction->tran_type = "Septic Tanker Booking";
             $mTransaction->tran_no = $tranNo;
@@ -1882,7 +1882,7 @@ class SepticTankController extends Controller
             $mTransaction->paid_amount = $booking->payment_amount;
             $mTransaction->emp_dtl_id = $user->id;
             $mTransaction->emp_user_type = $userType;
-            if (Str::upper($mTransaction->payment_mode) != 'CASH') {
+            if (in_array($req->paymentMode,["CASH"],"ONLINE")) {
                 $mTransaction->status = 2;
             }
             
@@ -1898,7 +1898,7 @@ class SepticTankController extends Controller
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
-            return responseMsgs(true, $msg, $req->applicationId, '110169', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(true, $msg, ["tranId"=>$mTransaction->id,"TranNo"=>$mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
         }
         catch(Exception $e)
         {

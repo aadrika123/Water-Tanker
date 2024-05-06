@@ -2466,31 +2466,37 @@ class WaterTankerController extends Controller
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 $msg = '';
+                $tranId ="";
+                $response = "";
+                $req->merge(["isNotWebHook"=>true,"paymentModes"=>$req->paymentMode,"paymentMode"=>"ONLINE"]);
                 DB::beginTransaction();
                 $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
-                if ($wtCount > 0) {
-                    $mWtBooking = WtBooking::find($req->id);
-                    $mWtBooking->payment_date = Carbon::now();
-                    $mWtBooking->payment_mode = "Online";
-                    $mWtBooking->payment_status = 1;
-                    $mWtBooking->payment_id = $req->paymentId;
-                    $mWtBooking->payment_details = $req->all();
-                    $mWtBooking->save();
+                if ($wtCount > 0) {                    
+                    // $mWtBooking = WtBooking::find($req->id);
+                    // $mWtBooking->payment_date = Carbon::now();
+                    // $mWtBooking->payment_mode = "Online";
+                    // $mWtBooking->payment_status = 1;
+                    // $mWtBooking->payment_id = $req->paymentId;
+                    // $mWtBooking->payment_details = $req->all();
+                    // $mWtBooking->save();
+                    $response = $this->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($stCount > 0) {
-                    $mStBooking = StBooking::find($req->id);
-                    $mStBooking->payment_date = Carbon::now();
-                    $mStBooking->payment_mode = "Online";
-                    $mStBooking->payment_status = 1;
-                    $mStBooking->payment_id = $req->paymentId;
-                    $mStBooking->payment_details = $req->all();
-                    $mStBooking->save();
+                    // $mStBooking = StBooking::find($req->id);
+                    // $mStBooking->payment_date = Carbon::now();
+                    // $mStBooking->payment_mode = "Online";
+                    // $mStBooking->payment_status = 1;
+                    // $mStBooking->payment_id = $req->paymentId;
+                    // $mStBooking->payment_details = $req->all();
+                    // $mStBooking->save();
+                    $response = (new SepticTankController())->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 DB::commit();
-                return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
+                $data = $response->original["data"];
+                return responseMsgs(true, $msg, $data, '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
             DB::rollBack();
@@ -2509,9 +2515,9 @@ class WaterTankerController extends Controller
                 "moduleId" =>Config::get('constants.WATER_TANKER_MODULE_ID'),
                 "gatewayType"   =>"",
                 "id"=>$req->applicationId,
-                "orderId"=>"",
-                "paymentId"=>"",
-                "paymentMode"=>$req->paymentMode,
+                "orderId"=>$req->paymentId,
+                "paymentId"=>$req->paymentId,
+                "paymentModes"=>$req->paymentModes,
                 "tranDate"=>Carbon::parse(),
                 "ulbId"=>$user->ulb_id,
                 "userId"=>$user->id,
@@ -2520,11 +2526,11 @@ class WaterTankerController extends Controller
                 "bankName"=>$req->bankName,
                 "chequeDate"=>$req->chequeDate,
             ];
-            if($user->getTable()!="users")
+            if($req->isNotWebHook && $user->getTable()!="users")
             {
                 throw new Exception("Citizen Not Allowed");
             }
-            if($userType!="JSK")
+            if($req->isNotWebHook && $userType!="JSK")
             {
                 throw new Exception("Only jsk allow");
             }
@@ -2580,7 +2586,7 @@ class WaterTankerController extends Controller
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
-            return responseMsgs(true, $msg, $mTransaction->id, '110169', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(true, $msg, ["tranId"=>$mTransaction->id,"TranNo"=>$mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
         }
         catch(Exception $e)
         {
@@ -2636,22 +2642,32 @@ class WaterTankerController extends Controller
             // Variable initialization
             $ulb = $this->ulbList();
             $mWtBooking = new WtBooking();
-            $payDetails = $mWtBooking->getRecieptDetails($tranId);
-            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
-            if (!$payDetails)
+            $mTransaction = WtTransaction::whereIn("status",[1,2])->find($tranId);
+            if(!$mTransaction)
+            {
                 throw new Exception("Payment Details Not Found !!!");
-            if($payDetails->payment_status==0)
+            }
+            $appData = $mWtBooking->getRecieptDetails($mTransaction->booking_id);
+            if (!$appData)
+                throw new Exception("Booking Details Not Found !!!");
+            if($appData->payment_status==0)
             {
                 throw new Exception("Payment not Done");
-            }
-            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
-            $payDetails->toll_free_no = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
-            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("current_website");
-            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
-            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
-            $payDetails->paymentAgainst = "Water Tanker";
-            $payDetails->delivery_date = Carbon::parse(  $payDetails->delivery_date)->format('d-m-Y');
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110169', 01, responseTime(), 'POST', $req->deviceId);
+            }  
+            $chequeDtls = $mTransaction->getChequeDtls();
+            $mTransaction->cheque_no = $chequeDtls->cheque_no??"";  
+            $mTransaction->cheque_date = $chequeDtls->cheque_date??""; 
+            $mTransaction->bank_name = $chequeDtls->bank_name??""; 
+            $mTransaction->branch_name = $chequeDtls->branch_name??"";      
+            $appData->payment_details = json_decode(json_encode($mTransaction->toArray()));
+            $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
+            $appData->toll_free_no = (collect($ulb)->where("id", $appData->ulb_id))->value("toll_free_no");
+            $appData->website = (collect($ulb)->where("id", $appData->ulb_id))->value("current_website");
+            $appData->inWords = getIndianCurrency($appData->payment_amount) . "Only /-";
+            $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
+            $appData->paymentAgainst = "Water Tanker";
+            $appData->delivery_date = Carbon::parse(  $appData->delivery_date)->format('d-m-Y');
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $appData, '110169', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
         }
