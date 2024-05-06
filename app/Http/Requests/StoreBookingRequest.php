@@ -23,8 +23,13 @@ class StoreBookingRequest extends FormRequest
      */
     public function rules()
     {
+        $user = Auth()->user();
+        if($user->gettable()=="users" && !$this->ulbId)
+        {
+            $this->merge(["ulbId"=>$user->ulb_id]);
+        }
         return [
-            'ulbId' => 'required|integer',
+            'ulbId' =>'required|integer',
             // 'citizenId' => 'required|integer',
             'applicantName' => 'required|string|max:255',
             // 'agencyId' => 'required|integer',

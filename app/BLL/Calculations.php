@@ -132,7 +132,7 @@ class Calculations
      */
     public function getAmount($ulb, $capacityId)
     {
-        return WtUlbCapacityRate::select('rate')->where('ulb_id', $ulb)->where('capacity_id', $capacityId)->first()->rate;
+        return WtUlbCapacityRate::select('rate')->where('ulb_id', $ulb)->where("status",1)->where('capacity_id', $capacityId)->first()->rate;
     }
 
     /**
