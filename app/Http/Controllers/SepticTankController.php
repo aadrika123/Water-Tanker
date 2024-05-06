@@ -198,7 +198,7 @@ class SepticTankController extends Controller
             'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -232,7 +232,7 @@ class SepticTankController extends Controller
             'remarks' => 'required|string|max:255',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $user = $req->auth;
@@ -305,7 +305,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -346,7 +346,7 @@ class SepticTankController extends Controller
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -435,7 +435,7 @@ class SepticTankController extends Controller
             'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -474,7 +474,7 @@ class SepticTankController extends Controller
             'driverEmail' => "required|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):"")
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -540,7 +540,7 @@ class SepticTankController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -596,7 +596,7 @@ class SepticTankController extends Controller
             'resourceId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -624,7 +624,7 @@ class SepticTankController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -683,7 +683,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -712,7 +712,7 @@ class SepticTankController extends Controller
             'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -754,7 +754,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -801,7 +801,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -902,7 +902,7 @@ class SepticTankController extends Controller
             'capacity' => 'required|integer|unique:st_capacities',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -950,7 +950,7 @@ class SepticTankController extends Controller
             'capacityId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -975,7 +975,7 @@ class SepticTankController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtCapacity = StCapacity::find($req->capacityId);
@@ -1006,7 +1006,7 @@ class SepticTankController extends Controller
             'rate' => 'required|integer|gt:0',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -1054,7 +1054,7 @@ class SepticTankController extends Controller
             'capacityRateId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1081,7 +1081,7 @@ class SepticTankController extends Controller
             "status"=>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -1114,7 +1114,7 @@ class SepticTankController extends Controller
             'isResidential' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1137,7 +1137,7 @@ class SepticTankController extends Controller
             'paymentId' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1267,7 +1267,7 @@ class SepticTankController extends Controller
             'isInUlb' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtLocation = new WtLocation();
@@ -1327,7 +1327,7 @@ class SepticTankController extends Controller
             'remarks' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $applicationDetails = StBooking::find($req->applicationId);
@@ -1353,7 +1353,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $applicationDetails = StBooking::find($req->applicationId);
@@ -1658,7 +1658,7 @@ class SepticTankController extends Controller
             'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = StBooking::find($req->applicationId);
@@ -1762,7 +1762,7 @@ class SepticTankController extends Controller
             ],
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = new StBooking();
@@ -1798,7 +1798,7 @@ class SepticTankController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1894,7 +1894,7 @@ class SepticTankController extends Controller
             $mTransaction->save();
             $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d"),"tranId"=>$mTransaction->id]);
             $this->postTempTransaction($req);
-            
+
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";

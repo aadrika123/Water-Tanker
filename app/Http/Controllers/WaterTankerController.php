@@ -88,7 +88,7 @@ class WaterTankerController extends Controller
             'dispatchCapacity' => 'required|numeric',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -183,7 +183,7 @@ class WaterTankerController extends Controller
             'capacity' => 'required|integer|unique:wt_capacities',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -233,7 +233,7 @@ class WaterTankerController extends Controller
             'rate' => 'required|integer|gt:0',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -296,7 +296,7 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -466,7 +466,7 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -532,7 +532,7 @@ class WaterTankerController extends Controller
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -624,7 +624,7 @@ class WaterTankerController extends Controller
             'date' => 'nullable|date|date_format:Y-m-d',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -679,7 +679,7 @@ class WaterTankerController extends Controller
             'vehicleId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -747,7 +747,7 @@ class WaterTankerController extends Controller
             'cancelDetails' => 'nullable|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->request->add(['cancelledById' => $cancelById, 'cancelledBy' => $cancelledBy]);
         try {
@@ -821,7 +821,7 @@ class WaterTankerController extends Controller
             'refundDetails' => 'nullable|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -877,7 +877,7 @@ class WaterTankerController extends Controller
             'date' => 'nullable|date|date_format:Y-m-d',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if ($req->auth['user_type'] != 'UlbUser')
@@ -918,7 +918,7 @@ class WaterTankerController extends Controller
             "status"=> "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtAgency = WtAgency::find($req->agencyId);
@@ -957,7 +957,7 @@ class WaterTankerController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -996,7 +996,7 @@ class WaterTankerController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         if ($req->auth['user_type'] == 'Water-Agency')
@@ -1036,7 +1036,7 @@ class WaterTankerController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtCapacity = WtCapacity::find($req->capacityId);
@@ -1068,7 +1068,7 @@ class WaterTankerController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -1176,7 +1176,7 @@ class WaterTankerController extends Controller
             'agencyId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1199,7 +1199,7 @@ class WaterTankerController extends Controller
             'hydrationCenterId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1222,7 +1222,7 @@ class WaterTankerController extends Controller
             'resourceId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1245,7 +1245,7 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1268,7 +1268,7 @@ class WaterTankerController extends Controller
             'capacityRateId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1291,7 +1291,7 @@ class WaterTankerController extends Controller
             'driverId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1339,7 +1339,7 @@ class WaterTankerController extends Controller
             'mapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1365,7 +1365,7 @@ class WaterTankerController extends Controller
             'mapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -1502,7 +1502,7 @@ class WaterTankerController extends Controller
             'isInUlb' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -1551,7 +1551,7 @@ class WaterTankerController extends Controller
             'locationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtLocation = new WtLocation();
@@ -1576,7 +1576,7 @@ class WaterTankerController extends Controller
             "status"    =>"nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -1612,7 +1612,7 @@ class WaterTankerController extends Controller
             'rank' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1664,7 +1664,7 @@ class WaterTankerController extends Controller
             'locationHydrationMapId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtLocationHydrationMap = new WtLocationHydrationMap();
@@ -1690,7 +1690,7 @@ class WaterTankerController extends Controller
             'rank' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable Initialization
@@ -1737,7 +1737,7 @@ class WaterTankerController extends Controller
             ],
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = new WtBooking();
@@ -1776,14 +1776,7 @@ class WaterTankerController extends Controller
      */
     public function reassignBooking(Request $req)
     {
-        // $validator = Validator::make($req->all(), [
-        //     'applicationId' => 'required|integer',
-        //     'vdmId' => 'required|integer',
-        // ]);
-        // if ($validator->fails()) {
-        //     return ['status' => false, 'message' => $validator->errors()->first()];
-        // }
-
+        
         $ulbId = $req->auth["ulb_id"]??null;
         $mWtResource = new WtResource();
         $mWtBooking = new WtBooking();
@@ -1896,7 +1889,7 @@ class WaterTankerController extends Controller
             'ulbId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -1933,7 +1926,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtBooking = new WtBooking();
@@ -1992,7 +1985,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -2022,7 +2015,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -2099,7 +2092,7 @@ class WaterTankerController extends Controller
             'toDate' => 'required|date_format:Y-m-d|after_or_equal:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
@@ -2143,7 +2136,7 @@ class WaterTankerController extends Controller
             'ulbId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $mWtLocation = new WtLocation();
@@ -2197,7 +2190,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -2249,7 +2242,7 @@ class WaterTankerController extends Controller
             'paymentId' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -2334,7 +2327,7 @@ class WaterTankerController extends Controller
             'hydrationCenterId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             // Variable initialization
@@ -2676,7 +2669,7 @@ class WaterTankerController extends Controller
             'remarks' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $applicationDetails = WtBooking::find($req->applicationId);
@@ -2702,7 +2695,7 @@ class WaterTankerController extends Controller
             'applicationId' => 'required|integer',
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' => $validator->errors()->first()];
+            return validationErrorV2($validator);
         }
         try {
             $applicationDetails = WtBooking::find($req->applicationId);

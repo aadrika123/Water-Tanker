@@ -41,6 +41,6 @@ class UlbWaterBookingRequest extends FormRequest
             'success'   => false,
             'message'   =>$validator->errors()->first(),
             'data'      => $validator->errors()
-        ], 422),);
+        ], 200),);
     }
 }
