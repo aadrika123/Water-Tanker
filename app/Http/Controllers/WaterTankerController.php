@@ -1714,18 +1714,41 @@ class WaterTankerController extends Controller
      * | API - 50
      */
     public function getBookingDetailById(Request $req)
-    {        
-        $mWtBooking = new WtBooking();
+    {       
+        
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer|exists:'.$mWtBooking->getTable().",id",
+            'applicationId' => [
+                "required",
+                "integer",
+                function ($attribute, $value, $fail) {
+                    $existsInTable1 = WtBooking::where("id",$value)
+                        ->exists();  
+                    if (!$existsInTable1)
+                    {
+                        $existsInTable1 = WtCancellation::where("id",$value)
+                        ->exists();  
+                    }                                      
+                    if (!$existsInTable1) {
+                        $fail('The '.$attribute.' is invalid.');
+                    }
+                },
+            ],
         ]);
         if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->errors()->first()];
         }
         try {
+            $mWtBooking = new WtBooking();
             $data = $mWtBooking->find($req->applicationId);
+            if(!$data)
+            {
+                $mWtBooking = new WtCancellation();
+                $data = WtCancellation::find($req->applicationId);
+            }
+            $appStatus = $this->getAppStatus($req->applicationId);
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
+            $list->booking_status = $appStatus;
             
             $list->payment_details = json_decode($list->payment_details);
             $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
@@ -3040,6 +3063,43 @@ class WaterTankerController extends Controller
         {
             return responseMsgs(false,$e->getMessage(),"","POST",$req->deviceId??"");
         }
+    }
+
+    public function getAppStatus($appId)
+    {
+        $booking = WtBooking::find($appId);
+        if(!$booking)
+        {
+            $booking = WtCancellation::find($appId);
+        }
+        $driver  = $booking->getAssignedDriver();
+        $vehicle  = $booking->getAssignedVehicle();
+        $status = "";
+        if($booking->getTable()==(new WtCancellation())->getTable())
+        {
+            $status = "Booking canceled on ".Carbon::parse($booking->cancel_date)->format("d-m-Y")." by ".$booking->cancelled_by;
+        }
+        elseif($booking->payment_status==0)
+        {
+            $status = "Payment Pending of amount ".$booking->payment_amount;
+        }
+        elseif($booking->delivery_track_status==2)
+        {
+            $status = "Water Tanker Delivered On ".Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
+        }
+        elseif($booking->delivery_track_status==1)
+        {
+            $status = "Water Tanker Delivery trip Cancelled By Driver Due To ".Str::title($booking->delivery_comments);
+        }
+        elseif($booking->is_vehicle_sent==0)
+        {
+            $status = "Driver And Vehicle not assigned";
+        }
+        elseif($booking->is_vehicle_sent==1)
+        {
+            $status = "Driver (".$driver->driver_name.") And Vehicle (".$vehicle->vehicle_no.") assigned";
+        }
+        return $status;
     }
 
     /**======================================   Support Function ====================================================================== */
