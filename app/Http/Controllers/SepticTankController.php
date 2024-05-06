@@ -8,11 +8,14 @@ use App\Http\Requests\PaymentCounterReq;
 use App\Http\Requests\SepticTank\StoreRequest;
 use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
+use App\Models\ForeignModels\TempTransaction;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
 use App\Models\Septic\StCancelledBooking;
 use App\Models\Septic\StCapacity;
+use App\Models\Septic\StChequeDtl;
+use App\Models\Septic\StTransaction;
 use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StDriver;
 use App\Models\StReassignBooking;
@@ -1851,9 +1854,8 @@ class SepticTankController extends Controller
             {
                 throw new Exception("Payment Already Don");
             }
-            
+            $mTransaction = new StTransaction();
             $idGenrater = new PaymentRepository();
-            $waterTankerController = new WaterTankerController();
             $tranNo = $idGenrater->generatingTransactionId($booking->ulb_id);
             $mergData["transactionNo"] = $tranNo;
             $mergData["amount"] = $booking->payment_amount;
@@ -1869,13 +1871,30 @@ class SepticTankController extends Controller
             $booking->payment_id = "";
             $booking->payment_details = json_encode($mergData);
             $booking->payment_by_user_id = $user->id;
+
+            $mTransaction->booking_id = $booking->id;
+            $mTransaction->ward_id = $booking->ward_id;
+            $mTransaction->ulb_id = $booking->ulb_id;
+            $mTransaction->tran_type = "Septic Tanker Booking";
+            $mTransaction->tran_no = $tranNo;
+            $mTransaction->tran_date = $booking->payment_date;
+            $mTransaction->payment_mode = $booking->payment_mode;
+            $mTransaction->paid_amount = $booking->payment_amount;
+            $mTransaction->emp_dtl_id = $user->id;
+            $mTransaction->emp_user_type = $userType;
+            if (Str::upper($mTransaction->payment_mode) != 'CASH') {
+                $mTransaction->status = 2;
+            }
             
 
             DB::beginTransaction();
-            DB::connection("pgsql_master")->beginTransaction();            
+            DB::connection("pgsql_master")->beginTransaction();
+
             $booking->update();
-            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d")]);
-            $waterTankerController->postTempTransaction($req);
+            $mTransaction->save();
+            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d"),"tranId"=>$mTransaction->id]);
+            $this->postTempTransaction($req);
+            
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
@@ -1886,6 +1905,42 @@ class SepticTankController extends Controller
             DB::rollBack();
             DB::connection("pgsql_master")->rollBack();
             return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
+        }
+    }
+
+    public function postTempTransaction(Request $req)
+    {
+        $tranReqs = [
+            'transaction_id' => $req->tranId,
+            'application_id' => $req->applicationId,
+            'module_id' => $req->moduleId,
+            'workflow_id' => $req->workflowId,
+            'transaction_no' => $req->transactionNo,
+            'application_no' => $req->applicationNo,
+            'amount' => $req->paidAmount,
+            'payment_mode' => $req->paymentMode,
+            'tran_date' => $req->tranDate,
+            'user_id' => $req->empDtlId,
+            'ulb_id' => $req->ulbId,
+            'cheque_dd_no' => $req->chequeNo,
+            'bank_name' => $req->bankName,
+            "ward_no" => null,
+        ];
+
+        if (!in_array($req->paymentMode, ['CASH',"ONLINE"])) {
+            $tradeChq = new StChequeDtl();
+            $tradeChq->tran_id = $req->tranId;
+            $tradeChq->booking_id = $req->applicationId;
+            $tradeChq->cheque_no      = $req->chequeNo;
+            $tradeChq->cheque_date    = $req->chequeDate;
+            $tradeChq->bank_name      = $req->bankName;
+            $tradeChq->branch_name    = $req->branchName;
+            $tradeChq->emp_dtl_id     =  $req->empDtlId;
+            $tradeChq->save();
+        }
+        if ($req->payment_mode != 'ONLINE') {   
+            $mTempTransaction = new TempTransaction();         
+            $mTempTransaction->tempTransaction($tranReqs);
         }
     }
 

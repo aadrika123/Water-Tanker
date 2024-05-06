@@ -35,9 +35,11 @@ use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
 use App\Models\UlbWaterTankerBooking;
 use App\Models\User;
+use App\Models\WtChequeDtl;
 use App\Models\WtLocation;
 use App\Models\WtLocationHydrationMap;
 use App\Models\WtReassignBooking;
+use App\Models\WtTransaction;
 use App\Repository\Payment\Concrete\PaymentRepository;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -2542,7 +2544,7 @@ class WaterTankerController extends Controller
             {
                 throw new Exception("Payment Already Don");
             }
-            
+            $mTransaction = new WtTransaction();
             $idGenrater = new PaymentRepository();
             $tranNo = $idGenrater->generatingTransactionId($booking->ulb_id);
             $mergData["transactionNo"] = $tranNo;
@@ -2560,15 +2562,32 @@ class WaterTankerController extends Controller
             $booking->payment_details = json_encode($mergData);
             $booking->payment_by_user_id = $user->id;
 
+            $mTransaction->booking_id = $booking->id;
+            $mTransaction->ward_id = $booking->ward_id;
+            $mTransaction->ulb_id = $booking->ulb_id;
+            $mTransaction->tran_type = "Water Tanker Booking";
+            $mTransaction->tran_no = $tranNo;
+            $mTransaction->tran_date = $booking->payment_date;
+            $mTransaction->payment_mode = $booking->payment_mode;
+            $mTransaction->paid_amount = $booking->payment_amount;
+            $mTransaction->emp_dtl_id = $user->id;
+            $mTransaction->emp_user_type = $userType;
+            if (Str::upper($mTransaction->payment_mode) != 'CASH') {
+                $mTransaction->status = 2;
+            }
+
             DB::beginTransaction();
-            DB::connection("pgsql_master")->beginTransaction();            
-            $booking->update();
-            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d")]);
+            DB::connection("pgsql_master")->beginTransaction(); 
+
+            $booking->update();            
+            $mTransaction->save();
+            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d"),"tranId"=>$mTransaction->id]);
             $this->postTempTransaction($req);
+            DB::enableQueryLog();
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
-            return responseMsgs(true, $msg, $req->applicationId, '110169', 01, "", 'POST', $req->deviceId);
+            return responseMsgs(true, $msg, $mTransaction->id, '110169', 01, "", 'POST', $req->deviceId);
         }
         catch(Exception $e)
         {
@@ -2581,7 +2600,7 @@ class WaterTankerController extends Controller
     public function postTempTransaction(Request $req)
     {
         $tranReqs = [
-            'transaction_id' => $req->applicationId,
+            'transaction_id' => $req->tranId,
             'application_id' => $req->applicationId,
             'module_id' => $req->moduleId,
             'workflow_id' => $req->workflowId,
@@ -2596,6 +2615,18 @@ class WaterTankerController extends Controller
             'bank_name' => $req->bankName,
             "ward_no" => null,
         ];
+
+        if (!in_array($req->paymentMode, ['CASH',"ONLINE"])) {
+            $tradeChq = new WtChequeDtl();
+            $tradeChq->tran_id = $req->tranId;
+            $tradeChq->booking_id = $req->applicationId;
+            $tradeChq->cheque_no      = $req->chequeNo;
+            $tradeChq->cheque_date    = $req->chequeDate;
+            $tradeChq->bank_name      = $req->bankName;
+            $tradeChq->branch_name    = $req->branchName;
+            $tradeChq->emp_dtl_id     =  $req->empDtlId;
+            $tradeChq->save();
+        }
         if ($req->payment_mode != 'ONLINE') {   
             $mTempTransaction = new TempTransaction();         
             $mTempTransaction->tempTransaction($tranReqs);
