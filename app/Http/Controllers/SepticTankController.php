@@ -1289,27 +1289,37 @@ class SepticTankController extends Controller
      * | Function - 35
      * | API - 35
      */
-    public function getRecieptDetailsByPaymentId($tranId, Request $req)
+    public function getRecieptDetailsByPaymentId(Request $req)
     {
         try {
             // Variable initialization
             $ulb = $this->ulbList();
             $mStBooking = new StBooking();
-            $payDetails = $mStBooking->getRecieptDetails($tranId);
-            // $payDetails['payment_details'] = json_decode($payDetails->payment_details);
-            if (!$payDetails)
+            $mTransaction = StTransaction::whereIn("status",[1,2])->find($req->tranId);
+            if(!$mTransaction)
+            {
                 throw new Exception("Payment Details Not Found !!!");
-            if($payDetails->payment_status==0)
+            }
+            $appData = $mStBooking->getRecieptDetails($mTransaction->booking_id);
+            if (!$appData)
+                throw new Exception("Booking Details Not Found !!!");
+            if($appData->payment_status==0)
             {
                 throw new Exception("Payment not Done");
             }
-            $payDetails->ulb_name = (collect($ulb)->where("id", $payDetails->ulb_id))->value("ulb_name");
-            $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
-            $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
-            $payDetails->tollFreeNo = (collect($ulb)->where("id", $payDetails->ulb_id))->value("toll_free_no");
-            $payDetails->website = (collect($ulb)->where("id", $payDetails->ulb_id))->value("parent_website");
-            $payDetails->paymentAgainst = "Septic Tanker";
-            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110233', 01, responseTime(), 'POST', $req->deviceId);
+            $chequeDtls = $mTransaction->getChequeDtls();
+            $mTransaction->cheque_no = $chequeDtls->cheque_no??"";  
+            $mTransaction->cheque_date = $chequeDtls->cheque_date??""; 
+            $mTransaction->bank_name = $chequeDtls->bank_name??""; 
+            $mTransaction->branch_name = $chequeDtls->branch_name??"";      
+            $appData->payment_details = json_decode(json_encode($mTransaction->toArray()));
+            $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
+            $appData->inWords = getIndianCurrency($mTransaction->paid_amount) . "Only /-";
+            $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
+            $appData->tollFreeNo = (collect($ulb)->where("id", $appData->ulb_id))->value("toll_free_no");
+            $appData->website = (collect($ulb)->where("id", $appData->ulb_id))->value("parent_website");
+            $appData->paymentAgainst = "Septic Tanker";
+            return responseMsgs(true, "Payment Details Fetched Successfully !!!", $appData, '110233', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110233', 01, "", 'POST', $req->deviceId);
         }

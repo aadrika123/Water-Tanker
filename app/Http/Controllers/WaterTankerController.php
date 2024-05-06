@@ -2636,13 +2636,13 @@ class WaterTankerController extends Controller
      * | Function - 69
      * | API - 69
      */
-    public function getWaterTankerReciept(Request $req, $tranId)
+    public function getWaterTankerReciept(Request $req)
     {
         try {
             // Variable initialization
             $ulb = $this->ulbList();
             $mWtBooking = new WtBooking();
-            $mTransaction = WtTransaction::whereIn("status",[1,2])->find($tranId);
+            $mTransaction = WtTransaction::whereIn("status",[1,2])->find($req->tranId);
             if(!$mTransaction)
             {
                 throw new Exception("Payment Details Not Found !!!");
@@ -2663,7 +2663,7 @@ class WaterTankerController extends Controller
             $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
             $appData->toll_free_no = (collect($ulb)->where("id", $appData->ulb_id))->value("toll_free_no");
             $appData->website = (collect($ulb)->where("id", $appData->ulb_id))->value("current_website");
-            $appData->inWords = getIndianCurrency($appData->payment_amount) . "Only /-";
+            $appData->inWords = getIndianCurrency($mTransaction->paid_amount) . "Only /-";
             $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
             $appData->paymentAgainst = "Water Tanker";
             $appData->delivery_date = Carbon::parse(  $appData->delivery_date)->format('d-m-Y');
