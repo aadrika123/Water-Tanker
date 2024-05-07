@@ -2,6 +2,7 @@
 
 namespace App\BLL;
 
+use App\Http\IdGenerator\PrefixIdGenerator;
 use App\Models\Septic\StUlbCapacityRate;
 use App\Models\StRate;
 use App\Models\WtAgency;
@@ -122,9 +123,11 @@ class Calculations
             "paramId" => $paramId,
             'ulbId' => $ulbId
         ];
-        $refResponse = Http::post($this->_idGeneraionUrl . 'api/id-generator', $reqData);
-        $idGenerateData = json_decode($refResponse);
-        return $idGenerateData->data;
+        $PrefixIdGenerator = new PrefixIdGenerator($paramId,$ulbId);
+        return $PrefixIdGenerator->generate();
+        // $refResponse = Http::post($this->_idGeneraionUrl . 'api/id-generator', $reqData);
+        // $idGenerateData = json_decode($refResponse);
+        // return $idGenerateData->data;
     }
 
     /**
