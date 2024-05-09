@@ -1724,9 +1724,21 @@ class SepticTankController extends Controller
     {
         try {
             $ulbId = $req->auth["ulb_id"];
+            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            if($req->fromDate)
+            {
+                $fromDate = $req->fromDate;
+            }
+            if($req->uptoDate)
+            {
+                $uptoDate = $req->uptoDate;
+            }
             $mWtReassignBooking = new StReassignBooking();
             $list = $mWtReassignBooking->listReassignBookingOrm();
-            $list = $list->where("wb.ulb_id",$ulbId);
+            $list = $list->where("wb.ulb_id",$ulbId)
+            ->whereBetween("wb.assign_date",[$fromDate,$uptoDate])
+            ->where("wb.delivery_track_status","<>",2)
+            ->orderBy("wb.assign_date","DESC");
 
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
@@ -1737,7 +1749,7 @@ class SepticTankController extends Controller
                 "data" => collect($list->items())->map(function ($val) {
                     $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
                     $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
-                    $val->re_assign_date = Carbon::parse($val->re_assign_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),

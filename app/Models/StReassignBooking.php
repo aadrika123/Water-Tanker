@@ -26,12 +26,17 @@ class StReassignBooking extends Model
     }
 
     public function listReassignBookingOrm(){
-        return DB::table('st_reassign_bookings as wrb')
-                ->join('st_bookings as wb','wb.id','=','wrb.application_id')
+        return DB::table('st_bookings as wb')
+                ->join(DB::raw("
+                (
+                    SELECT * FROM st_reassign_bookings
+                    WHERE id in (select max(id) from st_reassign_bookings group by  application_id)
+                )wrb"
+            ),'wb.id','=','wrb.application_id')
                 ->join('st_resources as wr','wr.id','=','wrb.vehicle_id')
                 ->join('st_drivers as wd','wd.id','=','wrb.driver_id')
                 ->leftJoin('st_capacities as wc','wc.id','=','wb.capacity_id')
-                ->select('wrb.re_assign_date','wb.applicant_name','wb.booking_date','wb.cleaning_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
+                ->select('wb.assign_date','wb.applicant_name','wb.booking_date','wb.cleaning_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
                     'wd.driver_name','wd.driver_mobile','wr.vehicle_name','wr.vehicle_no','wc.capacity' ,
                     "wrb.delivery_track_status","wrb.delivery_comments");
     }
