@@ -35,7 +35,7 @@ class StoreRequest extends FormRequest
             'locationId' => 'required|integer',
             'ulbArea' => 'required|boolean',  
             'applicantName' => 'required|string|max:255',
-            'cleaningDate' => 'required|date_format:Y-m-d|after_or_equal:'. date('Y-m-d'),
+            'cleaningDate' => 'required|date_format:Y-m-d|after:'. date('Y-m-d'),
             'mobile' => 'required|digits:10',
             'email' => 'required|email',
             'wardId' => $this->ulbArea == 1 ? "required|integer":'nullable',
