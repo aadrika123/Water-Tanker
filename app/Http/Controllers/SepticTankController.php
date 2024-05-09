@@ -59,10 +59,10 @@ class SepticTankController extends Controller
     public function addBooking(StoreRequest $req)
     {
         try {
+            $user = Auth()->user();
             // Variable initialization
             $mStBooking = new StBooking();
             $mCalculations = new Calculations();
-            $req->merge(['citizenId' => $req->auth['id']]);
 
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];

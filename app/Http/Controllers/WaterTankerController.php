@@ -589,7 +589,6 @@ class WaterTankerController extends Controller
                 throw new Exception('Your Delivery Date Slot are Not Available. Please Try To Other Date !!!');
             $hydrationCenter = ['hydrationCenter' => $hydrationCenterId];
             $req->merge($hydrationCenter);
-            $req->merge(['citizenId' => $user->getTable()=="active_citizens" ? $user->id : null]);
 
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];

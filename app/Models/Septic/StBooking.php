@@ -40,6 +40,8 @@ class StBooking extends Model
             'payment_amount' => $req->paymentAmount,
             'holding_no' => $req->holdingNo,
             'location_id' => $req->locationId,
+            'user_id' => $req->userId,
+            'user_type' => $req->userType,
         ];
     }
 

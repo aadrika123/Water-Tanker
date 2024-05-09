@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WtBooking;
 use App\Models\WtTransaction;
 use Carbon\Carbon;
 use Exception;
@@ -89,6 +90,83 @@ class WaterTankerReportController extends Controller
             
             $queryRunTime = (collect(DB::getQueryLog())->sum("time"));
             return responseMsgs(true, "", $list);
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false,$e->getMessage(),"");
+        }
+    }
+
+    public function userWiseCollection(Request $request)
+    {
+        try{
+            $user = Auth()->user();
+            $request->merge(["userJoin"=>"JOIN","userId"=>$user->id]);
+            return $this->collationReports($request);
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false,$e->getMessage(),"");
+        }
+    }
+
+
+    public function waterDashBoard(Request $request)
+    {
+        try{
+            $user = Auth()->user();
+            $userJoin = "LEFTJOIN";
+            $userId = $paymentMode = null;
+            $ulbId = $user->ulb_id;
+            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            if ($request->userJoin) {
+                $userJoin = $request->userJoin;
+            }
+            if ($request->fromDate)
+            {
+                $fromDate = $request->fromDate;
+            }
+            if ($request->uptoDate)
+            {
+                $uptoDate = $request->uptoDate;
+            }
+            if ($request->userId)
+            {
+                $userId = $request->userId;
+            }
+            if ($request->ulbId)
+            {
+                $ulbId = $request->ulbId;
+            }
+            if ($request->paymentMode)
+            {
+                $paymentMode = $request->paymentMode;
+            }
+            $tran = WtTransaction::select(DB::raw("count(wt_transactions.id) as total_tran,
+                        count(distinct(wt_transactions.booking_id))as total_booking,
+                        count(distinct(wt_transactions.emp_dtl_id))as total_users,
+                        sum(wt_transactions.paid_amount)as total_amount"))
+                ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
+                ->whereIn("status",[1,2]);
+            $pendingPayment = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
+                                count(distinct(wt_bookings.payment_amount))as pending_amount,
+                                count(distinct(wt_bookings.emp_dtl_id))as total_users,
+                                sum(wt_transactions.paid_amount)as total_amount"))
+                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id");
+            if($userId)
+            {
+                $tran->where("wt_transactions.emp_dtl_id",$userId);
+            }
+            if($ulbId)
+            {
+                $tran->where("wt_transactions.ulb_id",$ulbId);
+            }
+            if($paymentMode)
+            {
+                $tran->where(DB::raw("UPPER(wt_transactions.ulb_id)"),DB::raw("UPPER('$paymentMode')"));
+            }
+            
+            $tran = $tran->get();
         }
         catch(Exception $e)
         {
