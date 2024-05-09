@@ -25,6 +25,11 @@ class StoreRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = Auth()->user();
+        if($user->gettable()=="users")
+        {
+            $this->merge(["ulbId"=>$user->ulb_id]);
+        }
         $rules= [
             'ulbId' => 'required|integer',
             'locationId' => 'required|integer',
