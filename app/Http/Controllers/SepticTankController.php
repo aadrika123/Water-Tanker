@@ -1551,16 +1551,20 @@ class SepticTankController extends Controller
             $ulbId = $user["ulb_id"];
             $mWtBooking = new StBooking();
             $data = $mWtBooking->getBookingList()
-                    ->leftJoin(
-                        DB::raw("(SELECT DISTINCT application_id FROM st_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
-                        function($join){
-                            $join->on("reassign.application_id","stb.id");
-                        }
-                        )
+                    // ->leftJoin(
+                    //     DB::raw("(SELECT DISTINCT application_id FROM st_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                    //     function($join){
+                    //         $join->on("reassign.application_id","stb.id");
+                    //     }
+                    //     )
                     ->where("delivery_track_status",1)
                     ->where("assign_status","<",2)
-                    ->where("stb.ulb_id",$ulbId)
-                    ->whereNull("reassign.application_id");
+                    ->where("stb.ulb_id",$ulbId);
+                    // ->whereNull("reassign.application_id");
+            if($formDate && $uptoDate)
+            {
+                $data->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+            }
 
             $perPage = $request->perPage ? $request->perPage : 10;
             $list = $data->paginate($perPage);

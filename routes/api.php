@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\SepticTankController;
 use App\Http\Controllers\WaterTankerController;
+use App\Http\Controllers\WaterTankerReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -124,6 +125,10 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');
             Route::post('water-tanker/offline-payment', 'offlinePayment');
             Route::post('water-tanker/search-booking', 'searchApp');
+        });
+
+        Route::controller(WaterTankerReportController::class)->group(function () {
+            Route::post('water-tanker/collection-report', 'collationReports');    
         });
 
         /**

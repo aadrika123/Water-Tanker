@@ -2960,6 +2960,10 @@ class WaterTankerController extends Controller
                     ->where("is_vehicle_sent","<",2)
                     ->where("wb.ulb_id",$ulbId);
                     // ->whereNull("reassign.application_id");
+                if($formDate && $uptoDate)
+                {
+                    $data->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+                }
 
             $perPage = $request->perPage ? $request->perPage : 10;
             $list = $data->paginate($perPage);
