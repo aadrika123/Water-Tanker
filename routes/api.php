@@ -128,7 +128,10 @@ Route::group(['middleware' => ['checkToken']], function () {
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
-            Route::post('water-tanker/collection-report', 'collationReports');    
+            Route::post('water-tanker/report/collection', 'collationReports');  
+            Route::post('water-tanker/report/collection-user-wise', 'userWiseCollection');   
+            Route::post('water-tanker/report/dashboard', 'dashBoard');  
+            Route::post('water-tanker/report/dashboard-user-wise', 'userWishDashBoard');  
         });
 
         /**

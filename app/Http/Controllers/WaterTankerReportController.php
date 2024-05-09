@@ -145,19 +145,19 @@ class WaterTankerReportController extends Controller
             $tran = WtTransaction::select(DB::raw("count(wt_transactions.id) as total_tran,
                         count(distinct(wt_transactions.booking_id))as total_booking,
                         count(distinct(wt_transactions.emp_dtl_id))as total_users,
-                        sum(wt_transactions.paid_amount)as total_amount"))
+                        case when sum(wt_transactions.paid_amount) is null  then 0 else sum(wt_transactions.paid_amount) end as total_amount"))
                 ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
                 ->whereIn("wt_transactions.status",[1,2]);
             $pendingPaymentApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
                                 count(distinct(wt_bookings.payment_amount))as pending_amount,
                                 count(distinct(wt_bookings.user_id))as total_users"))
-                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
+                        ->$userJoin("users","users.id","wt_bookings.user_id")
                         ->where("wt_bookings.status",1)
                         ->where("wt_bookings.payment_status",0);
             $applyApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
                             count(distinct(wt_bookings.payment_amount))as pending_amount,
                             count(distinct(wt_bookings.user_id))as total_users"))
-                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
+                        ->$userJoin("users","users.id","wt_bookings.user_id")
                         ->where("wt_bookings.status",1);
             if($fromDate && $uptoDate)
             {
@@ -190,7 +190,7 @@ class WaterTankerReportController extends Controller
                 "paymentPending"=>$pendingPaymentApp,
                 "apply"=>$applyApp
             ];
-            return responseMsgs(true,"Dashboard data",$data);
+            return responseMsgs(true,"Dashboard data",remove_null($data));
         }
         catch(Exception $e)
         {
