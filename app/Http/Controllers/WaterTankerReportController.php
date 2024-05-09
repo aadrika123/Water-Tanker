@@ -111,7 +111,7 @@ class WaterTankerReportController extends Controller
     }
 
 
-    public function waterDashBoard(Request $request)
+    public function dashBoard(Request $request)
     {
         try{
             $user = Auth()->user();
@@ -147,26 +147,63 @@ class WaterTankerReportController extends Controller
                         count(distinct(wt_transactions.emp_dtl_id))as total_users,
                         sum(wt_transactions.paid_amount)as total_amount"))
                 ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
-                ->whereIn("status",[1,2]);
-            $pendingPayment = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
+                ->whereIn("wt_transactions.status",[1,2]);
+            $pendingPaymentApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
                                 count(distinct(wt_bookings.payment_amount))as pending_amount,
-                                count(distinct(wt_bookings.emp_dtl_id))as total_users,
-                                sum(wt_transactions.paid_amount)as total_amount"))
-                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id");
+                                count(distinct(wt_bookings.user_id))as total_users"))
+                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
+                        ->where("wt_bookings.status",1)
+                        ->where("wt_bookings.payment_status",0);
+            $applyApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
+                            count(distinct(wt_bookings.payment_amount))as pending_amount,
+                            count(distinct(wt_bookings.user_id))as total_users"))
+                        ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
+                        ->where("wt_bookings.status",1);
+            if($fromDate && $uptoDate)
+            {
+                $tran->whereBetween("wt_transactions.tran_date",[$fromDate,$uptoDate]);
+                $pendingPaymentApp->whereBetween("wt_bookings.booking_date",[$fromDate,$uptoDate]);
+                $applyApp->whereBetween("wt_bookings.booking_date",[$fromDate,$uptoDate]);
+            }
             if($userId)
             {
                 $tran->where("wt_transactions.emp_dtl_id",$userId);
+                $pendingPaymentApp->where("wt_bookings.user_id",$userId);
+                $applyApp->where("wt_bookings.user_id",$userId);
             }
             if($ulbId)
             {
                 $tran->where("wt_transactions.ulb_id",$ulbId);
+                $pendingPaymentApp->where("wt_bookings.ulb_id",$ulbId);
+                $applyApp->where("wt_bookings.ulb_id",$ulbId);
             }
             if($paymentMode)
             {
                 $tran->where(DB::raw("UPPER(wt_transactions.ulb_id)"),DB::raw("UPPER('$paymentMode')"));
             }
             
-            $tran = $tran->get();
+            $tran = $tran->first();
+            $pendingPaymentApp = $pendingPaymentApp->first();
+            $applyApp = $applyApp->first();
+            $data = [
+                "tran"=>$tran,
+                "paymentPending"=>$pendingPaymentApp,
+                "apply"=>$applyApp
+            ];
+            return responseMsgs(true,"Dashboard data",$data);
+        }
+        catch(Exception $e)
+        {
+            return responseMsgs(false,$e->getMessage(),"");
+        }
+    }
+
+    public function userWishDashBoard(Request $request)
+    {
+        try{
+            $user = Auth()->user();
+            $request->merge(["userJoin"=>"JOIN","userId"=>$user->id]);
+            return $this->dashBoard($request);
         }
         catch(Exception $e)
         {
