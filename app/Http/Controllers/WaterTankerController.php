@@ -2424,7 +2424,7 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
+                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id??0)->values();
 
                 $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
                 $data1['hydrationCenter'] = $hydrationCenter;
@@ -2439,7 +2439,7 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id)->values();
+                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id??0)->values();
 
                 $mWtLocation = new WtLocation();
                 $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
@@ -2448,7 +2448,7 @@ class WaterTankerController extends Controller
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
                 $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)->values();
+                    $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id??0)->values();
 
                 $ulb = $this->_ulbs;
                 $f_list = $list->map(function ($val) use ($ulb) {
