@@ -13,4 +13,9 @@ class WtTransaction extends Model
     {
         return $this->hasOne(WtChequeDtl::class,"tran_id","id")->orderBy("id","DESC")->first();
     }
+
+    public function getBooking()
+    {
+        return $this->belongsTo(WtBooking::class,"booking_id","id")->first();
+    }
 }

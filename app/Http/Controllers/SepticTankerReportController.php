@@ -61,8 +61,30 @@ class SepticTankerReportController extends Controller
                              "st_cheque_dtls.cheque_date",
                              "st_cheque_dtls.bank_name",
                              "st_cheque_dtls.branch_name",
-                             "users.name"
+                             "users.name",
+                             "bookings.booking_no",
+                            "bookings.applicant_name",                            
+                            "bookings.mobile",
+                            "bookings.booking_date",
                          )
+                         ->join(DB::raw(
+                            "(
+                                (
+                                    SELECT st_transactions.id as tran_id,
+                                        st_bookings.id,st_bookings.booking_no,st_bookings.applicant_name,st_bookings.mobile,st_bookings.booking_date 
+                                    FROM st_bookings
+                                    JOIN st_transactions on st_transactions.booking_id = st_bookings.id
+                                    WHERE st_transactions.tran_date BETWEEN '$fromDate' AND '$uptoDate'
+                                )
+                                UNION(
+                                    SELECT st_transactions.id as tran_id,
+                                        st_bookings.id,st_bookings.booking_no,st_bookings.applicant_name,st_bookings.mobile,st_bookings.booking_date 
+                                    FROM st_cancelled_bookings AS st_bookings
+                                    JOIN st_transactions on st_transactions.booking_id = st_bookings.id
+                                    WHERE st_transactions.tran_date BETWEEN '$fromDate' AND '$uptoDate'
+                                )
+                            )bookings"
+                        ),"bookings.tran_id","st_transactions.id")
                      ->leftJoin("st_cheque_dtls","st_cheque_dtls.tran_id","st_transactions.id")
                      ->$userJoin("users","users.id","st_transactions.emp_dtl_id")
                      ->whereIn("st_transactions.status",[1,2])

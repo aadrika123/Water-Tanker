@@ -61,8 +61,30 @@ class WaterTankerReportController extends Controller
                             "wt_cheque_dtls.cheque_date",
                             "wt_cheque_dtls.bank_name",
                             "wt_cheque_dtls.branch_name",
-                            "users.name"
+                            "users.name",
+                            "bookings.booking_no",
+                            "bookings.applicant_name",                            
+                            "bookings.mobile",
+                            "bookings.booking_date",
                         )
+                    ->join(DB::raw(
+                        "(
+                            (
+                                SELECT wt_transactions.id as tran_id,
+                                    wt_bookings.id,wt_bookings.booking_no,wt_bookings.applicant_name,wt_bookings.mobile,wt_bookings.booking_date 
+                                FROM wt_bookings
+                                JOIN wt_transactions on wt_transactions.booking_id = wt_bookings.id
+                                WHERE wt_transactions.tran_date BETWEEN '$fromDate' AND '$uptoDate'
+                            )
+                            UNION(
+                                SELECT wt_transactions.id as tran_id,
+                                    wt_bookings.id,wt_bookings.booking_no,wt_bookings.applicant_name,wt_bookings.mobile,wt_bookings.booking_date 
+                                FROM wt_cancellations AS wt_bookings
+                                JOIN wt_transactions on wt_transactions.booking_id = wt_bookings.id
+                                WHERE wt_transactions.tran_date BETWEEN '$fromDate' AND '$uptoDate'
+                            )
+                        )bookings"
+                    ),"bookings.tran_id","wt_transactions.id")
                     ->leftJoin("wt_cheque_dtls","wt_cheque_dtls.tran_id","wt_transactions.id")
                     ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
                     ->whereIn("wt_transactions.status",[1,2])
