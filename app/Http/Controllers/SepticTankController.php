@@ -2047,17 +2047,27 @@ class SepticTankController extends Controller
         {
             $status = "Septic Tanker Cleaned On ".Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
         }
-        elseif($booking->delivery_track_status==1)
+
+
+        elseif($booking->driver_id && $booking->vehicle_id)
         {
-            $status = "Septic Tanker trip Cancelled By Driver Due To ".Str::title($booking->delivery_comments);
+            $status = "Driver (".$driver->driver_name.") And Vehicle (".$vehicle->vehicle_no.") assigned";
         }
-        elseif($booking->is_vehicle_sent==0)
+        elseif(!$booking->driver_id && !$booking->vehicle_id)
         {
             $status = "Driver And Vehicle not assigned";
         }
-        elseif($booking->is_vehicle_sent==1)
+        elseif(!$booking->driver_id && $booking->vehicle_id)
         {
-            $status = "Driver (".$driver->driver_name.") And Vehicle (".$vehicle->vehicle_no.") assigned";
+            $status = "Driver is not assigned But Vehicle assigned ";
+        }
+        elseif($booking->driver_id && !$booking->vehicle_id)
+        {
+            $status = "Driver is assigned But Vehicle not assigned ";
+        }
+        elseif($booking->is_vehicle_sent =1)
+        {
+            $status = "Driver is going for cleaning";
         }
         return $status;
     }
