@@ -2462,7 +2462,7 @@ class WaterTankerController extends Controller
             }
             return responseMsgs(true, "Data Fetched !!!", $data1, "110167", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "110167", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), [$e->getFile(),$e->getLine()], "110167", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
