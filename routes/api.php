@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SepticTankController;
+use App\Http\Controllers\SepticTankerReportController;
 use App\Http\Controllers\WaterTankerController;
 use App\Http\Controllers\WaterTankerReportController;
 use Illuminate\Http\Request;
@@ -190,6 +191,13 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/sent-vehicle', 'sentVehicle'); 
             Route::post('septic-tanker/offline-payment', 'offlinePayment');
             Route::post('septic-tanker/search-booking', 'searchApp');
+        });
+
+        Route::controller(SepticTankerReportController::class)->group(function () {
+            Route::post('septic-tanker/report/collection', 'collationReports');  
+            Route::post('septic-tanker/report/collection-user-wise', 'userWiseCollection');   
+            Route::post('septic-tanker/report/dashboard', 'dashBoard');  
+            Route::post('septic-tanker/report/dashboard-user-wise', 'userWishDashBoard');  
         });
     });
 });
