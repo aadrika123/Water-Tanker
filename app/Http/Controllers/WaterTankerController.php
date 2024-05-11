@@ -1430,6 +1430,7 @@ class WaterTankerController extends Controller
     public function listAssignAgency(Request $req)
     {
         try {
+            $fromDate = $uptoDate =Carbon::now()->format("Y-m-d");
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
