@@ -65,8 +65,9 @@ class StBooking extends Model
         return DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"),"str.application_id","stb.id")
             ->select('stb.*', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
-            ->join('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id');
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id');
     }
 
     /**

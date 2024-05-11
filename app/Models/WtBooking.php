@@ -78,8 +78,10 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             // ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile')
-            ->where('assign_date', '!=', NULL);
+            ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"),"wtr.application_id","wb.id")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile',"wtr.application_id")
+            ->where('assign_date', '!=', NULL)
+            ->whereNull('wtr.application_id');
     }
 
 

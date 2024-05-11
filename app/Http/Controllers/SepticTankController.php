@@ -134,6 +134,7 @@ class SepticTankController extends Controller
             $list = $mStBooking->getBookingList()
                 ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->where('assign_status', '1')
+                ->whereNull('str.application_id')
                 ->orderByDesc('id')
                 ->get();
             $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
