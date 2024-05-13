@@ -2137,7 +2137,7 @@ class WaterTankerController extends Controller
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110159", "1.0", "", 'POST', $req->deviceId ?? "");
         }
-    }
+    } 
 
     /**
      * | Get ULB Wise Location List

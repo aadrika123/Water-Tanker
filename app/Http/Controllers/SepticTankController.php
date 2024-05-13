@@ -1315,6 +1315,7 @@ class SepticTankController extends Controller
             $mTransaction->branch_name = $chequeDtls->branch_name??"";      
             $appData->payment_details = json_decode(json_encode($mTransaction->toArray()));
             $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
+            $appData->address = (collect($ulb)->where("id", $appData->ulb_id))->value("address");
             $appData->inWords = getIndianCurrency($mTransaction->paid_amount) . "Only /-";
             $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
             $appData->tollFreeNo = (collect($ulb)->where("id", $appData->ulb_id))->value("toll_free_no");
