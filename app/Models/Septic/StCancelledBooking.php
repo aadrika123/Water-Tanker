@@ -5,6 +5,7 @@ namespace App\Models\Septic;
 use App\Models\StDriver;
 use App\Models\StReassignBooking;
 use App\Models\StResource;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,10 @@ class StCancelledBooking extends Model
         return DB::table('st_cancelled_bookings as stcb')
             ->select('stcb.*', 'wtl.location')
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id');
+    }
+
+    public function todayCancelledBooking($ulb_id){
+        return self::select('*')->where('cleaning_date',Carbon::now()->format('Y-m-d'))->where('ulb_id',$ulb_id);  
     }
 
     public function getReassignedBookingOrm()

@@ -9,6 +9,7 @@ use App\Http\Requests\SepticTank\StoreRequest;
 use App\MicroServices\DocUpload;
 use App\Models\BuildingType;
 use App\Models\ForeignModels\TempTransaction;
+use App\Models\ForeignModels\UlbMaster;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
@@ -80,6 +81,33 @@ class SepticTankController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110201", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
+    public function wtAgencyDashboard(Request $req)
+    {
+        try {
+            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+                throw new Exception("Unauthorized Access !!!");
+            // Variable initialization           
+            $ulbId = Auth()->user()->ulb_id;
+            $ulbDtl = UlbMaster::find($ulbId);
+            $mWtBooking = new StBooking();
+            $todayBookings = $mWtBooking->todayBookings($ulbId )->get();
+
+            $mWtCancellation = new StCancelledBooking();
+            $todayCancelBookings = $mWtCancellation->todayCancelledBooking($ulbId );
+
+            $retData['todayTotalBooking'] = $todayBookings->count('id');
+            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count('id');
+            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
+            $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
+            $retData['agencyName'] =   $ulbDtl->ulb_name;
+            // $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
+            return responseMsgs(true, "Data Fetched Successfully !!!", $retData, "110158", "1.0", responseTime(), "POST", $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110158", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 

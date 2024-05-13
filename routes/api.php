@@ -142,7 +142,11 @@ Route::group(['middleware' => ['checkToken']], function () {
          * | Module Id - 11 (Septic Tanker)
          */
         Route::controller(SepticTankController::class)->group(function () {
-            Route::post('septic-tanker/add-booking', 'addBooking');                                                                 // 01 ( Add Booking )
+            Route::post('septic-tanker/add-booking', 'addBooking');   
+            /**
+             * make by prity pandey
+             */
+            Route::post('septic-tanker/wt-agency-dashboard', 'wtAgencyDashboard');                                                              // 01 ( Add Booking )
             Route::post('septic-tanker/list-booking', 'listBooking');                                                               // 02 ( List Booking )
             Route::post('septic-tanker/list-assigned-booking', 'listAssignedBooking');                                              // 03 ( List Booking )
             Route::post('septic-tanker/get-applied-application', 'getAppliedApplication');                                          // 04 ( Get Applied Application )

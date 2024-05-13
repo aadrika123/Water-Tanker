@@ -111,6 +111,13 @@ class StBooking extends Model
         return $details;
     }
 
+    public function todayBookings($ulb_id)
+    {
+        $todayDate = Carbon::now()->format('Y-m-d');
+        return self::select('*')->where('cleaning_date', $todayDate)
+        ->where('ulb_id', $ulb_id);
+    }
+
 
     public function getReassignedBookingOrm()
     {
