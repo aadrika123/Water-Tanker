@@ -216,10 +216,28 @@ class WaterTankerReportController extends Controller
         try {
             $user = Auth()->user();
             $ulbId = $user->ulb_id;
+            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            if ($request->fromDate) {
+                $fromDate = $request->fromDate;
+            }
+            if ($request->uptoDate) {
+                $uptoDate = $request->uptoDate;
+            }
             $cancleBookingList = WtCancellation::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancelled_by,cancel_details"))
-                ->where("wt_cancellations.ulb_id", $ulbId)
-                ->get();
-            return responseMsgs(true, "water tank cancle booking list", remove_null($cancleBookingList));
+                ->where("wt_cancellations.ulb_id", $ulbId);
+                //->get();
+            if ($fromDate && $uptoDate) {
+                $cancleBookingList->whereBetween("wt_cancellations.booking_date", [$fromDate, $uptoDate]);
+            }
+            $perPage = $request->perPge ? $request->perPge : 10;
+            $paginator = $cancleBookingList->paginate($perPage);
+            $list = [
+                "current_page" => $paginator->currentPage(),
+                "last_page" => $paginator->lastPage(),
+                "data" => $paginator->items(),
+                "total" => $paginator->total(),
+            ];
+            return responseMsgs(true, "water tank cancle booking list", remove_null($list));
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "");
         }
