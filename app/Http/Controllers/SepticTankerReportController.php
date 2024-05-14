@@ -222,7 +222,7 @@ class SepticTankerReportController extends Controller
             if ($request->uptoDate) {
                 $uptoDate = $request->uptoDate;
             }
-            $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no, cleaning_date,cancel_date,cancel_by"))
+            $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no, applicant_name,mobile,address,cleaning_date,cancel_date,cancel_by"))
                 ->where("st_cancelled_bookings.ulb_id", $ulbId);
             //->get();
             if ($fromDate && $uptoDate) {
