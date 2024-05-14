@@ -99,10 +99,10 @@ class SepticTankController extends Controller
             $mWtCancellation = new StCancelledBooking();
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($ulbId );
 
-            $retData['todayTotalBooking'] = $todayBookings->count('id');
-            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count('id');
-            $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
-            $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
+            $retData['todayTotalCleaning'] = $todayBookings->count('id');
+            $retData['todayOutForCleaning'] = $todayBookings->where('is_vehicle_sent', 1)->count('id');
+            $retData['todayCleaned'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
+            $retData['todayTotalCancelCleaning'] = $todayCancelBookings->count();
             $retData['agencyName'] =   $ulbDtl->ulb_name;
             // $retData['waterCapacity'] =  $agencyDetails->dispatch_capacity;
             return responseMsgs(true, "Data Fetched Successfully !!!", $retData, "110158", "1.0", responseTime(), "POST", $req->deviceId ?? "");
