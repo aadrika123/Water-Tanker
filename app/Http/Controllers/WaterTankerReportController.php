@@ -223,9 +223,11 @@ class WaterTankerReportController extends Controller
             if ($request->uptoDate) {
                 $uptoDate = $request->uptoDate;
             }
-            $cancleBookingList = WtCancellation::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancelled_by,cancel_details"))
+            $cancleBookingList = WtCancellation::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancelled_by,remarks,delivery_latitude,delivery_longitude,wt_drivers.driver_name,wt_resources.vehicle_name,wt_resources.vehicle_no"))
+                ->leftjoin("wt_drivers", "wt_drivers.id", "wt_cancellations.driver_id")
+                ->leftjoin("wt_resources", "wt_resources.id", "wt_cancellations.vehicle_id")
                 ->where("wt_cancellations.ulb_id", $ulbId);
-                //->get();
+            //->get();
             if ($fromDate && $uptoDate) {
                 $cancleBookingList->whereBetween("wt_cancellations.booking_date", [$fromDate, $uptoDate]);
             }
@@ -237,7 +239,7 @@ class WaterTankerReportController extends Controller
                 "data" => $paginator->items(),
                 "total" => $paginator->total(),
             ];
-            return responseMsgs(true, "water tank cancle booking list",$list);
+            return responseMsgs(true, "water tank cancle booking list", $list);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "");
         }
