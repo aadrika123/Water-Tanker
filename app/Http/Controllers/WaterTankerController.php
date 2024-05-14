@@ -1757,11 +1757,13 @@ class WaterTankerController extends Controller
                 $val->branch_name = $chequeDtls->branch_name??"";
                 return $val;
             });
+            $wardDtl = DB::table("ulb_ward_masters")->find($data->ward_id);
             $appStatus = $this->getAppStatus($req->applicationId);
             $list = $mWtBooking->getBookingDetailById($req->applicationId);
             $reassign = $data->getLastReassignedBooking();
             $list->booking_status = $appStatus;
             $list->tran_dtls = $tranDtls;
+            $list->ward_no =  $wardDtl ?  $wardDtl->ward_name??"":"";
             
             $list->payment_details = json_decode($list->payment_details);
             $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
