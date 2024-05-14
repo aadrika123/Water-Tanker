@@ -129,10 +129,13 @@ Route::group(['middleware' => ['checkToken']], function () {
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
-            Route::post('water-tanker/report/collection', 'collationReports');  
+               
             Route::post('water-tanker/report/collection-user-wise', 'userWiseCollection');   
             Route::post('water-tanker/report/dashboard', 'dashBoard');  
-            Route::post('water-tanker/report/dashboard-user-wise', 'userWishDashBoard');  
+            Route::post('water-tanker/report/dashboard-user-wise', 'userWishDashBoard'); 
+            
+            //written by Prity Pabdey
+            Route::post('water-tanker/cancle-booking', 'cancleBookingList');
         });
 
         /**
@@ -201,7 +204,9 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/report/collection', 'collationReports');  
             Route::post('septic-tanker/report/collection-user-wise', 'userWiseCollection');   
             Route::post('septic-tanker/report/dashboard', 'dashBoard');  
-            Route::post('septic-tanker/report/dashboard-user-wise', 'userWishDashBoard');  
+            Route::post('septic-tanker/report/dashboard-user-wise', 'userWishDashBoard'); 
+            //written by prity pandey
+            Route::post('septic-tanker/cancle-booking', 'cancleBookingList');
         });
     });
 });

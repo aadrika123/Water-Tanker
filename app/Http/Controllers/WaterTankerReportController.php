@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WtBooking;
+use App\Models\WtCancellation;
 use App\Models\WtTransaction;
 use Carbon\Carbon;
 use Exception;
@@ -19,7 +20,6 @@ class WaterTankerReportController extends Controller
 
     public function __construct()
     {
-        
     }
 
     public function collationReports(Request $request)
@@ -32,43 +32,40 @@ class WaterTankerReportController extends Controller
         if ($request->userJoin) {
             $userJoin = $request->userJoin;
         }
-        if ($request->fromDate)
-        {
+        if ($request->fromDate) {
             $fromDate = $request->fromDate;
         }
-        if ($request->uptoDate)
-        {
+        if ($request->uptoDate) {
             $uptoDate = $request->uptoDate;
         }
-        if ($request->userId)
-        {
+        if ($request->userId) {
             $userId = $request->userId;
         }
-        if ($request->ulbId)
-        {
+        if ($request->ulbId) {
             $ulbId = $request->ulbId;
         }
-        if ($request->paymentMode)
-        {
+        if ($request->paymentMode) {
             $paymentMode = $request->paymentMode;
         }
-        try{
-            $data = WtTransaction::select("wt_transactions.id","wt_transactions.booking_id",
-                            "wt_transactions.payment_mode",
-                            "wt_transactions.paid_amount",
-                            "wt_transactions.tran_no",
-                            "wt_cheque_dtls.cheque_no",
-                            "wt_cheque_dtls.cheque_date",
-                            "wt_cheque_dtls.bank_name",
-                            "wt_cheque_dtls.branch_name",
-                            "users.name",
-                            "bookings.booking_no",
-                            "bookings.applicant_name",                            
-                            "bookings.mobile",
-                            "bookings.booking_date",
-                        )
-                    ->join(DB::raw(
-                        "(
+        try {
+            $data = WtTransaction::select(
+                "wt_transactions.id",
+                "wt_transactions.booking_id",
+                "wt_transactions.payment_mode",
+                "wt_transactions.paid_amount",
+                "wt_transactions.tran_no",
+                "wt_cheque_dtls.cheque_no",
+                "wt_cheque_dtls.cheque_date",
+                "wt_cheque_dtls.bank_name",
+                "wt_cheque_dtls.branch_name",
+                "users.name",
+                "bookings.booking_no",
+                "bookings.applicant_name",
+                "bookings.mobile",
+                "bookings.booking_date",
+            )
+                ->join(DB::raw(
+                    "(
                             (
                                 SELECT wt_transactions.id as tran_id,
                                     wt_bookings.id,wt_bookings.booking_no,wt_bookings.applicant_name,wt_bookings.mobile,wt_bookings.booking_date 
@@ -84,22 +81,19 @@ class WaterTankerReportController extends Controller
                                 WHERE wt_transactions.tran_date BETWEEN '$fromDate' AND '$uptoDate'
                             )
                         )bookings"
-                    ),"bookings.tran_id","wt_transactions.id")
-                    ->leftJoin("wt_cheque_dtls","wt_cheque_dtls.tran_id","wt_transactions.id")
-                    ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
-                    ->whereIn("wt_transactions.status",[1,2])
-                    ->whereBetween("wt_transactions.tran_date",[$fromDate,$uptoDate]);
-            if($userId)
-            {
-                $data->where("wt_transactions.emp_dtl_id",$userId);
+                ), "bookings.tran_id", "wt_transactions.id")
+                ->leftJoin("wt_cheque_dtls", "wt_cheque_dtls.tran_id", "wt_transactions.id")
+                ->$userJoin("users", "users.id", "wt_transactions.emp_dtl_id")
+                ->whereIn("wt_transactions.status", [1, 2])
+                ->whereBetween("wt_transactions.tran_date", [$fromDate, $uptoDate]);
+            if ($userId) {
+                $data->where("wt_transactions.emp_dtl_id", $userId);
             }
-            if($ulbId)
-            {
-                $data->where("wt_transactions.ulb_id",$ulbId);
+            if ($ulbId) {
+                $data->where("wt_transactions.ulb_id", $ulbId);
             }
-            if($paymentMode)
-            {
-                $data->where(DB::raw("UPPER(wt_transactions.ulb_id)"),DB::raw("UPPER('$paymentMode')"));
+            if ($paymentMode) {
+                $data->where(DB::raw("UPPER(wt_transactions.ulb_id)"), DB::raw("UPPER('$paymentMode')"));
             }
             $perPage = $request->perPge ? $request->perPge : 10;
             $paginator = $data->paginate($perPage);
@@ -109,33 +103,29 @@ class WaterTankerReportController extends Controller
                 "data" => $paginator->items(),
                 "total" => $paginator->total(),
             ];
-            
+
             $queryRunTime = (collect(DB::getQueryLog())->sum("time"));
             return responseMsgs(true, "", $list);
-        }
-        catch(Exception $e)
-        {
-            return responseMsgs(false,$e->getMessage(),"");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
         }
     }
 
     public function userWiseCollection(Request $request)
     {
-        try{
+        try {
             $user = Auth()->user();
-            $request->merge(["userJoin"=>"JOIN","userId"=>$user->id]);
+            $request->merge(["userJoin" => "JOIN", "userId" => $user->id]);
             return $this->collationReports($request);
-        }
-        catch(Exception $e)
-        {
-            return responseMsgs(false,$e->getMessage(),"");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
         }
     }
 
 
     public function dashBoard(Request $request)
     {
-        try{
+        try {
             $user = Auth()->user();
             $userJoin = "LEFTJOIN";
             $userId = $paymentMode = null;
@@ -144,92 +134,94 @@ class WaterTankerReportController extends Controller
             if ($request->userJoin) {
                 $userJoin = $request->userJoin;
             }
-            if ($request->fromDate)
-            {
+            if ($request->fromDate) {
                 $fromDate = $request->fromDate;
             }
-            if ($request->uptoDate)
-            {
+            if ($request->uptoDate) {
                 $uptoDate = $request->uptoDate;
             }
-            if ($request->userId)
-            {
+            if ($request->userId) {
                 $userId = $request->userId;
             }
-            if ($request->ulbId)
-            {
+            if ($request->ulbId) {
                 $ulbId = $request->ulbId;
             }
-            if ($request->paymentMode)
-            {
+            if ($request->paymentMode) {
                 $paymentMode = $request->paymentMode;
             }
             $tran = WtTransaction::select(DB::raw("count(wt_transactions.id) as total_tran,
                         count(distinct(wt_transactions.booking_id))as total_booking,
                         count(distinct(wt_transactions.emp_dtl_id))as total_users,
                         case when sum(wt_transactions.paid_amount) is null  then 0 else sum(wt_transactions.paid_amount) end as total_amount"))
-                ->$userJoin("users","users.id","wt_transactions.emp_dtl_id")
-                ->whereIn("wt_transactions.status",[1,2]);
+                ->$userJoin("users", "users.id", "wt_transactions.emp_dtl_id")
+                ->whereIn("wt_transactions.status", [1, 2]);
             $pendingPaymentApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
                                 count(distinct(wt_bookings.payment_amount))as pending_amount,
                                 count(distinct(wt_bookings.user_id))as total_users"))
-                        ->$userJoin("users","users.id","wt_bookings.user_id")
-                        ->where("wt_bookings.status",1)
-                        ->where("wt_bookings.payment_status",0);
+                ->$userJoin("users", "users.id", "wt_bookings.user_id")
+                ->where("wt_bookings.status", 1)
+                ->where("wt_bookings.payment_status", 0);
             $applyApp = WtBooking::select(DB::raw("count(wt_bookings.id) as total_booking,
                             count(distinct(wt_bookings.payment_amount))as pending_amount,
                             count(distinct(wt_bookings.user_id))as total_users"))
-                        ->$userJoin("users","users.id","wt_bookings.user_id")
-                        ->where("wt_bookings.status",1);
-            if($fromDate && $uptoDate)
-            {
-                $tran->whereBetween("wt_transactions.tran_date",[$fromDate,$uptoDate]);
-                $pendingPaymentApp->whereBetween("wt_bookings.booking_date",[$fromDate,$uptoDate]);
-                $applyApp->whereBetween("wt_bookings.booking_date",[$fromDate,$uptoDate]);
+                ->$userJoin("users", "users.id", "wt_bookings.user_id")
+                ->where("wt_bookings.status", 1);
+            if ($fromDate && $uptoDate) {
+                $tran->whereBetween("wt_transactions.tran_date", [$fromDate, $uptoDate]);
+                $pendingPaymentApp->whereBetween("wt_bookings.booking_date", [$fromDate, $uptoDate]);
+                $applyApp->whereBetween("wt_bookings.booking_date", [$fromDate, $uptoDate]);
             }
-            if($userId)
-            {
-                $tran->where("wt_transactions.emp_dtl_id",$userId);
-                $pendingPaymentApp->where("wt_bookings.user_id",$userId);
-                $applyApp->where("wt_bookings.user_id",$userId);
+            if ($userId) {
+                $tran->where("wt_transactions.emp_dtl_id", $userId);
+                $pendingPaymentApp->where("wt_bookings.user_id", $userId);
+                $applyApp->where("wt_bookings.user_id", $userId);
             }
-            if($ulbId)
-            {
-                $tran->where("wt_transactions.ulb_id",$ulbId);
-                $pendingPaymentApp->where("wt_bookings.ulb_id",$ulbId);
-                $applyApp->where("wt_bookings.ulb_id",$ulbId);
+            if ($ulbId) {
+                $tran->where("wt_transactions.ulb_id", $ulbId);
+                $pendingPaymentApp->where("wt_bookings.ulb_id", $ulbId);
+                $applyApp->where("wt_bookings.ulb_id", $ulbId);
             }
-            if($paymentMode)
-            {
-                $tran->where(DB::raw("UPPER(wt_transactions.ulb_id)"),DB::raw("UPPER('$paymentMode')"));
+            if ($paymentMode) {
+                $tran->where(DB::raw("UPPER(wt_transactions.ulb_id)"), DB::raw("UPPER('$paymentMode')"));
             }
-            
+
             $tran = $tran->first();
             $pendingPaymentApp = $pendingPaymentApp->first();
             $applyApp = $applyApp->first();
             $data = [
-                "tran"=>$tran,
-                "paymentPending"=>$pendingPaymentApp,
-                "apply"=>$applyApp
+                "tran" => $tran,
+                "paymentPending" => $pendingPaymentApp,
+                "apply" => $applyApp
             ];
-            return responseMsgs(true,"Dashboard data",remove_null($data));
-        }
-        catch(Exception $e)
-        {
-            return responseMsgs(false,$e->getMessage(),"");
+            return responseMsgs(true, "Dashboard data", remove_null($data));
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
         }
     }
 
     public function userWishDashBoard(Request $request)
     {
-        try{
+        try {
             $user = Auth()->user();
-            $request->merge(["userJoin"=>"JOIN","userId"=>$user->id]);
+            $request->merge(["userJoin" => "JOIN", "userId" => $user->id]);
             return $this->dashBoard($request);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
         }
-        catch(Exception $e)
-        {
-            return responseMsgs(false,$e->getMessage(),"");
+    }
+
+
+    public function cancleBookingList(Request $request)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id;
+            $cancleBookingList = WtCancellation::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancelled_by,cancel_details"))
+                ->where("wt_cancellations.ulb_id", $ulbId)
+                ->get();
+            return responseMsgs(true, "water tank cancle booking list", remove_null($cancleBookingList));
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
         }
     }
 }

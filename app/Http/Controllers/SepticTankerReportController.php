@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Septic\StBooking;
+use App\Models\Septic\StCancelledBooking;
 use App\Models\Septic\StTransaction;
 use Carbon\Carbon;
 use Exception;
@@ -232,4 +233,18 @@ class SepticTankerReportController extends Controller
              return responseMsgs(false,$e->getMessage(),"");
          }
      }
+
+     public function cancleBookingList(Request $request)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id;
+            $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no, cleaning_date,cancel_date,cancel_by"))
+                ->where("st_cancelled_bookings.ulb_id", $ulbId)
+                ->get();
+            return responseMsgs(true, "spetic tank cancle booking list", remove_null($cancleBookingList));
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "");
+        }
+    }
 }
