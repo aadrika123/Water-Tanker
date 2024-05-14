@@ -146,7 +146,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             /**
              * make by prity pandey
              */
-            Route::post('septic-tanker/wt-agency-dashboard', 'wtAgencyDashboard');                                                              // 01 ( Add Booking )
+            Route::post('septic-tanker/wt-agency-dashboard', 'stAgencyDashboard');                                                              // 01 ( Add Booking )
             Route::post('septic-tanker/list-booking', 'listBooking');                                                               // 02 ( List Booking )
             Route::post('septic-tanker/list-assigned-booking', 'listAssignedBooking');                                              // 03 ( List Booking )
             Route::post('septic-tanker/get-applied-application', 'getAppliedApplication');                                          // 04 ( Get Applied Application )

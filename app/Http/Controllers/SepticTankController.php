@@ -85,7 +85,7 @@ class SepticTankController extends Controller
     }
 
 
-    public function wtAgencyDashboard(Request $req)
+    public function stAgencyDashboard(Request $req)
     {
         try {
             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
