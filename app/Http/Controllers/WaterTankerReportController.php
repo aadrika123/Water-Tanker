@@ -237,7 +237,7 @@ class WaterTankerReportController extends Controller
                 "data" => $paginator->items(),
                 "total" => $paginator->total(),
             ];
-            return responseMsgs(true, "water tank cancle booking list", remove_null($list));
+            return responseMsgs(true, "water tank cancle booking list",$list);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "");
         }

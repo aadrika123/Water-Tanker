@@ -222,7 +222,7 @@ class SepticTankerReportController extends Controller
             if ($request->uptoDate) {
                 $uptoDate = $request->uptoDate;
             }
-            $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no, applicant_name,mobile,address,cleaning_date,cancel_date,cancel_by"))
+            $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancel_by,remarks,delivery_latitude,delivery_longitude"))
                 ->where("st_cancelled_bookings.ulb_id", $ulbId);
             //->get();
             if ($fromDate && $uptoDate) {
@@ -236,7 +236,7 @@ class SepticTankerReportController extends Controller
                 "data" => $paginator->items(),
                 "total" => $paginator->total(),
             ];
-            return responseMsgs(true, "septic tank cancle booking list", remove_null($list));
+            return responseMsgs(true, "septic tank cancle booking list", $list);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "");
         }
