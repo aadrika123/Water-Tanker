@@ -71,8 +71,9 @@ class Calculations
                 // echo $waterCapacity; die;
                 $totalBookingOnDeliveryDate = $this->getTotalBooking($lml['id'], $deliveryDate);
                 $currentBooking = WtCapacity::where('id', $capacityId)->first()->capacity;                     // find current book capacity
-                $totalBooking = $totalBookingOnDeliveryDate + $currentBooking;                                                // Add total book and current book for find agency capacity
-                if ($waterCapacity >= $totalBooking) {
+                $totalBooking = $totalBookingOnDeliveryDate + $currentBooking;                                              // Add total book and current book for find agency capacity
+                $waterCapacity =null;
+                if (!$waterCapacity || $waterCapacity >= $totalBooking) {
                     $hc_id = $lml['hydration_center_id'];
                     break;
                 }
