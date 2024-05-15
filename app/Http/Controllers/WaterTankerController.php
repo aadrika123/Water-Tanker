@@ -608,7 +608,7 @@ class WaterTankerController extends Controller
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), [$e->getFile(),$e->getLine(),$e->getCode()], "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
