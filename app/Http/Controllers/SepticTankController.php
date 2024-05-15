@@ -896,7 +896,7 @@ class SepticTankController extends Controller
             ->where("delivery_track_status", "=", 0)
             ->values();
             //$f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
-            $f_list['listDelivered'] = $list->where("delivery_track_status", 2)->values();
+            $f_list['listCleaned'] = $list->where("delivery_track_status", 2)->values();
 
             $mStCancelledBooking = new StCancelledBooking();
             $list = $mStCancelledBooking->getCancelledBookingList()
