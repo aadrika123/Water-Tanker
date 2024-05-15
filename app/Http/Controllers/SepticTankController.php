@@ -891,9 +891,12 @@ class SepticTankController extends Controller
                 $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
                 return $val;
             });
-            $f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)->values();
-
-            $f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
+            //$f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)->values();
+            $f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)
+            ->where("delivery_track_status", "=", 0)
+            ->values();
+            //$f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
+            $f_list['listDelivered'] = $list->where("delivery_track_status", 2)->values();
 
             $mStCancelledBooking = new StCancelledBooking();
             $list = $mStCancelledBooking->getCancelledBookingList()
