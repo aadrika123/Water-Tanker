@@ -38,7 +38,7 @@ class StReassignBooking extends Model
                 ->leftJoin('st_capacities as wc','wc.id','=','wb.capacity_id')
                 ->select('wb.assign_date','wb.applicant_name','wb.booking_date','wb.cleaning_date','wb.address','wb.id','wb.ulb_id','wb.mobile as applicant_mobile',
                     'wd.driver_name','wd.driver_mobile','wr.vehicle_name','wr.vehicle_no','wc.capacity' ,
-                    "wrb.delivery_track_status","wrb.delivery_comments");
+                    "wrb.delivery_track_status","wrb.delivery_comments","wb.booking_no");
     }
 
     public function getAssignedVehicle()
