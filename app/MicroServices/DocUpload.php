@@ -249,9 +249,9 @@ class DocUpload
                 $responseData = $response->json();
                 $key['id'] =  $document->id ?? null;
                 $key['doc_id'] =  $document->doc_id ?? null;
-                $key['doc_code'] =  $document->doc_code;
-                $key['verify_status'] =  $document->verify_status;
-                $key['owner_name'] =  $document->owner_name;
+                $key['doc_code'] =  $document->doc_code??"";
+                $key['verify_status'] =  $document->verify_status??"";
+                $key['owner_name'] =  $document->owner_name??"";
                 $key['remarks'] =  $document->remarks ?? null;
                 $key['doc_path'] = $responseData['data']['fullPath'] ?? "";
                 $key['responseData'] = $responseData;

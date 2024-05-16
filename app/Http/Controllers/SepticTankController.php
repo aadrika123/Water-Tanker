@@ -753,7 +753,10 @@ class SepticTankController extends Controller
             if ($req->fromDate != NULL)
                 $list = $list->whereBetween('cleaning_date', [$req->fromDate, $req->toDate])->values();
             $ulb = $this->_ulbs;
-            $f_list = $list->map(function ($val) use ($ulb) {
+            $DocUpload = new DocUpload();
+            $f_list = $list->map(function ($val) use ($ulb, $DocUpload) {
+                $uploadDoc = ($DocUpload->getSingleDocUrl($val));
+                $val->doc_path = $uploadDoc["doc_path"] ?? "";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                 $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
@@ -893,8 +896,8 @@ class SepticTankController extends Controller
             });
             //$f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)->values();
             $f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)
-            ->where("delivery_track_status", "=", 0)
-            ->values();
+                ->where("delivery_track_status", "=", 0)
+                ->values();
             //$f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
             $f_list['listCleaned'] = $list->where("delivery_track_status", 2)->values();
 
@@ -1593,14 +1596,16 @@ class SepticTankController extends Controller
             if ($formDate && $uptoDate) {
                 $data->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
             }
-
+            $DocUpload = new DocUpload();
             $perPage = $request->perPage ? $request->perPage : 10;
             $list = $data->paginate($perPage);
             $f_list = [
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
-                "data" => collect($list->items())->map(function ($val) {
+                "data" => collect($list->items())->map(function ($val) use ($DocUpload) {
+                    $uploadDoc = ($DocUpload->getSingleDocUrl($val));
+                    $val->doc_path = $uploadDoc["doc_path"] ?? "";
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
                     $val->assign_date =  $val->assign_date;

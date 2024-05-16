@@ -43,6 +43,7 @@ class StoreBookingRequest extends FormRequest
             'capacityId' => 'required|integer',
             // 'quantity' => 'required|integer',
             'address' => 'required|string|max:255',
+            'wardId' => $this->ulbId == 2 ? "required|integer":'nullable'
         ];
     }
 

@@ -584,11 +584,13 @@ class WaterTankerController extends Controller
             // $bookingStatus = $mCalculations->checkBookingStatus($req->deliveryDate, $req->agencyId, $req->capacityId);       // Check booking is available or not on selected agency on delivery date
             // if ($bookingStatus == false)
             //     throw new Exception('Your Delivery Date Slot are Not Available. Please Try To Other Date or Agency !!!');
-            $hydrationCenterId = $mCalculations->findHydrationCenter($req->deliveryDate,  $req->capacityId, $req->locationId);
-            if (!$hydrationCenterId)
-                throw new Exception('Your Delivery Date Slot are Not Available. Please Try To Other Date !!!');
-            $hydrationCenter = ['hydrationCenter' => $hydrationCenterId];
-            $req->merge($hydrationCenter);
+
+            //commented by prity pandey
+            // $hydrationCenterId = $mCalculations->findHydrationCenter($req->deliveryDate,  $req->capacityId, $req->locationId);
+            // if (!$hydrationCenterId)
+            //     throw new Exception('Your Delivery Date Slot are Not Available. Please Try To Other Date !!!');
+            // $hydrationCenter = ['hydrationCenter' => $hydrationCenterId];
+            // $req->merge($hydrationCenter);
 
             $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
             $bookingNo = ['bookingNo' => $generatedId];
@@ -2558,7 +2560,7 @@ class WaterTankerController extends Controller
             }
             if(in_array($booking->payment_status,[1,2]))
             {
-                throw new Exception("Payment Already Don");
+                throw new Exception("Payment Already Done");
             }
             $mTransaction = new WtTransaction();
             $idGenrater = new PaymentRepository();
