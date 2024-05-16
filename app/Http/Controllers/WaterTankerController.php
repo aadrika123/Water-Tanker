@@ -120,27 +120,25 @@ class WaterTankerController extends Controller
 
     public function addAgencyNotInLocal(Request $reqs)
     {
-        try{
-            $users=  $reqs->auth;
+        try {
+            $users =  $reqs->auth;
             $ulb = UlbMaster::find($users["ulb_id"]);
             $reqs->merge([
-                'agencyName' =>  ($ulb->ulb_name??"test")." Water Agency",
+                'agencyName' => ($ulb->ulb_name ?? "test") . " Water Agency",
                 'ownerName' => $users["name"],
-                'agencyAddress' => $users["address"],            
+                'agencyAddress' => $users["address"],
                 'agencyMobile' => $users["mobile"],
                 'agencyEmail' => $users["email"],
                 'dispatchCapacity' => 0,
-                "UId"=>$users["id"],
-                "ulbId"=>$users["ulb_id"],
+                "UId" => $users["id"],
+                "ulbId" => $users["ulb_id"],
             ]);
             $mWtAgency = new WtAgency();
             DB::beginTransaction();
             $res = $mWtAgency->storeAgency($reqs);                                       // Store Agency Request
             DB::commit();
             return responseMsgs(true, "Agency Added Successfully !!!", '', "110101", "1.0", responseTime(), 'POST', $reqs->deviceId ?? "");
-        }
-        catch(Exception $e)
-        {
+        } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110101", "1.0", "", 'POST', $reqs->deviceId ?? "");
         }
@@ -163,7 +161,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val["ulb_name"] = (collect($ulb)->where("id", $val["ulb_id"]))->value("ulb_name");
-                $val['date'] = Carbon::parse( $val['date'])->format('d-m-Y');
+                $val['date'] = Carbon::parse($val['date'])->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency List !!!",  $f_list, "110102", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -211,7 +209,7 @@ class WaterTankerController extends Controller
             $mWtCapacity = new WtCapacity();
             $list = $mWtCapacity->getCapacityList();
             $f_list = $list->map(function ($val) {
-                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
+                $val->date = Carbon::parse($val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Capacity List !!!", $f_list, "110104", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -366,14 +364,14 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
             'driverLicenseNo' => 'required|string|max:50',
-            'driverEmail' => "required|string|email|unique:".$user->getConnectionName().".".$user->getTable().",email",
+            'driverEmail' => "required|string|email|unique:" . $user->getConnectionName() . "." . $user->getTable() . ",email",
 
         ]);
         if ($validator->fails()) {
-            return ['status' => false, 'message' =>"validation Error","errors"=> $validator->errors()];
+            return ['status' => false, 'message' => "validation Error", "errors" => $validator->errors()];
         }
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
@@ -389,11 +387,11 @@ class WaterTankerController extends Controller
                 "ulb" => $req->ulbId,
                 "userType" =>  "Driver",
             ];
-            
+
             $roleModle = new WfRole();
             $dRoleRequest = new Request([
-                "wfRoleId"=> $roleModle->getDriverRoleId(),
-                "createdBy"=>$req->auth['id'],
+                "wfRoleId" => $roleModle->getDriverRoleId(),
+                "createdBy" => $req->auth['id'],
             ]);
             // Variable initialization
             $mWtDriver = new WtDriver();
@@ -402,7 +400,7 @@ class WaterTankerController extends Controller
             $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login
             $req->merge(['UId' => $userId]);
             $dRoleRequest->merge([
-                "userId"=>$userId,
+                "userId" => $userId,
             ]);
             $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
             $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
@@ -434,13 +432,13 @@ class WaterTankerController extends Controller
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id',  DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
             $ulb = $this->_ulbs;
-            $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
-            $f_list = $list->map(function ($val) use ($ulb,$users) {
-                $user = $users->where("id",$val->u_id)->first();
-                $val->email = $user ? $user->email:"";
+            $users = User::where("ulb_id", $req->auth["ulb_id"])->get();
+            $f_list = $list->map(function ($val) use ($ulb, $users) {
+                $user = $users->where("id", $val->u_id)->first();
+                $val->email = $user ? $user->email : "";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->driver_dob = Carbon::parse( $val->driver_dob)->format('d/m/Y');
-                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
+                $val->driver_dob = Carbon::parse($val->driver_dob)->format('d/m/Y');
+                $val->date = Carbon::parse($val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Driver List !!!", $f_list->values(), "110110", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -469,7 +467,7 @@ class WaterTankerController extends Controller
             return validationErrorV2($validator);
         }
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
             if ($req->auth['user_type'] == 'Water-Agency')
@@ -496,7 +494,7 @@ class WaterTankerController extends Controller
     public function listResource(Request $req)
     {
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtResource = new WtResource();
@@ -506,7 +504,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::parse( $val->date)->format('d/m/Y');
+                $val->date = Carbon::parse($val->date)->format('d/m/Y');
                 return $val;
             });
             return responseMsgs(true, "Resource List !!!", $f_list->values(), "110112", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -610,7 +608,7 @@ class WaterTankerController extends Controller
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), [$e->getFile(),$e->getLine(),$e->getCode()], "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), [$e->getFile(), $e->getLine(), $e->getCode()], "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -630,10 +628,10 @@ class WaterTankerController extends Controller
         }
         try {
             // Variable initialization
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception("Unauthorized  Access !!!");
             $test = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first();
-            if(!$test){
+            if (!$test) {
                 $this->addAgencyNotInLocal($req);
             }
             $mWtBooking = new WtBooking();
@@ -657,8 +655,8 @@ class WaterTankerController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                     $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                     return $val;
                 }),
@@ -711,7 +709,7 @@ class WaterTankerController extends Controller
     public function listMapDriverVehicle(Request $req)
     {
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtDriverVehicleMap = new WtDriverVehicleMap();
@@ -721,7 +719,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 $val->is_ulb_vehicle = $val->is_ulb_vehicle == 1 ? 'Yes' : 'No';
                 return $val;
             });
@@ -739,12 +737,12 @@ class WaterTankerController extends Controller
     public function cancelBooking(Request $req)
     {
         $cancelledBy = $req->auth['user_type'];
-        if ($cancelledBy == 'Citizen' )
+        if ($cancelledBy == 'Citizen')
             $cancelById = $req->auth['id'];
         if ($cancelledBy == 'Water-Agency' || $cancelledBy == 'UlbUser')
             $cancelById = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id;
         $validator = Validator::make($req->all(), [
-            'applicationId' => 'required|integer|exists:'.(new WtBooking())->getTable().",id",
+            'applicationId' => 'required|integer|exists:' . (new WtBooking())->getTable() . ",id",
             'remarks' => 'required|string',
             'cancelDetails' => 'nullable|string',
         ]);
@@ -799,8 +797,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::parse( $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse($val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Booking List !!!", $f_list, "110120", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -917,7 +915,7 @@ class WaterTankerController extends Controller
             'ownerName' => 'required|string|max:255',
             'dispatchCapacity' => 'required|numeric',
             'ulbId' => 'required|integer',
-            "status"=> "nullable|integer|in:1,0",
+            "status" => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -933,8 +931,7 @@ class WaterTankerController extends Controller
             $mWtAgency->owner_name = $req->ownerName;
             $mWtAgency->dispatch_capacity = $req->dispatchCapacity;
             $mWtAgency->ulb_id = $req->ulbId;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtAgency->status = $req->status;
             }
             $mWtAgency->save();
@@ -956,7 +953,7 @@ class WaterTankerController extends Controller
             'name' => 'required|string',
             'waterCapacity' => 'required|numeric',
             'address' => 'required|string',
-            "status"    =>"nullable|integer|in:1,0",
+            "status"    => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -970,8 +967,7 @@ class WaterTankerController extends Controller
             $mWtHydrationCenter->ulb_id = $req->ulbId;
             $mWtHydrationCenter->water_capacity = $req->waterCapacity;
             $mWtHydrationCenter->address = $req->address;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtHydrationCenter->status = $req->status;
             }
             $mWtHydrationCenter->save();
@@ -995,7 +991,7 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer|digits_between:1,150',
             'resourceType' => 'required|string|max:200',
             'isUlbResource' => 'required|boolean',
-            "status"    =>"nullable|integer|in:1,0",
+            "status"    => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1014,8 +1010,7 @@ class WaterTankerController extends Controller
             $mWtResource->capacity_id = $req->capacityId;
             $mWtResource->resource_type = $req->resourceType;
             $mWtResource->is_ulb_resource = $req->isUlbResource;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtResource->status = $req->status;
             }
             $mWtResource->save();
@@ -1035,7 +1030,7 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'capacityId' => 'required|integer',
             'capacity' => 'required|numeric|unique:wt_capacities',
-            "status"    =>"nullable|integer|in:1,0",
+            "status"    => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1045,8 +1040,7 @@ class WaterTankerController extends Controller
             if (!$mWtCapacity)
                 throw new Exception("No Data Found !!!");
             $mWtCapacity->capacity = $req->capacity;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtCapacity->status = $req->status;
             }
             $mWtCapacity->save();
@@ -1067,7 +1061,7 @@ class WaterTankerController extends Controller
             'capacityId' => 'required|integer',
             'capacityRateId' => 'required|integer',
             'rate' => 'required|integer|gt:0',
-            "status"    =>"nullable|integer|in:1,0",
+            "status"    => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1080,8 +1074,7 @@ class WaterTankerController extends Controller
             $mWtUlbCapacityRate->ulb_id = $req->ulbId;
             $mWtUlbCapacityRate->capacity_id = $req->capacityId;
             $mWtUlbCapacityRate->rate = $req->rate;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtUlbCapacityRate->status = $req->status;
             }
             $mWtUlbCapacityRate->save();
@@ -1102,7 +1095,7 @@ class WaterTankerController extends Controller
         $mWtDriver = new WtDriver();
         $WtDriver = $mWtDriver->find($req->driverId);
         $validator = Validator::make($req->all(), [
-            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id",
+            'driverId' => "required|integer|exists:" . $mWtDriver->getConnectionName() . "." . $mWtDriver->getTable() . ",id",
             'driverName' => 'required|string|max:200',
             'driverAadharNo' => 'required|string|max:16',
             'driverMobile' => 'required|digits:10',
@@ -1110,8 +1103,8 @@ class WaterTankerController extends Controller
             'driverFather' => 'required|string|max:200',
             'driverDob' => 'required|date',
             'driverLicenseNo' => 'required|string|max:50',
-            "status"=>"nullable|integer|in:1,0",
-            'driverEmail' => "required|email|unique:".$mUser->getConnectionName().".".$mUser->getTable().",email".($WtDriver && $WtDriver->u_id?(",".$WtDriver->u_id):""),
+            "status" => "nullable|integer|in:1,0",
+            'driverEmail' => "required|email|unique:" . $mUser->getConnectionName() . "." . $mUser->getTable() . ",email" . ($WtDriver && $WtDriver->u_id ? ("," . $WtDriver->u_id) : ""),
 
         ]);
         if ($validator->fails()) {
@@ -1133,12 +1126,10 @@ class WaterTankerController extends Controller
             $WtDriver->driver_father = $req->driverFather;
             $WtDriver->driver_dob = $req->driverDob;
             $WtDriver->driver_license_no = $req->driverLicenseNo;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $WtDriver->status = $req->status;
             }
-            if(!$user)
-            {
+            if (!$user) {
                 $reqs = [
                     "name" =>  $req->driverName,
                     "email" => $req->driverEmail,
@@ -1151,15 +1142,14 @@ class WaterTankerController extends Controller
                 $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
                 $WtDriver->u_id = $userId;
             }
-            if($user)
-            {
+            if ($user) {
                 isset($req->driverEmail) ? $user->email = $req->driverEmail : "";
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
             }
             $WtDriver->save();
-            $user ? $user->update():"";
+            $user ? $user->update() : "";
             return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110129", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110129", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1299,8 +1289,8 @@ class WaterTankerController extends Controller
             // Variable initialization
             $mWtDriver = new WtDriver();
             $list = $mWtDriver->getDriverDetailsById($req->driverId);
-            $user  = User::where("id",$list->u_id)->first();
-            $list ? ($list->email = $user ? $user->email:""):"";
+            $user  = User::where("id", $list->u_id)->first();
+            $list ? ($list->email = $user ? $user->email : "") : "";
             return responseMsgs(true, "Data Fetched !!!", $list, "110135", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110135", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1391,15 +1381,15 @@ class WaterTankerController extends Controller
      */
     public function bookingAssignment(Request $req)
     {
-        $ulbId = $req->auth["ulb_id"]??null;
+        $ulbId = $req->auth["ulb_id"] ?? null;
         $mWtResource = new WtResource();
         $mWtBooking = new WtBooking();
         $mWtDriver = new WtDriver();
         $validator = Validator::make($req->all(), [
-            'applicationId' => "required|integer|exists:".$mWtBooking->getConnectionName().".".$mWtBooking->getTable().",id,status,1,ulb_id,".$ulbId,
+            'applicationId' => "required|integer|exists:" . $mWtBooking->getConnectionName() . "." . $mWtBooking->getTable() . ",id,status,1,ulb_id," . $ulbId,
             // 'vdmId' => 'required|integer',
-            'vehicleId' => "required|integer|exists:".$mWtResource->getConnectionName().".".$mWtResource->getTable().",id,status,1,ulb_id,".$ulbId,
-            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id,status,1,ulb_id,".$ulbId,
+            'vehicleId' => "required|integer|exists:" . $mWtResource->getConnectionName() . "." . $mWtResource->getTable() . ",id,status,1,ulb_id," . $ulbId,
+            'driverId' => "required|integer|exists:" . $mWtDriver->getConnectionName() . "." . $mWtDriver->getTable() . ",id,status,1,ulb_id," . $ulbId,
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1432,12 +1422,12 @@ class WaterTankerController extends Controller
     public function listAssignAgency(Request $req)
     {
         try {
-            $fromDate = $uptoDate =Carbon::now()->format("Y-m-d");
+            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
             $ulb = collect($this->_ulbs);
-            $list = ($list)->where("wb.ulb_id",$ulbId);
+            $list = ($list)->where("wb.ulb_id", $ulbId);
 
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
@@ -1447,8 +1437,8 @@ class WaterTankerController extends Controller
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($ulb) {
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
@@ -1478,11 +1468,11 @@ class WaterTankerController extends Controller
             $list = $mWtBooking->assignList()->get();
             $ulb = $this->_ulbs;
             $ulbId = $req->auth["ulb_id"];
-            $list = collect($list)->where("ulb_id",$ulbId);
+            $list = collect($list)->where("ulb_id", $ulbId);
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::parse( $val->booking_date)->format('d/m/Y');
-                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d/m/Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d/m/Y');
+                $val->delivery_date = Carbon::parse($val->delivery_date)->format('d/m/Y');
                 $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                 return $val;
             });
@@ -1534,7 +1524,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110143", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1576,7 +1566,7 @@ class WaterTankerController extends Controller
             'locationId' => 'required|integer',
             'isInUlb' => 'required|integer',
             'location' => 'required|string',
-            "status"    =>"nullable|integer|in:1,0",
+            "status"    => "nullable|integer|in:1,0",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1589,8 +1579,7 @@ class WaterTankerController extends Controller
             $mWtLocation->ulb_id = $req->ulbId;
             $mWtLocation->location = $req->location;
             $mWtLocation->is_in_ulb = $req->isInUlb;
-            if(isset($req->status))
-            {
+            if (isset($req->status)) {
                 $mWtLocation->status = $req->status;
             }
             $mWtLocation->save();
@@ -1647,7 +1636,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location Hydration Map List !!!", $f_list, "110147", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -1719,22 +1708,21 @@ class WaterTankerController extends Controller
      * | API - 50
      */
     public function getBookingDetailById(Request $req)
-    {       
-        
+    {
+
         $validator = Validator::make($req->all(), [
             'applicationId' => [
                 "required",
                 "integer",
                 function ($attribute, $value, $fail) {
-                    $existsInTable1 = WtBooking::where("id",$value)
-                        ->exists();  
-                    if (!$existsInTable1)
-                    {
-                        $existsInTable1 = WtCancellation::where("id",$value)
-                        ->exists();  
-                    }                                      
+                    $existsInTable1 = WtBooking::where("id", $value)
+                        ->exists();
                     if (!$existsInTable1) {
-                        $fail('The '.$attribute.' is invalid.');
+                        $existsInTable1 = WtCancellation::where("id", $value)
+                            ->exists();
+                    }
+                    if (!$existsInTable1) {
+                        $fail('The ' . $attribute . ' is invalid.');
                     }
                 },
             ],
@@ -1745,18 +1733,17 @@ class WaterTankerController extends Controller
         try {
             $mWtBooking = new WtBooking();
             $data = $mWtBooking->find($req->applicationId);
-            if(!$data)
-            {
+            if (!$data) {
                 $mWtBooking = new WtCancellation();
                 $data = WtCancellation::find($req->applicationId);
             }
-            $tranDtls = $data->getAllTrans()->map(function($val){
+            $tranDtls = $data->getAllTrans()->map(function ($val) {
                 $chequeDtls = $val->getChequeDtls();
                 $val->tran_date = Carbon::parse($val->tran_date)->format("d-m-Y");
-                $val->cheque_no = $chequeDtls->cheque_no??"";
-                $val->cheque_date = $chequeDtls->cheque_date??"";
-                $val->bank_name = $chequeDtls->bank_name??"";
-                $val->branch_name = $chequeDtls->branch_name??"";
+                $val->cheque_no = $chequeDtls->cheque_no ?? "";
+                $val->cheque_date = $chequeDtls->cheque_date ?? "";
+                $val->bank_name = $chequeDtls->bank_name ?? "";
+                $val->branch_name = $chequeDtls->branch_name ?? "";
                 return $val;
             });
             $wardDtl = DB::table("ulb_ward_masters")->find($data->ward_id);
@@ -1765,11 +1752,11 @@ class WaterTankerController extends Controller
             $reassign = $data->getLastReassignedBooking();
             $list->booking_status = $appStatus;
             $list->tran_dtls = $tranDtls;
-            $list->ward_no =  $wardDtl ?  $wardDtl->ward_name??"":"";
-            
+            $list->ward_no =  $wardDtl ?  $wardDtl->ward_name ?? "" : "";
+
             $list->payment_details = json_decode($list->payment_details);
-            $list->booking_date = Carbon::parse( $list->booking_date)->format('d-m-Y');
-            $list->delivery_date = Carbon::parse( $list->delivery_date)->format('d-m-Y');
+            $list->booking_date = Carbon::parse($list->booking_date)->format('d-m-Y');
+            $list->delivery_date = Carbon::parse($list->delivery_date)->format('d-m-Y');
             $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
 
             $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
@@ -1791,16 +1778,17 @@ class WaterTankerController extends Controller
      */
     public function reassignBooking(Request $req)
     {
-        
-        $ulbId = $req->auth["ulb_id"]??null;
+
+        $ulbId = $req->auth["ulb_id"] ?? null;
         $mWtResource = new WtResource();
         $mWtBooking = new WtBooking();
-        $mWtDriver = new WtDriver();DB::enableQueryLog();
+        $mWtDriver = new WtDriver();
+        DB::enableQueryLog();
         $validator = Validator::make($req->all(), [
-            'applicationId' => "required|integer|exists:".$mWtBooking->getConnectionName().".".$mWtBooking->getTable().",id,status,1,ulb_id,".$ulbId,
+            'applicationId' => "required|integer|exists:" . $mWtBooking->getConnectionName() . "." . $mWtBooking->getTable() . ",id,status,1,ulb_id," . $ulbId,
             // 'vdmId' => 'required|integer',
-            'vehicleId' => "required|integer|exists:".$mWtResource->getConnectionName().".".$mWtResource->getTable().",id,status,1,ulb_id,".$ulbId,
-            'driverId' => "required|integer|exists:".$mWtDriver->getConnectionName().".".$mWtDriver->getTable().",id,status,1,ulb_id,".$ulbId,
+            'vehicleId' => "required|integer|exists:" . $mWtResource->getConnectionName() . "." . $mWtResource->getTable() . ",id,status,1,ulb_id," . $ulbId,
+            'driverId' => "required|integer|exists:" . $mWtDriver->getConnectionName() . "." . $mWtDriver->getTable() . ",id,status,1,ulb_id," . $ulbId,
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -1812,11 +1800,21 @@ class WaterTankerController extends Controller
             // $mWtDriverVehicleMap = WtDriverVehicleMap::find($req->vdmId);
             // if (!$mWtDriverVehicleMap)
             //     throw new Exception("Driver Vehicle Map Not Found !!!");
-            $mWtBookingForReplicate = WtBooking::select('id', 'vdm_id', 'vehicle_id', 'driver_id',"assign_date as re_assign_date",
-                                        "delivery_track_status","delivery_comments","delivery_latitude","delivery_longitude",
-                                        "unique_id","reference_no","driver_delivery_update_date_time"
-                                    )
-                                    ->where('id', $req->applicationId)->first();
+            $mWtBookingForReplicate = WtBooking::select(
+                'id',
+                'vdm_id',
+                'vehicle_id',
+                'driver_id',
+                "assign_date as re_assign_date",
+                "delivery_track_status",
+                "delivery_comments",
+                "delivery_latitude",
+                "delivery_longitude",
+                "unique_id",
+                "reference_no",
+                "driver_delivery_update_date_time"
+            )
+                ->where('id', $req->applicationId)->first();
             // $mWtBooking->vdm_id = $req->vdmId;
             // $mWtBooking->vehicle_id = $mWtDriverVehicleMap->vehicle_id;
             // $mWtBooking->driver_id = $mWtDriverVehicleMap->driver_id;
@@ -1833,7 +1831,7 @@ class WaterTankerController extends Controller
             $mWtBooking->driver_delivery_update_date_time = null;
 
             $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
-            
+
 
             // Re-Assign booking on Re-assign Table
             $reassign = $mWtBookingForReplicate->replicate();
@@ -1860,21 +1858,19 @@ class WaterTankerController extends Controller
     {
         try {
             $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
-            if($req->fromDate)
-            {
+            if ($req->fromDate) {
                 $fromDate = $req->fromDate;
             }
-            if($req->uptoDate)
-            {
+            if ($req->uptoDate) {
                 $uptoDate = $req->uptoDate;
             }
             $ulbId = $req->auth["ulb_id"];
             $mWtReassignBooking = new WtReassignBooking();
             $list = $mWtReassignBooking->listReassignBookingOrm();
-            $list = $list->where("wb.ulb_id",$ulbId)
-                    ->whereBetween("wb.assign_date",[$fromDate,$uptoDate])
-                    ->where("wb.delivery_track_status","<>",2)
-                    ->orderBy("wb.assign_date","DESC");
+            $list = $list->where("wb.ulb_id", $ulbId)
+                ->whereBetween("wb.assign_date", [$fromDate, $uptoDate])
+                ->where("wb.delivery_track_status", "<>", 2)
+                ->orderBy("wb.assign_date", "DESC");
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
             $f_list = [
@@ -1882,14 +1878,14 @@ class WaterTankerController extends Controller
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) {
-                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
-                    $val->re_assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
             ];
-            
+
             return responseMsgs(true, "Re-Assign Booking List !!!", $f_list, "110152", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110152", "1.0", "", 'POST', $req->deviceId ?? "");
@@ -1982,8 +1978,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Agency Booking List !!!", $f_list, "110155", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2075,7 +2071,7 @@ class WaterTankerController extends Controller
     public function wtAgencyDashboard(Request $req)
     {
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception("Unauthorized Access !!!");
             // Variable initialization
             $agencyDetails = WtAgency::select('id', 'agency_name', 'dispatch_capacity')->where('ulb_id', $req->auth['ulb_id'])->first();
@@ -2113,7 +2109,7 @@ class WaterTankerController extends Controller
             return validationErrorV2($validator);
         }
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtBooking = new WtBooking();
@@ -2125,23 +2121,25 @@ class WaterTankerController extends Controller
 
             if ($req->auth['user_type'] == 'Water-Agency')
                 $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id);
-
+            $DocUpload = new DocUpload();
             $ulb = $this->_ulbs;
-            $f_list = $list->map(function ($val) use ($ulb) {
+            $f_list = $list->map(function ($val) use ($ulb, $DocUpload) {
                 $driver = WtDriver::find($val->delivered_by_driver_id);
-                $val->delivered_by = (($driver->driver_name??"")." (".($driver->driver_license_no??"").")");
-                $val->delivered_date_time = $val->driver_delivery_date_time ?  Carbon::parse($val->driver_delivery_date_time)->format('h:i:s A d-m-Y'):"";
+                $val->delivered_by = (($driver->driver_name ?? "") . " (" . ($driver->driver_license_no ?? "") . ")");
+                $val->delivered_date_time = $val->driver_delivery_date_time ?  Carbon::parse($val->driver_delivery_date_time)->format('h:i:s A d-m-Y') : "";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                 $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+                $uploadDoc = ($DocUpload->getSingleDocUrl($val));
+                $val->doc_path = $uploadDoc["doc_path"] ?? "";
                 return $val;
             });
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110159", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110159", "1.0", "", 'POST', $req->deviceId ?? "");
         }
-    } 
+    }
 
     /**
      * | Get ULB Wise Location List
@@ -2162,7 +2160,7 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->date = Carbon::parse( $val->date)->format('d-m-Y');
+                $val->date = Carbon::parse($val->date)->format('d-m-Y');
                 return $val;
             });
             return responseMsgs(true, "Location List !!!", $f_list, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2276,7 +2274,7 @@ class WaterTankerController extends Controller
             $payDetails->inWords = getIndianCurrency($payDetails->payment_amount) . "Only /-";
             $payDetails->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $payDetails->ulb_id))->value("logo");
             $payDetails->paymentAgainst = "Water Tanker";
-            $payDetails->delivery_date = Carbon::parse(  $payDetails->delivery_date)->format('d-m-Y');
+            $payDetails->delivery_date = Carbon::parse($payDetails->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $payDetails, '110164', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110163', 01, "", 'POST', $req->deviceId);
@@ -2302,14 +2300,14 @@ class WaterTankerController extends Controller
 
             $ulb = $this->_ulbs;
             $list->map(function ($val) use ($ulb) {
-                $val->tranId = WtTransaction::select("id")->where("booking_id",$val->id)->whereIn("status",[1,2])->first()->id??"";
+                $val->tranId = WtTransaction::select("id")->where("booking_id", $val->id)->whereIn("status", [1, 2])->first()->id ?? "";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-                $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
+                $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                 return $val;
             });
-            $f_list['listApplied'] =  $list->where("is_vehicle_sent","<>",2)->values();
-            $f_list['listDelivered'] = $list->where("is_vehicle_sent",2)->values();
+            $f_list['listApplied'] =  $list->where("is_vehicle_sent", "<>", 2)->values();
+            $f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
 
 
             $mWtCancellation = new WtCancellation();
@@ -2324,8 +2322,8 @@ class WaterTankerController extends Controller
             $ulb = $this->_ulbs;
             $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
-                $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                $val->cancel_date = Carbon::parse( $val->cancel_date)->format('d-m-Y');
+                $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                $val->cancel_date = Carbon::parse($val->cancel_date)->format('d-m-Y');
                 return $val;
             })->values();
             return responseMsgs(true, "Agency Booking List !!!", $f_list, "110164", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -2374,7 +2372,7 @@ class WaterTankerController extends Controller
         $redis = Redis::connection();
         try {
             // Variable initialization
-            $data1 = null;#json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
+            $data1 = null; #json_decode(Redis::get('ulb_masters'));      // Get Value from Redis Cache Memory
             if (!$data1) {                                                   // If Cache Memory is not available
                 $data1 = array();
                 $client = new \GuzzleHttp\Client();
@@ -2386,7 +2384,7 @@ class WaterTankerController extends Controller
             }
             return $data1;
         } catch (Exception $e) {
-            $ulb= (new UlbMaster())->getAllUlb();
+            $ulb = (new UlbMaster())->getAllUlb();
             $data1 = $ulb->original['data'];
             $data1 = collect($data1);
             $redis->set('ulb_masters', json_encode($data1));
@@ -2404,7 +2402,7 @@ class WaterTankerController extends Controller
     {
         // $redis = Redis::connection();
         try {
-            if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency","JSK"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency", "JSK"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             // $data1 = json_decode(Redis::get('wt_masters'));                     // Get Value from Redis Cache Memory
@@ -2421,18 +2419,18 @@ class WaterTankerController extends Controller
 
                 $listCapacity = $mWtCapacity->getCapacityList();
                 $data1['capacity'] = $listCapacity;
-                $users = User::where("ulb_id",$req->auth["ulb_id"])->get();
+                $users = User::where("ulb_id", $req->auth["ulb_id"])->get();
 
-                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id'])->map(function($val) use($users){
-                    $user = $users->where("id",$val->u_id)->first();
-                    $val->email = $user ? $user->email:"";
+                $listDriver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id'])->map(function ($val) use ($users) {
+                    $user = $users->where("id", $val->u_id)->first();
+                    $val->email = $user ? $user->email : "";
                     return $val;
                 });
                 $data1['driver'] = $listDriver;
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['driver'] = $listDriver->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id??0)->values();
+                    $data1['driver'] = $listDriver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
 
                 $hydrationCenter = $mWtHydrationCenter->getHydrationCeenterForMasterData($req->auth['ulb_id']);
                 $data1['hydrationCenter'] = $hydrationCenter;
@@ -2447,7 +2445,7 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id??0)->values();
+                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
 
                 $mWtLocation = new WtLocation();
                 $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
@@ -2456,7 +2454,7 @@ class WaterTankerController extends Controller
                 $mWtDriverVehicleMap = new WtDriverVehicleMap();
                 $list = $mWtDriverVehicleMap->getMapDriverVehicle($req->auth['ulb_id']);
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id??0)->values();
+                    $list = $list->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
 
                 $ulb = $this->_ulbs;
                 $f_list = $list->map(function ($val) use ($ulb) {
@@ -2470,7 +2468,7 @@ class WaterTankerController extends Controller
             }
             return responseMsgs(true, "Data Fetched !!!", $data1, "110167", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), [$e->getFile(),$e->getLine()], "110167", "1.0", "", 'POST', $req->deviceId ?? "");
+            return responseMsgs(false, $e->getMessage(), [$e->getFile(), $e->getLine()], "110167", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 
@@ -2485,12 +2483,12 @@ class WaterTankerController extends Controller
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 $msg = '';
-                $tranId ="";
+                $tranId = "";
                 $response = "";
-                $req->merge(["isNotWebHook"=>true,"paymentModes"=>$req->paymentMode,"paymentMode"=>"ONLINE"]);
+                $req->merge(["isNotWebHook" => true, "paymentModes" => $req->paymentMode, "paymentMode" => "ONLINE"]);
                 DB::beginTransaction();
                 $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
-                if ($wtCount > 0) {                    
+                if ($wtCount > 0) {
                     // $mWtBooking = WtBooking::find($req->id);
                     // $mWtBooking->payment_date = Carbon::now();
                     // $mWtBooking->payment_mode = "Online";
@@ -2524,42 +2522,38 @@ class WaterTankerController extends Controller
     }
 
     public function offlinePayment(PaymentCounterReq $req)
-    {       
-        try{
-            
+    {
+        try {
+
             $user = Auth()->user();
             $userType = $user->user_type;
             $mergData = [
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
-                "moduleId" =>Config::get('constants.WATER_TANKER_MODULE_ID'),
-                "gatewayType"   =>"",
-                "id"=>$req->applicationId,
-                "orderId"=>$req->paymentId,
-                "paymentId"=>$req->paymentId,
-                "paymentModes"=>$req->paymentModes,
-                "tranDate"=>Carbon::parse(),
-                "ulbId"=>$user->ulb_id,
-                "userId"=>$user->id,
-                "workflowId"=>0,
-                "chequeNo"=>$req->chequeNo,
-                "bankName"=>$req->bankName,
-                "chequeDate"=>$req->chequeDate,
+                "moduleId" => Config::get('constants.WATER_TANKER_MODULE_ID'),
+                "gatewayType"   => "",
+                "id" => $req->applicationId,
+                "orderId" => $req->paymentId,
+                "paymentId" => $req->paymentId,
+                "paymentModes" => $req->paymentModes,
+                "tranDate" => Carbon::parse(),
+                "ulbId" => $user->ulb_id,
+                "userId" => $user->id,
+                "workflowId" => 0,
+                "chequeNo" => $req->chequeNo,
+                "bankName" => $req->bankName,
+                "chequeDate" => $req->chequeDate,
             ];
-            if($req->isNotWebHook && $user->getTable()!="users")
-            {
+            if ($req->isNotWebHook && $user->getTable() != "users") {
                 throw new Exception("Citizen Not Allowed");
             }
-            if($req->isNotWebHook && $userType!="JSK")
-            {
+            if ($req->isNotWebHook && $userType != "JSK") {
                 throw new Exception("Only jsk allow");
             }
             $booking = WtBooking::find($req->applicationId);
-            if($booking->ulb_id != $user->ulb_id)
-            {
+            if ($booking->ulb_id != $user->ulb_id) {
                 throw new Exception("this application related to another ulb");
             }
-            if(in_array($booking->payment_status,[1,2]))
-            {
+            if (in_array($booking->payment_status, [1, 2])) {
                 throw new Exception("Payment Already Done");
             }
             $mTransaction = new WtTransaction();
@@ -2567,15 +2561,15 @@ class WaterTankerController extends Controller
             $tranNo = $idGenrater->generatingTransactionId($booking->ulb_id);
             $mergData["transactionNo"] = $tranNo;
             $mergData["amount"] = $booking->payment_amount;
-            $mergData["applicationNo"]=$booking->booking_no;
-            $mergData["paidAmount"]=$booking->payment_amount;
-            $mergData["empDtlId"]=$user->id;
-            $mergData["ulbId"]=$booking->ulb_id;
+            $mergData["applicationNo"] = $booking->booking_no;
+            $mergData["paidAmount"] = $booking->payment_amount;
+            $mergData["empDtlId"] = $user->id;
+            $mergData["ulbId"] = $booking->ulb_id;
             $req->merge($mergData);
 
             $booking->payment_date = Carbon::now();
             $booking->payment_mode = $req->paymentMode;
-            $booking->payment_status = $req->paymentMode=="CASH" ? 1 : 2;
+            $booking->payment_status = $req->paymentMode == "CASH" ? 1 : 2;
             $booking->payment_id = "";
             $booking->payment_details = json_encode($mergData);
             $booking->payment_by_user_id = $user->id;
@@ -2595,20 +2589,18 @@ class WaterTankerController extends Controller
             }
 
             DB::beginTransaction();
-            DB::connection("pgsql_master")->beginTransaction(); 
+            DB::connection("pgsql_master")->beginTransaction();
 
-            $booking->update();            
+            $booking->update();
             $mTransaction->save();
-            $req->merge(["tranDate"=>Carbon::now()->format("Y-m-d"),"tranId"=>$mTransaction->id]);
+            $req->merge(["tranDate" => Carbon::now()->format("Y-m-d"), "tranId" => $mTransaction->id]);
             $this->postTempTransaction($req);
 
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
-            return responseMsgs(true, $msg, ["tranId"=>$mTransaction->id,"TranNo"=>$mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
-        }
-        catch(Exception $e)
-        {
+            return responseMsgs(true, $msg, ["tranId" => $mTransaction->id, "TranNo" => $mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
+        } catch (Exception $e) {
             DB::rollBack();
             DB::connection("pgsql_master")->rollBack();
             return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
@@ -2634,7 +2626,7 @@ class WaterTankerController extends Controller
             "ward_no" => null,
         ];
 
-        if (!in_array($req->paymentMode, ['CASH',"ONLINE"])) {
+        if (!in_array($req->paymentMode, ['CASH', "ONLINE"])) {
             $tradeChq = new WtChequeDtl();
             $tradeChq->tran_id = $req->tranId;
             $tradeChq->booking_id = $req->applicationId;
@@ -2645,8 +2637,8 @@ class WaterTankerController extends Controller
             $tradeChq->emp_dtl_id     =  $req->empDtlId;
             $tradeChq->save();
         }
-        if ($req->payment_mode != 'ONLINE') {   
-            $mTempTransaction = new TempTransaction();         
+        if ($req->payment_mode != 'ONLINE') {
+            $mTempTransaction = new TempTransaction();
             $mTempTransaction->tempTransaction($tranReqs);
         }
     }
@@ -2661,23 +2653,21 @@ class WaterTankerController extends Controller
             // Variable initialization
             $ulb = $this->ulbList();
             $mWtBooking = new WtBooking();
-            $mTransaction = WtTransaction::whereIn("status",[1,2])->find($req->tranId);
-            if(!$mTransaction)
-            {
+            $mTransaction = WtTransaction::whereIn("status", [1, 2])->find($req->tranId);
+            if (!$mTransaction) {
                 throw new Exception("Payment Details Not Found !!!");
             }
             $appData = $mWtBooking->getRecieptDetails($mTransaction->booking_id);
             if (!$appData)
                 throw new Exception("Booking Details Not Found !!!");
-            if($appData->payment_status==0)
-            {
+            if ($appData->payment_status == 0) {
                 throw new Exception("Payment not Done");
-            }  
+            }
             $chequeDtls = $mTransaction->getChequeDtls();
-            $mTransaction->cheque_no = $chequeDtls->cheque_no??"";  
-            $mTransaction->cheque_date = $chequeDtls->cheque_date??""; 
-            $mTransaction->bank_name = $chequeDtls->bank_name??""; 
-            $mTransaction->branch_name = $chequeDtls->branch_name??"";      
+            $mTransaction->cheque_no = $chequeDtls->cheque_no ?? "";
+            $mTransaction->cheque_date = $chequeDtls->cheque_date ?? "";
+            $mTransaction->bank_name = $chequeDtls->bank_name ?? "";
+            $mTransaction->branch_name = $chequeDtls->branch_name ?? "";
             $appData->payment_details = json_decode(json_encode($mTransaction->toArray()));
             $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
             $appData->ulb_address = (collect($ulb)->where("id", $appData->ulb_id))->value("address");
@@ -2686,7 +2676,7 @@ class WaterTankerController extends Controller
             $appData->inWords = getIndianCurrency($mTransaction->paid_amount) . "Only /-";
             $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
             $appData->paymentAgainst = "Water Tanker";
-            $appData->delivery_date = Carbon::parse(  $appData->delivery_date)->format('d-m-Y');
+            $appData->delivery_date = Carbon::parse($appData->delivery_date)->format('d-m-Y');
             return responseMsgs(true, "Payment Details Fetched Successfully !!!", $appData, '110169', 01, responseTime(), 'POST', $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", '110169', 01, "", 'POST', $req->deviceId);
@@ -2772,153 +2762,159 @@ class WaterTankerController extends Controller
      * function added by sandeep bara
      */
 
-     public function vehicleDriverMasterUlbWise(Request $req)
-     {
-         try {
-             if (!in_array($req->auth['user_type'] ,["UlbUser","Water-Agency"]))
-                 throw new Exception('Unauthorized Access !!!');
-             // Initialize Variable
-             $req->merge(['ulbId' => $req->auth['ulb_id']]);
-             $mWtResource = new WtResource();
-             $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
-             $mWtDriver = new WtDriver();
-             $driver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
-             $f_list['listResource'] = $resource->values();
-             $f_list['listDriver'] = $driver->values();
-             return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110217", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
-         } catch (Exception $e) {
-             return responseMsgs(false, $e->getMessage(), "", "110217", "1.0", "", 'POST', $req->deviceId ?? "");
-         }
-     }
+    public function vehicleDriverMasterUlbWise(Request $req)
+    {
+        try {
+            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+                throw new Exception('Unauthorized Access !!!');
+            // Initialize Variable
+            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            $mWtResource = new WtResource();
+            $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
+            $mWtDriver = new WtDriver();
+            $driver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+            $f_list['listResource'] = $resource->values();
+            $f_list['listDriver'] = $driver->values();
+            return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110217", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110217", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
     public function driverDeliveryList(Request $res)
     {
-        try{
+        try {
             $key = $res->key;
-            $formDate = $uptoDate =null;
-            if($res->fromDate)
-            {
-                $formDate =$res->fromDate;
+            $formDate = $uptoDate = null;
+            if ($res->fromDate) {
+                $formDate = $res->fromDate;
             }
-            if($res->uptoDate)
-            {
-                $uptoDate =$res->uptoDate;
+            if ($res->uptoDate) {
+                $uptoDate = $res->uptoDate;
             }
             $user = $res->auth;
-            $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
-                    ->join("wt_drivers","wt_drivers.id","wt_bookings.driver_id")
-                    ->join("wt_resources","wt_resources.id","wt_bookings.vehicle_id")
-                    ->where("wt_drivers.u_id",$user["id"])
-                    ->where("wt_bookings.status",1)
-                    ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                    ->where('assign_date', '!=', NULL)
-                    ->where('is_vehicle_sent', '!=', 2)
-                    ->where('delivery_track_status', 0 );
-            
-            $reassign = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type")
-                        ->join("wt_reassign_bookings","wt_reassign_bookings.application_id","wt_bookings.id")
-                        ->join("wt_drivers","wt_drivers.id","wt_reassign_bookings.driver_id")
-                        ->join("wt_resources","wt_resources.id","wt_reassign_bookings.vehicle_id")
-                        ->where("wt_drivers.u_id",$user["id"])
-                        ->where("wt_bookings.status",1)
-                        ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                        ->where('assign_date', '!=', NULL)
-                        ->where('is_vehicle_sent', '!=', 2)
-                        ->where('wt_reassign_bookings.delivery_track_status', 0 );
+            $data = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type")
+                ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
+                ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
+                ->where("wt_drivers.u_id", $user["id"])
+                ->where("wt_bookings.status", 1)
+                ->where("wt_bookings.ulb_id", $user["ulb_id"])
+                ->where('assign_date', '!=', NULL)
+                ->where('is_vehicle_sent', '!=', 2)
+                ->where('delivery_track_status', 0);
 
-            if($key)
-            {
-                $data = $data->where(function($where) use($key){
-                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+            $reassign = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type")
+                ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
+                ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
+                ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
+                ->where("wt_drivers.u_id", $user["id"])
+                ->where("wt_bookings.status", 1)
+                ->where("wt_bookings.ulb_id", $user["ulb_id"])
+                ->where('assign_date', '!=', NULL)
+                ->where('is_vehicle_sent', '!=', 2)
+                ->where('wt_reassign_bookings.delivery_track_status', 0);
+
+            if ($key) {
+                $data = $data->where(function ($where) use ($key) {
+                    $where->orWhere("wt_bookings.booking_no", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.applicant_name", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.mobile", "LIKE", "%$key%");
                 });
-                $reassign = $reassign->where(function($where) use($key){
-                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+                $reassign = $reassign->where(function ($where) use ($key) {
+                    $where->orWhere("wt_bookings.booking_no", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.applicant_name", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.mobile", "LIKE", "%$key%");
                 });
             }
-            if($formDate && $uptoDate )
-            {
-                $data = $data->whereBetween("assign_date",[$formDate,$uptoDate]);
-                $reassign = $reassign->whereBetween("re_assign_date",[$formDate,$uptoDate]);
+            if ($formDate && $uptoDate) {
+                $data = $data->whereBetween("assign_date", [$formDate, $uptoDate]);
+                $reassign = $reassign->whereBetween("re_assign_date", [$formDate, $uptoDate]);
             }
 
             $data = $data;
-            $data = $data->orderBy("delivery_date","ASC")
-                    ->orderBy("delivery_time","ASC")
-                    ->get();
+            $data = $data->orderBy("delivery_date", "ASC")
+                ->orderBy("delivery_time", "ASC")
+                ->get();
             return responseMsgs(true, "Booking list",  $data, "110115", "1.0", responseTime(), 'POST', $res->deviceId ?? "");
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $res->deviceId ?? "");
         }
     }
 
     public function updatedListDeliveryByDriver(Request $request)
     {
-        try{
+        try {
             $user = $request->auth;
             $key = $request->key;
             $formDate = $uptoDate =  null;
-            if(!$key)
-            {
+            if (!$key) {
                 $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
             }
-            if($request->fromDate && $request->uptoDate)
-            {
+            if ($request->fromDate && $request->uptoDate) {
                 $formDate = $request->fromDate;
                 $uptoDate = $request->uptoData;
             }
-            $data = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type",
-                    "wt_bookings.delivery_track_status","wt_bookings.delivery_comments", "wt_bookings.delivery_latitude",
-                    "wt_bookings.delivery_longitude",
-                    "wt_bookings.driver_delivery_update_date_time","assign_date AS assign_date","wt_bookings.driver_delivery_update_date_time AS update_date_time"
-                    )
-                    ->join("wt_drivers","wt_drivers.id","wt_bookings.driver_id")
-                    ->join("wt_resources","wt_resources.id","wt_bookings.vehicle_id")
-                    ->where("wt_drivers.u_id",$user["id"])
-                    ->where("wt_bookings.status",1)
-                    ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                    ->where('assign_date', '!=', NULL)
-                    ->whereIn('delivery_track_status',[1,2] );
-            
-            $reassign = WtBooking::select("wt_bookings.*","wt_resources.vehicle_name","wt_resources.vehicle_no","wt_resources.resource_type",
-                        "wt_reassign_bookings.delivery_track_status","wt_reassign_bookings.delivery_comments", "wt_reassign_bookings.delivery_latitude",
-                        "wt_reassign_bookings.delivery_longitude",
-                        "wt_reassign_bookings.driver_delivery_update_date_time","re_assign_date AS assign_date",
-                        "wt_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
-                        )
-                        ->join("wt_reassign_bookings","wt_reassign_bookings.application_id","wt_bookings.id")
-                        ->join("wt_drivers","wt_drivers.id","wt_reassign_bookings.driver_id")
-                        ->join("wt_resources","wt_resources.id","wt_reassign_bookings.vehicle_id")
-                        ->where("wt_drivers.u_id",$user["id"])
-                        ->where("wt_bookings.status",1)
-                        ->where("wt_bookings.ulb_id",$user["ulb_id"])
-                        ->where('assign_date', '!=', NULL)
-                        ->whereIn('wt_reassign_bookings.delivery_track_status',[1,2] );
+            $data = WtBooking::select(
+                "wt_bookings.*",
+                "wt_resources.vehicle_name",
+                "wt_resources.vehicle_no",
+                "wt_resources.resource_type",
+                "wt_bookings.delivery_track_status",
+                "wt_bookings.delivery_comments",
+                "wt_bookings.delivery_latitude",
+                "wt_bookings.delivery_longitude",
+                "wt_bookings.driver_delivery_update_date_time",
+                "assign_date AS assign_date",
+                "wt_bookings.driver_delivery_update_date_time AS update_date_time"
+            )
+                ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
+                ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
+                ->where("wt_drivers.u_id", $user["id"])
+                ->where("wt_bookings.status", 1)
+                ->where("wt_bookings.ulb_id", $user["ulb_id"])
+                ->where('assign_date', '!=', NULL)
+                ->whereIn('delivery_track_status', [1, 2]);
 
-            if($key)
-            {
-                $data = $data->where(function($where) use($key){
-                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+            $reassign = WtBooking::select(
+                "wt_bookings.*",
+                "wt_resources.vehicle_name",
+                "wt_resources.vehicle_no",
+                "wt_resources.resource_type",
+                "wt_reassign_bookings.delivery_track_status",
+                "wt_reassign_bookings.delivery_comments",
+                "wt_reassign_bookings.delivery_latitude",
+                "wt_reassign_bookings.delivery_longitude",
+                "wt_reassign_bookings.driver_delivery_update_date_time",
+                "re_assign_date AS assign_date",
+                "wt_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+            )
+                ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
+                ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
+                ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
+                ->where("wt_drivers.u_id", $user["id"])
+                ->where("wt_bookings.status", 1)
+                ->where("wt_bookings.ulb_id", $user["ulb_id"])
+                ->where('assign_date', '!=', NULL)
+                ->whereIn('wt_reassign_bookings.delivery_track_status', [1, 2]);
+
+            if ($key) {
+                $data = $data->where(function ($where) use ($key) {
+                    $where->orWhere("wt_bookings.booking_no", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.applicant_name", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.mobile", "LIKE", "%$key%");
                 });
-                $reassign = $reassign->where(function($where) use($key){
-                    $where->orWhere("wt_bookings.booking_no","LIKE","%$key%")
-                    ->orWhere("wt_bookings.applicant_name","LIKE","%$key%")
-                    ->orWhere("wt_bookings.mobile","LIKE","%$key%");
+                $reassign = $reassign->where(function ($where) use ($key) {
+                    $where->orWhere("wt_bookings.booking_no", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.applicant_name", "LIKE", "%$key%")
+                        ->orWhere("wt_bookings.mobile", "LIKE", "%$key%");
                 });
             }
-            if($formDate && $uptoDate )
-            {
-                $data = $data->whereBetween(DB::raw("cast(wt_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
-                $reassign = $reassign->whereBetween(DB::raw("cast(wt_reassign_bookings.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
+            if ($formDate && $uptoDate) {
+                $data = $data->whereBetween(DB::raw("cast(wt_bookings.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
+                $reassign = $reassign->whereBetween(DB::raw("cast(wt_reassign_bookings.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
             }
 
             $data = $data->union($reassign);
-            $data = $data->orderBy("update_date_time","DESC");
+            $data = $data->orderBy("update_date_time", "DESC");
             $perPage = $request->perPage ? $request->perPage : 10;
             $data = $data->paginate($perPage);
             $f_list = [
@@ -2926,32 +2922,28 @@ class WaterTankerController extends Controller
                 "lastPage" => $data->lastPage(),
                 "total" => $data->total(),
                 "data" => collect($data->items())->map(function ($val) {
-                    $val->booking_date = Carbon::parse( $val->booking_date)->format('d-m-Y');
-                    $val->delivery_date = Carbon::parse( $val->delivery_date)->format('d-m-Y');
-                    $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];
             return responseMsgs(true, "Booking Delivered/Canceled list",  $f_list, "110115", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
-        }
-        catch(Exception $e)
-        {
+        } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
 
     public function driverCanceledList(Request $request)
     {
-        try{
+        try {
             $user = $request->auth;
             $key = $request->key;
             $formDate = $uptoDate =  null;
-            if(!$key)
-            {
+            if (!$key) {
                 $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
             }
-            if($request->fromDate && $request->uptoDate)
-            {
+            if ($request->fromDate && $request->uptoDate) {
                 $formDate = $request->fromDate;
                 $uptoDate = $request->uptoData;
             }
@@ -2959,46 +2951,45 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $mWtReassignBooking = new WtReassignBooking();
             $data = $mWtBooking->getBookingList()
-                    // ->leftJoin(
-                    //     DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
-                    //     function($join){
-                    //         $join->on("reassign.application_id","wb.id");
-                    //     }
-                    //     )
-                    ->where("delivery_track_status",1)
-                    ->where("is_vehicle_sent","<",2)
-                    ->where("wb.ulb_id",$ulbId);
-                    // ->whereNull("reassign.application_id");
-                if($formDate && $uptoDate)
-                {
-                    $data->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"),[$formDate,$uptoDate]);
-                }
-
+                // ->leftJoin(
+                //     DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
+                //     function($join){
+                //         $join->on("reassign.application_id","wb.id");
+                //     }
+                //     )
+                ->where("delivery_track_status", 1)
+                ->where("is_vehicle_sent", "<", 2)
+                ->where("wb.ulb_id", $ulbId);
+            // ->whereNull("reassign.application_id");
+            if ($formDate && $uptoDate) {
+                $data->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
+            }
+            $DocUpload = new DocUpload();
             $perPage = $request->perPage ? $request->perPage : 10;
             $list = $data->paginate($perPage);
             $f_list = [
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
-                "data" => collect($list->items())->map(function ($val) use($mWtReassignBooking) {
-                    $reassign = $mWtReassignBooking->select("wt_reassign_bookings.*","dr.driver_name","res.vehicle_no")
-                                ->leftjoin('wt_drivers as dr', 'wt_reassign_bookings.driver_id', '=', 'dr.id')
-                                ->leftjoin('wt_resources as res', 'wt_reassign_bookings.vehicle_id', '=', 'res.id')
-                                ->where("wt_reassign_bookings.application_id",$val->id)
-                                ->orderBy("wt_reassign_bookings.id","DESC")
-                                ->first();
+                "data" => collect($list->items())->map(function ($val) use ($mWtReassignBooking, $DocUpload) {
+                    $reassign = $mWtReassignBooking->select("wt_reassign_bookings.*", "dr.driver_name", "res.vehicle_no")
+                        ->leftjoin('wt_drivers as dr', 'wt_reassign_bookings.driver_id', '=', 'dr.id')
+                        ->leftjoin('wt_resources as res', 'wt_reassign_bookings.vehicle_id', '=', 'res.id')
+                        ->where("wt_reassign_bookings.application_id", $val->id)
+                        ->orderBy("wt_reassign_bookings.id", "DESC")
+                        ->first();
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                     $val->assign_date = $reassign ? $reassign->re_assign_date : $val->assign_date;
-                    $val->assign_date  = Carbon::parse($val->assign_date )->format('d-m-Y');
-                    $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )": $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    $val->assign_date  = Carbon::parse($val->assign_date)->format('d-m-Y');
+                    $uploadDoc = ($DocUpload->getSingleDocUrl($val));
+                    $val->doc_path = $uploadDoc["doc_path"] ?? "";
+                    $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )" : $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
             ];
             return responseMsgs(true, "Driver Cancel Booking List !!!", $f_list, "110152", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
-        }
-        catch(Exception $e)
-        {
+        } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
@@ -3006,67 +2997,62 @@ class WaterTankerController extends Controller
     public function updateDeliveryTrackStatus(Request $request)
     {
         $rules = [
-            "applicationId"=>'required|digits_between:1,9223372036854775807',
-            "status"=>'required|in:1,2',
-            "comments"=>'required|string|min:10',
-            "latitude"=>'required',
-            "longitude"=>'required',
-            "document"=>'required|mimes:png,jpg,jpeg,gif',
+            "applicationId" => 'required|digits_between:1,9223372036854775807',
+            "status" => 'required|in:1,2',
+            "comments" => 'required|string|min:10',
+            "latitude" => 'required',
+            "longitude" => 'required',
+            "document" => 'required|mimes:png,jpg,jpeg,gif',
         ];
-        $validated = Validator::make($request->all(),$rules);
-        if ($validated->fails()){
+        $validated = Validator::make($request->all(), $rules);
+        if ($validated->fails()) {
             return validationErrorV2($validated);
-        }        
-        try{
+        }
+        try {
             $user = $request->auth;
-            if(!$user || $user["user_type"]!="Driver"){
+            if (!$user || $user["user_type"] != "Driver") {
                 throw new Exception("You are not authorized for this");
             }
-            $driver = WtDriver::where("u_id",$user["id"])->first();
+            $driver = WtDriver::where("u_id", $user["id"])->first();
             $ModelWtBooking =   new WtBooking();
             $booking = $ModelWtBooking->find($request->applicationId);
-            if(!$booking)
-            {
+            if (!$booking) {
                 throw new Exception("booking not fund");
             }
             $reBooking = $booking->getLastReassignedBooking();
             $updateData = $booking;
-            $isReassigned = $reBooking ? true:false;
-            if($updateData->driver_id!=$driver->id)
-            {
+            $isReassigned = $reBooking ? true : false;
+            if ($updateData->driver_id != $driver->id) {
                 throw new Exception("You have not this booking");
             }
             $document = new DocUpload();
             $document = $document->severalDoc($request);
             $document = $document->original["data"];
             $sms = "Delivery Canceled";
-            if($request->status == 2 )
-            {
+            if ($request->status == 2) {
                 $sms = "Delivered Successfully";
             }
-            $updateData->delivery_track_status = $request->status;  
-            $updateData->delivery_latitude = $request->latitude;   
-            $updateData->delivery_longitude = $request->longitude;   
-            $updateData->delivery_comments = $request->comments; 
+            $updateData->delivery_track_status = $request->status;
+            $updateData->delivery_latitude = $request->latitude;
+            $updateData->delivery_longitude = $request->longitude;
+            $updateData->delivery_comments = $request->comments;
             $updateData->driver_delivery_update_date_time = Carbon::now();
-            $updateData->unique_id = $document["document"]["data"]["uniqueId"];    
+            $updateData->unique_id = $document["document"]["data"]["uniqueId"];
             $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
 
-            if($updateData->delivery_track_status==2){
-                $booking->is_vehicle_sent = $updateData->delivery_track_status;    
-                $booking->delivered_by_driver_id = $driver->id; 
-                $booking->driver_delivery_date_time = Carbon::now();            
+            if ($updateData->delivery_track_status == 2) {
+                $booking->is_vehicle_sent = $updateData->delivery_track_status;
+                $booking->delivered_by_driver_id = $driver->id;
+                $booking->driver_delivery_date_time = Carbon::now();
             }
-             
-            DB::beginTransaction();            
-            $updateData->update(); 
+
+            DB::beginTransaction();
+            $updateData->update();
             $booking->update();
-                                                                              
+
             DB::commit();
             return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
-        }
-        catch(Exception $e)
-        {
+        } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         }
@@ -3074,39 +3060,34 @@ class WaterTankerController extends Controller
 
     public function searchApp(Request $req)
     {
-        try{
+        try {
             $user = Auth()->user();
-            $ulbId = $user->ulb_id??null;
+            $ulbId = $user->ulb_id ?? null;
             $key = $req->key;
             $fromDate = $uptoDate = null;
-            if($req->fromDate)
-            {
+            if ($req->fromDate) {
                 $fromDate = $req->fromDate;
             }
-            if($req->uptoDate)
-            {
+            if ($req->uptoDate) {
                 $uptoDate = $req->uptoDate;
             }
             $list = WtBooking::select("*");
-            if($key)
-            {
-                $list=$list->where(function($where)use($key){
-                    $where->orWhere("booking_no","ILIKE","%$key%")
-                    ->orWhere("applicant_name","ILIKE","%$key%")
-                    ->orWhere("mobile","ILIKE","%$key%");
+            if ($key) {
+                $list = $list->where(function ($where) use ($key) {
+                    $where->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
                     // ->orWhere("holding_no","ILIKE","%$key%");                        
                 });
             }
-            if($ulbId)
-            {
-                $list=$list->where("ulb_id",$ulbId);
+            if ($ulbId) {
+                $list = $list->where("ulb_id", $ulbId);
             }
-            if($fromDate && $uptoDate)
-            {
-                $list=$list->whereBetween("booking_date",[$fromDate,$uptoDate]);
+            if ($fromDate && $uptoDate) {
+                $list = $list->whereBetween("booking_date", [$fromDate, $uptoDate]);
             }
-            $list = $list->orderBy("id","DESC");
-            $perPage = $req->perPage ? $req->perPage:10;
+            $list = $list->orderBy("id", "DESC");
+            $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
             $f_list = [
                 "currentPage" => $list->currentPage(),
@@ -3115,64 +3096,43 @@ class WaterTankerController extends Controller
                 "data" => collect($list->items())->map(function ($val) {
                     $val->payment_details = json_decode($val->payment_details);
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-                    $val->cleaning_date = Carbon::parse( $val->cleaning_date)->format('d-m-Y');
-                    $val->assign_date = Carbon::parse( $val->assign_date)->format('d-m-Y');
+                    $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
+                    $val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];
             return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
-        
-        }
-        catch(Exception $e)
-        {
-            return responseMsgs(false,$e->getMessage(),"","POST",$req->deviceId??"");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
         }
     }
 
     public function getAppStatus($appId)
     {
         $booking = WtBooking::find($appId);
-        if(!$booking)
-        {
+        if (!$booking) {
             $booking = WtCancellation::find($appId);
         }
         $driver  = $booking->getAssignedDriver();
         $vehicle  = $booking->getAssignedVehicle();
         $status = "";
-        if($booking->getTable()==(new WtCancellation())->getTable())
-        {
-            $status = "Booking canceled on ".Carbon::parse($booking->cancel_date)->format("d-m-Y")." by ".$booking->cancelled_by;
-        }
-        elseif($booking->payment_status==0)
-        {
-            $status = "Payment Pending of amount ".$booking->payment_amount;
-        }
-        elseif($booking->delivery_track_status==2)
-        {
-            $status = "Water Tanker Delivered On ".Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
-        }
-        elseif($booking->delivery_track_status==1)
-        {
-            $status = "Water Tanker Delivery trip Cancelled By Driver Due To ".Str::title($booking->delivery_comments);
-        }
-        elseif($booking->driver_id && $booking->vehicle_id)
-        {
-            $status = "Driver (".$driver->driver_name.") And Vehicle (".$vehicle->vehicle_no.") assigned";
-        }
-        elseif(!$booking->driver_id && !$booking->vehicle_id)
-        {
+        if ($booking->getTable() == (new WtCancellation())->getTable()) {
+            $status = "Booking canceled on " . Carbon::parse($booking->cancel_date)->format("d-m-Y") . " by " . $booking->cancelled_by;
+        } elseif ($booking->payment_status == 0) {
+            $status = "Payment Pending of amount " . $booking->payment_amount;
+        } elseif ($booking->delivery_track_status == 2) {
+            $status = "Water Tanker Delivered On " . Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
+        } elseif ($booking->delivery_track_status == 1) {
+            $status = "Water Tanker Delivery trip Cancelled By Driver Due To " . Str::title($booking->delivery_comments);
+        } elseif ($booking->driver_id && $booking->vehicle_id) {
+            $status = "Driver (" . $driver->driver_name . ") And Vehicle (" . $vehicle->vehicle_no . ") assigned";
+        } elseif (!$booking->driver_id && !$booking->vehicle_id) {
             $status = "Driver And Vehicle not assigned";
-        }
-        elseif(!$booking->driver_id && $booking->vehicle_id)
-        {
+        } elseif (!$booking->driver_id && $booking->vehicle_id) {
             $status = "Driver is not assigned But Vehicle assigned ";
-        }
-        elseif($booking->driver_id && !$booking->vehicle_id)
-        {
+        } elseif ($booking->driver_id && !$booking->vehicle_id) {
             $status = "Driver is assigned But Vehicle not assigned ";
-        }
-        elseif($booking->is_vehicle_sent =1)
-        {
+        } elseif ($booking->is_vehicle_sent = 1) {
             $status = "Driver is going for delivery";
         }
         return $status;
@@ -3210,7 +3170,7 @@ class WaterTankerController extends Controller
             // Validation---@source-App\Http\Requests\AuthUserRequest
             $user = new User;
             $this->saving($user, $req);                     // Storing data using Auth trait
-            $user->password = Hash::make(($req['password'])??("Basic" . '@' . "12345"));
+            $user->password = Hash::make(($req['password']) ?? ("Basic" . '@' . "12345"));
             $user->save();
             return  $user->id;
         } catch (Exception $e) {
