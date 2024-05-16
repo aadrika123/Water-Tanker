@@ -1915,7 +1915,7 @@ class SepticTankController extends Controller
                 throw new Exception("this application related to another ulb");
             }
             if (in_array($booking->payment_status, [1, 2])) {
-                throw new Exception("Payment Already Don");
+                throw new Exception("Payment Already Done");
             }
             $mTransaction = new StTransaction();
             $idGenrater = new PaymentRepository();
