@@ -2445,7 +2445,9 @@ class WaterTankerController extends Controller
                 if ($req->auth['user_type'] == 'UlbUser')
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
-                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
+                    $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')
+                //->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
+                ->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
 
                 $mWtLocation = new WtLocation();
                 $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
