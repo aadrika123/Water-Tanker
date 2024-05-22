@@ -1713,7 +1713,6 @@ class WaterTankerController extends Controller
         $validator = Validator::make($req->all(), [
             'applicationId' => [
                 "required",
-                "integer",
                 function ($attribute, $value, $fail) {
                     $existsInTable1 = WtBooking::where("id", $value)
                         ->exists();
