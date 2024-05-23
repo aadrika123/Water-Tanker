@@ -1141,12 +1141,14 @@ class WaterTankerController extends Controller
                 ];
                 $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
                 $WtDriver->u_id = $userId;
+                $user = User::find($WtDriver->u_id);
             }
             if ($user) {
                 isset($req->driverEmail) ? $user->email = $req->driverEmail : "";
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
+                $user->suspended = (bool)$WtDriver->status; 
             }
             $WtDriver->save();
             $user ? $user->update() : "";
@@ -1425,7 +1427,9 @@ class WaterTankerController extends Controller
             $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
-            $list = $mWtBooking->assignList()->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
+            $list = $mWtBooking->assignList()
+            ->where('delivery_track_status', '0')
+            ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
             $ulb = collect($this->_ulbs);
             $list = ($list)->where("wb.ulb_id", $ulbId);
 
@@ -3218,3 +3222,4 @@ class WaterTankerController extends Controller
 
     /** ================================================XXXXXXXXXXXXXXXXXXXXXXXXXXX===================================================================== */
 }
+
