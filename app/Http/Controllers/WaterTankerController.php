@@ -1148,7 +1148,7 @@ class WaterTankerController extends Controller
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
-                $user->suspended = (bool)$WtDriver->status; 
+                $user->suspended = !(bool)$WtDriver->status; 
             }
             $WtDriver->save();
             $user ? $user->update() : "";
