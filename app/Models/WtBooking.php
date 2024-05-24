@@ -32,8 +32,8 @@ class WtBooking extends Model
             'booking_no' => $req->bookingNo,
             'payment_amount' => $req->paymentAmount,
             'location_id' => $req->locationId,
-            'booking_latitude' => $req->latitude??null,
-            'booking_longitude' => $req->longitude??null,
+            'booking_latitude' => $req->latitude ?? null,
+            'booking_longitude' => $req->longitude ?? null,
             'user_id' => $req->userId,
             'user_type' => $req->userType,
         ];
@@ -58,12 +58,13 @@ class WtBooking extends Model
     public function getBookingList()
     {
         return DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name',"dr.driver_name","res.vehicle_no")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no","wt_locations.location")
             ->orderBy('wb.ulb_id');
     }
 
@@ -79,8 +80,8 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             // ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
-            ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"),"wtr.application_id","wb.id")
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile',"wtr.application_id")
+            ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id")
             ->where('assign_date', '!=', NULL)
             ->whereNull('wtr.application_id');
     }
@@ -119,7 +120,7 @@ class WtBooking extends Model
     {
         $todayDate = Carbon::now()->format('Y-m-d');
         return self::select('*')->where('delivery_date', $todayDate)
-        ->where('agency_id', $agencyId);
+            ->where('agency_id', $agencyId);
     }
 
 
@@ -128,7 +129,7 @@ class WtBooking extends Model
      */
     public function getRecieptDetails($payId)
     {
-       $details = DB::table('wt_bookings as wb')
+        $details = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
@@ -144,7 +145,7 @@ class WtBooking extends Model
         return $details;
     }
 
-    
+
     /**
      * | Get Payment Details By Payment Id After Payments
      */
@@ -171,30 +172,29 @@ class WtBooking extends Model
 
     public function getReassignedBookingOrm()
     {
-        return $this->hasMany(WtReassignBooking::class,"application_id","id");
+        return $this->hasMany(WtReassignBooking::class, "application_id", "id");
     }
     public function getLastReassignedBooking()
     {
-        return $this->getReassignedBookingOrm()->orderBy("id","DESC")->first();
+        return $this->getReassignedBookingOrm()->orderBy("id", "DESC")->first();
     }
 
     public function getDeliveredDriver()
     {
-        return $this->belongsTo(WtDriver::class,"delivered_by_driver_id","id")->first();
+        return $this->belongsTo(WtDriver::class, "delivered_by_driver_id", "id")->first();
     }
 
     public function getAssignedVehicle()
     {
-        return $this->hasOne(WtResource::class,"id","vehicle_id")->first();
+        return $this->hasOne(WtResource::class, "id", "vehicle_id")->first();
     }
     public function getAssignedDriver()
     {
-        return $this->hasOne(WtDriver::class,"id","driver_id")->first();
+        return $this->hasOne(WtDriver::class, "id", "driver_id")->first();
     }
 
     public function getAllTrans()
     {
-        return $this->hasMany(WtTransaction::class,"booking_id","id")->whereIn("status",[1,2])->orderBy("tran_date","ASC")->orderBy("id","ASC")->get();
+        return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
-
 }
