@@ -241,7 +241,12 @@ class SepticTankController extends Controller
             'driverId.integer' => 'The driver ID must be an integer.',
         ]);
         if ($validator->fails()) {
-            return validationErrorV2($validator);
+            //return validationErrorV2($validator);
+            return response()->json([
+                'success' => false,
+                'message' => 'Please Select Driver And Vehicle',
+                'errors' => $validator->errors()->messages(),
+            ], 422);
         }
         try {
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
