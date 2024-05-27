@@ -222,10 +222,23 @@ class SepticTankController extends Controller
      */
     public function assignmentBooking(Request $req)
     {
+        // $validator = Validator::make($req->all(), [
+        //     'applicationId' => 'required|integer',
+        //     'vehicleId' => 'required|integer',
+        //     'driverId' => 'required|integer',
+        // ]);
+
         $validator = Validator::make($req->all(), [
             'applicationId' => 'required|integer',
             'vehicleId' => 'required|integer',
             'driverId' => 'required|integer',
+        ], [
+            'applicationId.required' => 'The application ID is required.',
+            'applicationId.integer' => 'The application ID must be an integer.',
+            'vehicleId.required' => 'The vehicle ID is required. Please select a vehicle.',
+            'vehicleId.integer' => 'The vehicle ID must be an integer.',
+            'driverId.required' => 'The driver ID is required. Please select a driver.',
+            'driverId.integer' => 'The driver ID must be an integer.',
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
