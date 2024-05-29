@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CashVerificationController;
 use App\Http\Controllers\SepticTankController;
 use App\Http\Controllers\SepticTankerReportController;
 use App\Http\Controllers\WaterTankerController;
@@ -134,7 +135,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/report/dashboard', 'dashBoard');  
             Route::post('water-tanker/report/dashboard-user-wise', 'userWishDashBoard'); 
             
-            //written by Prity Pabdey
+            //written by Prity Pandey
             Route::post('water-tanker/cancle-booking', 'cancleBookingList');
         });
 
@@ -199,6 +200,13 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/offline-payment', 'offlinePayment');
             Route::post('septic-tanker/search-booking', 'searchApp');
         });
+
+         //written by Prity Pandey
+         Route::controller(CashVerificationController::class)->group(function () {
+            Route::post('water-tanker/list-cash-verification', 'cashVerificationList');
+            Route::post('water-tanker/cash-verification-dtl', 'cashVerificationDtl');
+            Route::post('water-tanker/verify-cash', 'verifyCash');
+         });
 
         Route::controller(SepticTankerReportController::class)->group(function () {
             Route::post('septic-tanker/report/collection', 'collationReports');  

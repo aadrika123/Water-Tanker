@@ -15,8 +15,10 @@ return [
     // "ULB_LOGO_URL" => 'http://192.168.0.202:8001/',
     // "PAYMENT_URL" => "http://192.168.0.202:8006/",
     // "ID_GENERATE_URL" => 'http://192.168.0.21:8000/',
+    'WATER_TANKER_TRAN_TYPE'=>'Water Tanker Booking',
+    'SEPTIC_TANKER_TRAN_TYPE'=>'Septic Tanker Booking',
 
-
+"CASH_VERIFICATION_PARAM_ID"=>'22',
     "PARAM_ID" => '35',
     "PARAM_ST_ID" => '36',
     "WATER_TANKER_MODULE_ID"=>"11",
@@ -30,7 +32,8 @@ return [
         "TRN"   => 37,
         "WCD"   => 39,
         "WFC"   => 42,
-        "WPS"   => 43
+        "WPS"   => 43,
+        "CASH_VERIFICATION_PARAM_ID"  => 33,
     ],
     "OFFLINE_PAYMENT_MODS"=>[
         'CASH',

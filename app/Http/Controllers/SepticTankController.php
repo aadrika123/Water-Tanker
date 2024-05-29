@@ -1959,7 +1959,10 @@ class SepticTankController extends Controller
             $mTransaction->paid_amount = $booking->payment_amount;
             $mTransaction->emp_dtl_id = $user->id;
             $mTransaction->emp_user_type = $userType;
-            if (in_array($req->paymentMode, ["CASH"], "ONLINE")) {
+            // if (in_array($req->paymentMode, ["CASH"], "ONLINE")) {
+            //     $mTransaction->status = 2;
+            // }
+            if (Str::upper($mTransaction->payment_mode) != 'CASH') {
                 $mTransaction->status = 2;
             }
 
