@@ -43,4 +43,21 @@ class WtTransaction extends Model
         ->where("wt_transactions.ulb_id",$ulbId)
         ->whereIn("wt_transactions.status",[1,2])->get();
     }
+
+    public function getTransByTranNo($tranNo)
+    {
+        return DB::table('wt_transactions as t')
+            ->select(
+                't.id as transaction_id',
+                't.tran_no as transaction_no',
+                't.paid_amount',
+                't.payment_mode',
+                't.tran_date',
+                't.tran_type as module_name',
+                't.status'
+            )
+            ->where('t.tran_no', $tranNo)
+            ->where('status', 1)
+            ->get();
+    }
 }

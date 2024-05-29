@@ -206,6 +206,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/list-cash-verification', 'cashVerificationList');
             Route::post('water-tanker/cash-verification-dtl', 'cashVerificationDtl');
             Route::post('water-tanker/verify-cash', 'verifyCash');
+            Route::post('water-tanker/search-transaction-no', 'searchTransactionNo');
          });
 
         Route::controller(SepticTankerReportController::class)->group(function () {

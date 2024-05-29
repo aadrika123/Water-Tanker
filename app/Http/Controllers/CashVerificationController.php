@@ -191,6 +191,9 @@ class CashVerificationController extends Controller
             $data['Cash'] = collect($details)->where('payment_mode', '=', 'CASH')->sum('amount');
             $data['date'] = Carbon::parse($date)->format('d-m-Y');
             $data['is_verified'] = false;
+            $data['totalAmount'] =  $details->sum('amount');
+            $data['numberOfTransaction'] =  $details->count();
+            $data['collectorName'] =  collect($details)[0]->user_name;
 
             return responseMsgs(true, "cash Collection", remove_null($data), "012203", "1.0", "", "POST", $request->deviceId ?? "");
         } catch (Exception $e) {
@@ -318,5 +321,30 @@ class CashVerificationController extends Controller
             "transaction_id" => $tranDtl['id']
         ]);
         $RevDailycollectiondetail->store($mReqs);
+    }
+
+    public function searchTransactionNo(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            "transactionNo" => "required",
+            "tranType" => "required|In:Property,Water,Trade,WanterTanker,SepticTanker"
+        ]);
+
+        if ($validator->fails())
+            return validationErrorV2($validator);
+        try {
+            if ($req->tranType == "WanterTanker") {
+                $mWtTransaction = new WtTransaction();
+                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+            }
+            if ($req->tranType == "SepticTanker") {
+                $mWtTransaction = new StTransaction();
+                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+            }
+
+            return responseMsgs(true, "Transaction No is", $transactionDtl, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        }
     }
 }
