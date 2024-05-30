@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\IdGenerator\PrefixIdGenerator;
+use App\MicroServices\DocUpload;
 use App\Models\ForeignModels\RevDailycollection;
 use App\Models\ForeignModels\RevDailycollectiondetail;
 use App\Models\ForeignModels\TempTransaction;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use App\Models\WtTransaction;
 use App\Models\Septic\StTransaction;
+use App\Models\StankTransactionDeactivateDtl;
+use App\Models\WtankTransactionDeactivateDtl;
 use App\Models\WtBooking;
 use Carbon\Carbon;
 use Exception;
@@ -327,23 +330,133 @@ class CashVerificationController extends Controller
     {
         $validator = Validator::make($req->all(), [
             "transactionNo" => "required",
-            "tranType" => "required|In:Property,Water,Trade,WanterTanker,SepticTanker"
+            "tranType" => "required|In:Watertanker,Septictanker"
         ]);
 
         if ($validator->fails())
             return validationErrorV2($validator);
         try {
-            if ($req->tranType == "WanterTanker") {
-                $mWtTransaction = new WtTransaction();
-                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
-            }
-            if ($req->tranType == "SepticTanker") {
-                $mWtTransaction = new StTransaction();
-                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
-            }
 
+            if ($req->tranType == "Watertanker") {
+            $mWtTransaction = new WtTransaction();
+            $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+            }
+            if ($req->tranType == "Septictanker") {
+            $mWtTransaction = new StTransaction();
+            $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+            }
+            //$transactionDtl = collect([$transactionDtlWater, $transactionDtlseptic]);
             return responseMsgs(true, "Transaction No is", $transactionDtl, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        }
+    }
+
+    public function deactivateTransaction(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            "TranId" => "required|integer",                         // Transaction ID
+            "moduleId" => "required|integer"
+
+        ]);
+        if ($validator->fails())
+            return validationErrorV2($validator);
+
+        try {
+            $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
+            $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
+            $transactionId = $req->TranId;
+            $moduleId=$req->moduleId;
+            $docUpload = new DocUpload;
+            $document = $req->document;
+            $refImageName = $req->id . "_" . $req->moduleId . "_" . (Carbon::now()->format("Y-m-d"));
+            $user = Auth()->user();
+            DB::beginTransaction();
+            DB::connection('pgsql_master')->beginTransaction();
+
+            $imageName = "";
+            $deactivationArr = [
+                "tran_id" => $req->TranId,
+                "deactivated_by" => $user->id,
+                "reason" => $req->remarks,
+                "file_path" => $imageName,
+                "deactive_date" => $req->deactiveDate ?? Carbon::now()->format("Y-m-d"),
+            ];
+            if ($req->moduleId == $waterTankerModuleId){
+            $mWtTransaction = new WtTransaction();
+            $mWtTransaction->deactivateTransaction($transactionId);
+            $wtankTranDeativetion = new WtankTransactionDeactivateDtl();
+            $wtankTranDeativetion->create($deactivationArr);
+            TempTransaction::where('transaction_id', $transactionId)
+            ->where('module_id',$moduleId)
+            ->update(['status' => 0]);
+            }
+            if ($req->moduleId == $septicTankerModuleId){
+            $mStTransaction = new StTransaction();
+            $mStTransaction->deactivateTransaction($transactionId);
+            $stankTranDeativetion = new StankTransactionDeactivateDtl();
+            $stankTranDeativetion->create($deactivationArr);
+            TempTransaction::where('transaction_id', $transactionId)
+            ->where('module_id',$moduleId)
+            ->update(['status' => 0]);
+            }
+            DB::commit();
+            DB::connection('pgsql_master')->commit();
+            return responseMsgs(true, "Transaction Deactivated", "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        } catch (Exception $e) {
+            DB::rollBack();
+            DB::connection('pgsql_master')->rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        }
+    }
+
+    public function deactivateTransactionList(Request $req)
+    {
+        
+        try {
+            $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
+            $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
+            $transactionId = $req->TranId;
+            $moduleId=$req->moduleId;
+            $docUpload = new DocUpload;
+            $document = $req->document;
+            $refImageName = $req->id . "_" . $req->moduleId . "_" . (Carbon::now()->format("Y-m-d"));
+            $user = Auth()->user();
+            DB::beginTransaction();
+            DB::connection('pgsql_master')->beginTransaction();
+
+            $imageName = "";
+            $deactivationArr = [
+                "tran_id" => $req->TranId,
+                "deactivated_by" => $user->id,
+                "reason" => $req->remarks,
+                "file_path" => $imageName,
+                "deactive_date" => $req->deactiveDate ?? Carbon::now()->format("Y-m-d"),
+            ];
+            if ($req->moduleId == $waterTankerModuleId){
+            $mWtTransaction = new WtTransaction();
+            $mWtTransaction->deactivateTransaction($transactionId);
+            $wtankTranDeativetion = new WtankTransactionDeactivateDtl();
+            $wtankTranDeativetion->create($deactivationArr);
+            TempTransaction::where('transaction_id', $transactionId)
+            ->where('module_id',$moduleId)
+            ->update(['status' => 0]);
+            }
+            if ($req->moduleId == $septicTankerModuleId){
+            $mStTransaction = new StTransaction();
+            $mStTransaction->deactivateTransaction($transactionId);
+            $stankTranDeativetion = new StankTransactionDeactivateDtl();
+            $stankTranDeativetion->create($deactivationArr);
+            TempTransaction::where('transaction_id', $transactionId)
+            ->where('module_id',$moduleId)
+            ->update(['status' => 0]);
+            }
+            DB::commit();
+            DB::connection('pgsql_master')->commit();
+            return responseMsgs(true, "Transaction Deactivated", "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        } catch (Exception $e) {
+            DB::rollBack();
+            DB::connection('pgsql_master')->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         }
     }

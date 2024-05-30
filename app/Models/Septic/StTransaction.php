@@ -54,7 +54,19 @@ class StTransaction extends Model
                 't.status'
             )
             ->where('t.tran_no', $tranNo)
+            ->where('t.is_verified', false)
             ->where('status', 1)
             ->get();
+    }
+
+    public function deactivateTransaction($transactionId)
+    {
+
+        StTransaction::where('id', $transactionId)
+                        ->update(
+                            [
+                                'status' => 0,
+                            ]
+                        );
     }
 }
