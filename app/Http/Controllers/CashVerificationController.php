@@ -21,98 +21,6 @@ use Illuminate\Support\Facades\Validator;
 
 class CashVerificationController extends Controller
 {
-    // public function cashVerificationList(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'date' => 'required|date',
-    //         'userId' => 'nullable|int'
-    //     ]);
-    //     if ($validator->fails())
-    //         return validationErrorV2($validator);
-    //     try {
-    //         $ulbId = authUser($request)->ulb_id;
-    //         $userId = $request->id;
-    //         $date = date('Y-m-d', strtotime($request->date));
-    //         $waterTankerTranType = Config::get('constants.WATER_TANKER_TRAN_TYPE');
-    //         $septicTankerTranType = Config::get('constants.SEPTIC_TANKER_TRAN_TYPE');
-    //         $mTempTransactionWtank = new WtTransaction();
-    //         $mTempTransactionStank = new StTransaction();
-    //         $waterTankerData = $mTempTransactionWtank->transactionDtl($date)
-    //             ->where('wt_transactions.ulb_id', $ulbId);
-    //         $septicTankerData = $mTempTransactionStank->transactionDtl($date)
-    //             ->where('st_transactions.ulb_id', $ulbId);
-    //         if (isset($userId)) {
-    //             $waterTankerData = $waterTankerData->where('emp_dtl_id', $userId);
-    //             $septicTankerData = $septicTankerData->where('emp_dtl_id', $userId);
-    //         }
-
-    //         $waterTankerData = $waterTankerData->get();
-    //         $septicTankerData = $septicTankerData->get();
-
-    //         $data = $waterTankerData->merge($septicTankerData);
-
-    //         $collection = $data->groupBy("emp_dtl_id");
-
-    //         $data = $collection->map(function ($val) use ($date) {
-    //             $total = $val->sum('paid_amount');
-    //             $wtank = $val->where("tran_type", 'Water Tanker Booking')->sum('paid_amount');
-    //             $stank = $val->where("tran_type", 'Septic Tanker Booking')->sum('paid_amount');
-    //             return [
-    //                 // "id" => $val[0]['emp_dtl_id'],
-    //                 "user_id" => $val[0]['emp_dtl_id'],
-    //                 "user_name" => $val[0]['name'],
-    //                 "waterTanker" => $wtank,
-    //                 "septicTanker" => $stank,
-    //                 "total" => $total,
-    //                 "date" => Carbon::parse($date)->format('d-m-Y'),
-    //                 // "verified_amount" => 0,
-    //             ];
-    //         });
-
-    //         $data = array_values($data->toArray());
-
-    //         return responseMsgs(true, "List cash Verification", $data, "012201", "1.0", "", "POST", $request->deviceId ?? "");
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), "", "012201", "1.0", "", "POST", $request->deviceId ?? "");
-    //     }
-    // }
-
-
-
-    // public function cashVerificationDtl(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         "date" => "required|date",
-    //         "userId" => "required|numeric",
-    //     ]);
-    //     if ($validator->fails())
-    //         return validationErrorV2($validator);
-    //     try {
-    //         $userId =  $request->userId;
-    //         $ulbId =  authUser($request)->ulb_id;
-    //         $date = date('Y-m-d', strtotime($request->date));
-    //         $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
-    //         $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
-    //         $mTempTransactionWtank = new WtTransaction();
-    //         $mTempTransactionStank = new StTransaction();
-
-    //         $details = $mTempTransactionWtank->transactionList($date, $userId, $ulbId);
-    //         $details = ($details)->merge($mTempTransactionStank->transactionList($date, $userId, $ulbId));
-    //         if ($details->isEmpty())
-    //             throw new Exception("No Application Found for this id");
-
-    //         $data['wtank'] = collect($details)->where("tran_type", 'Water Tanker Booking')->values();
-    //         $data['stank'] = collect($details)->where("tran_type", 'Septic Tanker Booking')->values();
-    //         $data['Cash'] = collect($details)->where('payment_mode', '=', 'CASH')->sum('paid_amount');
-    //         $data['date'] = Carbon::parse($date)->format('d-m-Y');
-    //         $data['is_verified'] = false;
-
-    //         return responseMsgs(true, "cash Collection", remove_null($data), "012203", "1.0", "", "POST", $request->deviceId ?? "");
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), "", "012203", "1.0", "", "POST", $request->deviceId ?? "");
-    //     }
-    // }
-
     public function cashVerificationList(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -338,12 +246,12 @@ class CashVerificationController extends Controller
         try {
 
             if ($req->tranType == "Watertanker") {
-            $mWtTransaction = new WtTransaction();
-            $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+                $mWtTransaction = new WtTransaction();
+                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
             }
             if ($req->tranType == "Septictanker") {
-            $mWtTransaction = new StTransaction();
-            $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
+                $mWtTransaction = new StTransaction();
+                $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
             }
             return responseMsgs(true, "Transaction No is", $transactionDtl, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         } catch (Exception $e) {
@@ -356,7 +264,7 @@ class CashVerificationController extends Controller
         $validator = Validator::make($req->all(), [
             "TranId" => "required",                         // Transaction ID
             "moduleId" => "required",
-            "remarks" =>"required|string",
+            "remarks" => "required|string",
             "document" => 'required|mimes:png,jpg,jpeg,gif'
         ]);
         if ($validator->fails())
@@ -366,7 +274,7 @@ class CashVerificationController extends Controller
             $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
             $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
             $transactionId = $req->TranId;
-            $moduleId=$req->moduleId;
+            $moduleId = $req->moduleId;
             $document = new DocUpload();
             $document = $document->severalDoc($req);
             $document = $document->original["data"];
@@ -381,27 +289,27 @@ class CashVerificationController extends Controller
                 "deactivated_by" => $user->id,
                 "reason" => $req->remarks,
                 "file_path" => $imageName,
-                "unique_id"=>$document["document"]["data"]["uniqueId"],
-                "reference_no"=>$document["document"]["data"]["ReferenceNo"],
+                "unique_id" => $document["document"]["data"]["uniqueId"],
+                "reference_no" => $document["document"]["data"]["ReferenceNo"],
                 "deactive_date" => $req->deactiveDate ?? Carbon::now()->format("Y-m-d"),
             ];
-            if ($req->moduleId == $waterTankerModuleId){
-            $mWtTransaction = new WtTransaction();
-            $mWtTransaction->deactivateTransaction($transactionId);
-            $wtankTranDeativetion = new WtankTransactionDeactivateDtl();
-            $wtankTranDeativetion->create($deactivationArr);
-            TempTransaction::where('transaction_id', $transactionId)
-            ->where('module_id',$moduleId)
-            ->update(['status' => 0]);
+            if ($req->moduleId == $waterTankerModuleId) {
+                $mWtTransaction = new WtTransaction();
+                $mWtTransaction->deactivateTransaction($transactionId);
+                $wtankTranDeativetion = new WtankTransactionDeactivateDtl();
+                $wtankTranDeativetion->create($deactivationArr);
+                TempTransaction::where('transaction_id', $transactionId)
+                    ->where('module_id', $moduleId)
+                    ->update(['status' => 0]);
             }
-            if ($req->moduleId == $septicTankerModuleId){
-            $mStTransaction = new StTransaction();
-            $mStTransaction->deactivateTransaction($transactionId);
-            $stankTranDeativetion = new StankTransactionDeactivateDtl();
-            $stankTranDeativetion->create($deactivationArr);
-            TempTransaction::where('transaction_id', $transactionId)
-            ->where('module_id',$moduleId)
-            ->update(['status' => 0]);
+            if ($req->moduleId == $septicTankerModuleId) {
+                $mStTransaction = new StTransaction();
+                $mStTransaction->deactivateTransaction($transactionId);
+                $stankTranDeativetion = new StankTransactionDeactivateDtl();
+                $stankTranDeativetion->create($deactivationArr);
+                TempTransaction::where('transaction_id', $transactionId)
+                    ->where('module_id', $moduleId)
+                    ->update(['status' => 0]);
             }
             DB::commit();
             DB::connection('pgsql_master')->commit();
@@ -413,5 +321,23 @@ class CashVerificationController extends Controller
         }
     }
 
-    
+    public function deactivatedTransactionList(Request $req)
+    {
+        try {
+            $mWtTransaction = new WtTransaction();
+            $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+
+            $mStTransaction = new StTransaction();
+            $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
+
+            $list = [
+                "Wtank" => $transactionDeactivationDtlWtank,
+                "Stank" => $transactionDeactivationDtlStank
+            ];
+
+            return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        }
+    }
 }

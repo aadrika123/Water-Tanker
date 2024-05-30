@@ -75,4 +75,12 @@ class WtTransaction extends Model
                             ]
                         );
     }
+
+    public function getDeactivatedTran()
+    {
+        return self::select("wt_transactions.tran_no","wt_transactions.tran_type","wt_transactions.tran_date","wt_transactions.payment_mode","wtank_transaction_deactivate_dtls.deactive_date","wtank_transaction_deactivate_dtls.reason")
+        ->join('wtank_transaction_deactivate_dtls','wtank_transaction_deactivate_dtls.tran_id','=','wt_transactions.id')
+        ->where("wt_transactions.status",0)
+        ->get();
+    }
 }
