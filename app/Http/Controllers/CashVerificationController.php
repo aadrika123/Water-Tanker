@@ -345,6 +345,11 @@ class CashVerificationController extends Controller
             $mWtTransaction = new StTransaction();
             $transactionDtl = $mWtTransaction->getTransByTranNo($req->transactionNo);
             }
+            // if ($transactionDtl->module_name == "Water Tanker Booking") {
+            //     $transactionDtl["module_id"] = 11;
+            // } else {
+            //     $transactionDtl["module_id"] = 16;
+            // }
             //$transactionDtl = collect([$transactionDtlWater, $transactionDtlseptic]);
             return responseMsgs(true, "Transaction No is", $transactionDtl, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         } catch (Exception $e) {
