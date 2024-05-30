@@ -54,11 +54,13 @@ class WtTransaction extends Model
                 't.payment_mode',
                 't.tran_date',
                 't.tran_type as module_name',
-                't.status'
+                't.status',
+                'wt_bookings.booking_no'
             )
+            ->join('wt_bookings','wt_bookings.id','=','t.booking_id')
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
-            ->where('status', 1)
+            ->where('t.status', 1)
             ->get();
     }
 

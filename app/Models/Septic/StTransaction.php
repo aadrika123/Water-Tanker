@@ -51,11 +51,13 @@ class StTransaction extends Model
                 't.payment_mode',
                 't.tran_date',
                 't.tran_type as module_name',
-                't.status'
+                't.status',
+                'st_bookings.booking_no'
             )
+            ->join('st_bookings','st_bookings.id','=','t.booking_id')
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
-            ->where('status', 1)
+            ->where('t.status', 1)
             ->get();
     }
 

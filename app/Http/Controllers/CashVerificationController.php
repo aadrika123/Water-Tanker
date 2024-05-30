@@ -356,8 +356,9 @@ class CashVerificationController extends Controller
     {
         $validator = Validator::make($req->all(), [
             "TranId" => "required|integer",                         // Transaction ID
-            "moduleId" => "required|integer"
-
+            "moduleId" => "required|integer",
+            "remarks" =>"required|string",
+            "document" => 'required|mimes:png,jpg,jpeg,gif'
         ]);
         if ($validator->fails())
             return validationErrorV2($validator);
@@ -367,8 +368,9 @@ class CashVerificationController extends Controller
             $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
             $transactionId = $req->TranId;
             $moduleId=$req->moduleId;
-            $docUpload = new DocUpload;
-            $document = $req->document;
+            $document = new DocUpload();
+            $document = $document->severalDoc($req);
+            $document = $document->original["data"];
             $refImageName = $req->id . "_" . $req->moduleId . "_" . (Carbon::now()->format("Y-m-d"));
             $user = Auth()->user();
             DB::beginTransaction();
@@ -380,6 +382,8 @@ class CashVerificationController extends Controller
                 "deactivated_by" => $user->id,
                 "reason" => $req->remarks,
                 "file_path" => $imageName,
+                "unique_id"=>$document["document"]["data"]["uniqueId"],
+                "reference_no"=>$document["document"]["data"]["ReferenceNo"],
                 "deactive_date" => $req->deactiveDate ?? Carbon::now()->format("Y-m-d"),
             ];
             if ($req->moduleId == $waterTankerModuleId){
