@@ -502,19 +502,7 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
                 ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            // if ($paymentMode && $paymentMode != 'ALL') {
-            //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
-            // }
-            // if($paymentMode == 'ALL'){
-            //     $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
-            // }else{
-            //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
-            // }
-            if ($paymentMode == 'ALL') {
-                $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
-                    // ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
-            }
-            if ($paymentMode != 'ALL') {
+            if ($paymentMode && $paymentMode != 'ALL') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
@@ -526,19 +514,7 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
                 ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            // if ($paymentMode && $paymentMode != 'All') {
-            //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
-            // }
-            // if ($paymentMode == 'ALL') {
-            //     $transactionDeactivationDtlStank = $mWtTransaction->getDeactivatedTran();
-            // } else {
-            //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
-            // }
-            if ($paymentMode == 'ALL') {
-                $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
-                //->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
-            }
-            if ($paymentMode != 'ALL') {
+            if ($paymentMode && $paymentMode != 'All') {
                 $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
