@@ -502,7 +502,7 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
                 ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            if ($paymentMode && $paymentMode != 'All') {
+            if ($paymentMode && $paymentMode != 'ALL') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
