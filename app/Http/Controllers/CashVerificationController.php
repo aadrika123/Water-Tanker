@@ -321,46 +321,6 @@ class CashVerificationController extends Controller
         }
     }
 
-    // public function deactivatedTransactionList(Request $req)
-    // {
-    //     $validator = Validator::make($req->all(), [
-    //         'fromDate' => 'nullable',
-    //         'uptoDate' => 'nullable',
-    //         'paymentMode' => 'nullable',
-    //         'transactionNo' => 'nullable'
-    //     ]);
-    //     if ($validator->fails())
-    //         return validationErrorV2($validator);
-    //     try {
-    //         $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
-    //         $mWtTransaction = new WtTransaction();
-    //         $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
-    //         if ($req->fromDate) {
-    //             $fromDate = $req->fromDate;
-    //         }
-    //         if ($req->uptoDate) {
-    //             $uptoDate = $req->uptoDate;
-    //         }
-    //         if ($req->paymentMode) {
-    //             $paymentMode = $req->paymentMode;
-    //         }
-    //         if ($req->transactionNo) {
-    //             $paymentMode = $req->transactionNo;
-    //         }
-    //         $transactionDeactivationDtlWtank->where('') 
-
-    //         $mStTransaction = new StTransaction();
-    //         $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
-
-    //         $list["Wtank"] = $transactionDeactivationDtlWtank;
-    //         $list["Stank"] = $transactionDeactivationDtlStank;
-
-    //         return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
-    //     }
-    // }
-
     public function deactivatedTransactionList(Request $req)
     {
         $validator = Validator::make($req->all(), [

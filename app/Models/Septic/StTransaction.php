@@ -75,8 +75,10 @@ class StTransaction extends Model
 
     public function getDeactivatedTran()
     {
-       return self::select("st_transactions.tran_no","st_transactions.tran_type","st_transactions.tran_date","st_transactions.payment_mode","stank_transaction_deactivate_dtls.deactive_date","stank_transaction_deactivate_dtls.reason")
+       return self::select("st_transactions.tran_no","st_transactions.tran_type","st_transactions.tran_date","st_transactions.payment_mode","stank_transaction_deactivate_dtls.deactive_date","stank_transaction_deactivate_dtls.reason","st_transactions.paid_amount","st_bookings.booking_no","users.name as deactivated_by")
         ->join('stank_transaction_deactivate_dtls','stank_transaction_deactivate_dtls.tran_id','=','st_transactions.id')
+        ->join('st_bookings','st_bookings.id','=','st_transactions.booking_id')
+        ->join('users','users.id','=','stank_transaction_deactivate_dtls.deactivated_by')
         ->where("st_transactions.status",0);
         //->get();
     }

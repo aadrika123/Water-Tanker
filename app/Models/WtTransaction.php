@@ -78,8 +78,10 @@ class WtTransaction extends Model
 
     public function getDeactivatedTran()
     {
-        return self::select("wt_transactions.tran_no","wt_transactions.tran_type","wt_transactions.tran_date","wt_transactions.payment_mode","wtank_transaction_deactivate_dtls.deactive_date","wtank_transaction_deactivate_dtls.reason")
+        return self::select("wt_transactions.tran_no","wt_transactions.tran_type","wt_transactions.tran_date","wt_transactions.payment_mode","wtank_transaction_deactivate_dtls.deactive_date","wtank_transaction_deactivate_dtls.reason","wt_transactions.paid_amount","wt_bookings.booking_no","users.name as deactivated_by")
         ->join('wtank_transaction_deactivate_dtls','wtank_transaction_deactivate_dtls.tran_id','=','wt_transactions.id')
+        ->join('wt_bookings','wt_bookings.id','=','wt_transactions.booking_id')
+        ->join('users','users.id','=','wtank_transaction_deactivate_dtls.deactivated_by')
         ->where("wt_transactions.status",0);
         //->get();
     }
