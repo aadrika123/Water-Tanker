@@ -485,7 +485,7 @@ class CashVerificationController extends Controller
         $validator = Validator::make($req->all(), [
             "fromDate" => "nullable|date|date_format:Y-m-d",
             "uptoDate" => "nullable|date|date_format:Y-m-d",
-            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,All',
+            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT',
             'transactionNo' => 'nullable|string'
         ]);
         if ($validator->fails())
