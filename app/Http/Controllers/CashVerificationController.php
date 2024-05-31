@@ -63,6 +63,8 @@ class CashVerificationController extends Controller
                     "wtank" => $wtank,
                     "stank" => $stank,
                     "total" => $total,
+                    "wtankTotal" => $wtank,
+                    "stankTotal" => $stank,
                     "date" => Carbon::parse($date)->format('d-m-Y'),
                     // "verified_amount" => 0,
                 ];
@@ -99,10 +101,16 @@ class CashVerificationController extends Controller
 
             $data['wtank'] = collect($details)->where("module_id", $waterTankerModuleId)->values();
             $data['stank'] = collect($details)->where("module_id", $septicTankerModuleId)->values();
-            $data['Cash'] = collect($details)->where('payment_mode', '=', 'CASH')->sum('amount');
+            //$data['Cash'] = collect($details)->where('payment_mode', '=', 'CASH')->sum('amount');
+            $data['WCash'] = collect($details)->where("module_id", $waterTankerModuleId)
+                ->where('payment_mode', '=', 'CASH')->sum('amount');
+            $data['SCash'] = collect($details)->where("module_id", $septicTankerModuleId)
+                ->where('payment_mode', '=', 'CASH')->sum('amount');
             $data['date'] = Carbon::parse($date)->format('d-m-Y');
             $data['is_verified'] = false;
-            $data['totalAmount'] =  $details->sum('amount');
+            //$data['totalAmount'] =  $details->sum('amount');
+            $data['WtotalAmount'] = $details->where("module_id", $waterTankerModuleId)->sum('amount');
+            $data['StotalAmount'] = $details->where("module_id", $septicTankerModuleId)->sum('amount');
             $data['numberOfTransaction'] =  $details->count();
             $data['collectorName'] =  collect($details)[0]->user_name;
 
@@ -321,6 +329,67 @@ class CashVerificationController extends Controller
         }
     }
 
+    // public function deactivatedTransactionList(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         "fromDate" => "nullable|date|date_format:Y-m-d",
+    //         "uptoDate" => "nullable|date|date_format:Y-m-d",
+    //         'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,All',
+    //         'transactionNo' => 'nullable|string'
+    //     ]);
+    //     if ($validator->fails())
+    //         return validationErrorV2($validator);
+
+    //     try {
+    //         $fromDate = $req->fromDate ?? Carbon::now()->format("Y-m-d");
+    //         $uptoDate = $req->uptoDate ?? Carbon::now()->format("Y-m-d");
+    //         $paymentMode = $req->paymentMode ?? null;
+    //         $transactionNo = $req->transactionNo ?? null;
+
+    //         // Get deactivated transactions for water tankers
+    //         $mWtTransaction = new WtTransaction();
+    //         $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
+    //             ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+
+    //         // if ($paymentMode) {
+    //         //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+    //         // }
+    //         if ($paymentMode && $paymentMode != 'All') {
+    //             $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+    //         }
+    //         if ($transactionNo) {
+    //             $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
+    //         }
+    //         $mStTransaction = new StTransaction();
+    //         $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
+    //             ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
+
+    //         // if ($paymentMode) {
+    //         //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+    //         // }
+    //         if ($paymentMode && $paymentMode != 'All') {
+    //             $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+    //         }
+    //         if ($transactionNo) {
+    //             $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
+    //         }
+    //         $query = $transactionDeactivationDtlWtank->union($transactionDeactivationDtlStank);
+    //         $perPage = $req->perPge ?? 10;
+    //         $page = $req->input('page', 1);
+    //         $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+    //         $list = [
+    //             "current_page" => $data->currentPage(),
+    //             "last_page" => $data->lastPage(),
+    //             "data" => $data->items(),
+    //             "total" => $data->total(),
+    //         ];
+    //         return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+    //     }
+    // }
+
     public function deactivatedTransactionList(Request $req)
     {
         $validator = Validator::make($req->all(), [
@@ -343,39 +412,51 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
                 ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            // if ($paymentMode) {
-            //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
-            // }
             if ($paymentMode && $paymentMode != 'All') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
             }
+
+            // Get deactivated transactions for septic tankers
             $mStTransaction = new StTransaction();
             $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
                 ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            // if ($paymentMode) {
-            //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
-            // }
             if ($paymentMode && $paymentMode != 'All') {
-                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
             }
-            $query = $transactionDeactivationDtlWtank->union($transactionDeactivationDtlStank);
-            $perPage = $req->perPge ?? 10;
+
+            $perPage = $req->perPage ?? 10;
             $page = $req->input('page', 1);
-            $data = $query->paginate($perPage, ['*'], 'page', $page);
+
+            // Paginate water tanker transactions
+            $wtankData = $transactionDeactivationDtlWtank->paginate($perPage, ['*'], 'wtankPage', $page);
+            $wtankList = [
+                "current_page" => $wtankData->currentPage(),
+                "last_page" => $wtankData->lastPage(),
+                "data" => $wtankData->items(),
+                "total" => $wtankData->total(),
+            ];
+
+            // Paginate septic tanker transactions
+            $stankData = $transactionDeactivationDtlStank->paginate($perPage, ['*'], 'stankPage', $page);
+            $stankList = [
+                "current_page" => $stankData->currentPage(),
+                "last_page" => $stankData->lastPage(),
+                "data" => $stankData->items(),
+                "total" => $stankData->total(),
+            ];
 
             $list = [
-                "current_page" => $data->currentPage(),
-                "last_page" => $data->lastPage(),
-                "data" => $data->items(),
-                "total" => $data->total(),
+                "wtank" => $wtankList,
+                "stank" => $stankList
             ];
+
             return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
