@@ -321,20 +321,95 @@ class CashVerificationController extends Controller
         }
     }
 
+    // public function deactivatedTransactionList(Request $req)
+    // {
+    //     $validator = Validator::make($req->all(), [
+    //         'fromDate' => 'nullable',
+    //         'uptoDate' => 'nullable',
+    //         'paymentMode' => 'nullable',
+    //         'transactionNo' => 'nullable'
+    //     ]);
+    //     if ($validator->fails())
+    //         return validationErrorV2($validator);
+    //     try {
+    //         $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
+    //         $mWtTransaction = new WtTransaction();
+    //         $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+    //         if ($req->fromDate) {
+    //             $fromDate = $req->fromDate;
+    //         }
+    //         if ($req->uptoDate) {
+    //             $uptoDate = $req->uptoDate;
+    //         }
+    //         if ($req->paymentMode) {
+    //             $paymentMode = $req->paymentMode;
+    //         }
+    //         if ($req->transactionNo) {
+    //             $paymentMode = $req->transactionNo;
+    //         }
+    //         $transactionDeactivationDtlWtank->where('') 
+
+    //         $mStTransaction = new StTransaction();
+    //         $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
+
+    //         $list["Wtank"] = $transactionDeactivationDtlWtank;
+    //         $list["Stank"] = $transactionDeactivationDtlStank;
+
+    //         return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+    //     }
+    // }
+
     public function deactivatedTransactionList(Request $req)
     {
-        try {
-            $mWtTransaction = new WtTransaction();
-            $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+        $validator = Validator::make($req->all(), [
+            'fromDate' => 'nullable|date',
+            'uptoDate' => 'nullable|date',
+            'paymentMode' => 'nullable|string',
+            'transactionNo' => 'nullable|string'
+        ]);
+        if ($validator->fails())
+            return validationErrorV2($validator);
 
+        try {
+            $fromDate = $req->fromDate ?? Carbon::now()->format("Y-m-d");
+            $uptoDate = $req->uptoDate ?? Carbon::now()->format("Y-m-d");
+            $paymentMode = $req->paymentMode ?? null;
+            $transactionNo = $req->transactionNo ?? null;
+
+            // Get deactivated transactions for water tankers
+            $mWtTransaction = new WtTransaction();
+            $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
+                ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+
+            if ($paymentMode) {
+                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+            }
+            if ($transactionNo) {
+                $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
+            }
             $mStTransaction = new StTransaction();
-            $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
+            $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
+                ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
+
+            if ($paymentMode) {
+                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            }
+            if ($transactionNo) {
+                $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
+            }
+            $query = $transactionDeactivationDtlWtank->union($transactionDeactivationDtlStank);
+            $perPage = $req->perPge ?? 10;
+            $page = $req->input('page', 1);
+            $data = $query->paginate($perPage, ['*'], 'page', $page);
 
             $list = [
-                "Wtank" => $transactionDeactivationDtlWtank,
-                "Stank" => $transactionDeactivationDtlStank
+                "current_page" => $data->currentPage(),
+                "last_page" => $data->lastPage(),
+                "data" => $data->items(),
+                "total" => $data->total(),
             ];
-
             return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);

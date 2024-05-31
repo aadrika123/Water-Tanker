@@ -77,7 +77,7 @@ class StTransaction extends Model
     {
        return self::select("st_transactions.tran_no","st_transactions.tran_type","st_transactions.tran_date","st_transactions.payment_mode","stank_transaction_deactivate_dtls.deactive_date","stank_transaction_deactivate_dtls.reason")
         ->join('stank_transaction_deactivate_dtls','stank_transaction_deactivate_dtls.tran_id','=','st_transactions.id')
-        ->where("st_transactions.status",0)
-        ->get();
+        ->where("st_transactions.status",0);
+        //->get();
     }
 }
