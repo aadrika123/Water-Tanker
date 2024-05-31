@@ -7,6 +7,7 @@ use App\MicroServices\DocUpload;
 use App\Models\ForeignModels\RevDailycollection;
 use App\Models\ForeignModels\RevDailycollectiondetail;
 use App\Models\ForeignModels\TempTransaction;
+use App\Models\Septic\StBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use App\Models\WtTransaction;
@@ -377,21 +378,36 @@ class CashVerificationController extends Controller
             ];
             if ($req->moduleId == $waterTankerModuleId) {
                 $mWtTransaction = new WtTransaction();
+                $transaction = $mWtTransaction->find($transactionId);
+                if (!$transaction) {
+                    throw new Exception("Transaction not found");
+                }
+                $bookingId = $transaction->booking_id;
                 $mWtTransaction->deactivateTransaction($transactionId);
+
                 $wtankTranDeativetion = new WtankTransactionDeactivateDtl();
                 $wtankTranDeativetion->create($deactivationArr);
                 TempTransaction::where('transaction_id', $transactionId)
                     ->where('module_id', $moduleId)
                     ->update(['status' => 0]);
+                WtBooking::where('id', $bookingId)
+                    ->update(['payment_status' => 0]);
             }
             if ($req->moduleId == $septicTankerModuleId) {
                 $mStTransaction = new StTransaction();
+                $transaction = $mStTransaction->find($transactionId);
+                if (!$transaction) {
+                    throw new Exception("Transaction not found");
+                }
+                $bookingId = $transaction->booking_id;
                 $mStTransaction->deactivateTransaction($transactionId);
                 $stankTranDeativetion = new StankTransactionDeactivateDtl();
                 $stankTranDeativetion->create($deactivationArr);
                 TempTransaction::where('transaction_id', $transactionId)
                     ->where('module_id', $moduleId)
                     ->update(['status' => 0]);
+                StBooking::where('id', $bookingId)
+                    ->update(['payment_status' => 0]);
             }
             DB::commit();
             DB::connection('pgsql_master')->commit();
