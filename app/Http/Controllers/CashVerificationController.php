@@ -523,9 +523,9 @@ class CashVerificationController extends Controller
             //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
             // }
             if($paymentMode == 'ALL'){
-                $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+                $transactionDeactivationDtlStank = $mWtTransaction->getDeactivatedTran();
             }else{
-                $transactionDeactivationDtlWtank->where('st_transactions.payment_mode', $paymentMode);
+                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
