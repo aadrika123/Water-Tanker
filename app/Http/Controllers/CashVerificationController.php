@@ -485,7 +485,7 @@ class CashVerificationController extends Controller
         $validator = Validator::make($req->all(), [
             "fromDate" => "nullable|date|date_format:Y-m-d",
             "uptoDate" => "nullable|date|date_format:Y-m-d",
-            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT',
+            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,ALL',
             'transactionNo' => 'nullable|string'
         ]);
         if ($validator->fails())
@@ -505,8 +505,10 @@ class CashVerificationController extends Controller
             // if ($paymentMode && $paymentMode != 'ALL') {
             //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             // }
-            if($paymentMode = 'ALL'){
+            if($paymentMode == 'ALL'){
                 $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+            }else{
+                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
@@ -517,8 +519,13 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
                 ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            if ($paymentMode && $paymentMode != 'All') {
-                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            // if ($paymentMode && $paymentMode != 'All') {
+            //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            // }
+            if($paymentMode == 'ALL'){
+                $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+            }else{
+                $transactionDeactivationDtlWtank->where('st_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
