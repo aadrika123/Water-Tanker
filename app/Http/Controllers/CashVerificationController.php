@@ -21,6 +21,64 @@ use Illuminate\Support\Facades\Validator;
 
 class CashVerificationController extends Controller
 {
+    // public function cashVerificationList(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'date' => 'nullable|date',
+    //         'userId' => 'nullable|int'
+    //     ]);
+    //     if ($validator->fails())
+    //         return validationErrorV2($validator);
+    //     try {
+    //         $ulbId =  Auth()->user()->ulb_id;
+    //         $userId =  $request->userId;
+    //         $date = date('Y-m-d', strtotime($request->date));
+    //         $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
+    //         $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
+    //         $mTempTransaction =  new TempTransaction();
+    //         $zoneId = $request->zone;
+    //         $wardId = $request->wardId;
+
+    //         $data = $mTempTransaction->transactionDtl($date, $ulbId);
+    //         if ($userId) {
+    //             $data = $data->where('user_id', $userId);
+    //         }
+    //         if ($zoneId) {
+    //             $data = $data->where('ulb_ward_masters.zone', $zoneId);
+    //         }
+    //         if ($wardId) {
+    //             $data = $data->where('ulb_ward_masters.id', $wardId);
+    //         }
+    //         $data = $data->get();
+
+    //         $collection = collect($data->groupBy("user_id")->all());
+
+    //         $data = $collection->map(function ($val) use ($date, $waterTankerModuleId, $septicTankerModuleId) {
+    //             $total =  $val->sum('amount');
+    //             $wtank = $val->where("module_id", $waterTankerModuleId)->sum('amount');
+    //             $stank = $val->where("module_id", $septicTankerModuleId)->sum('amount');
+    //             return [
+    //                 "id" => $val[0]['user_id'],
+    //                 "user_name" => $val[0]['name'],
+    //                 "wtank" => $wtank,
+    //                 "stank" => $stank,
+    //                 "total" => $total,
+    //                 "wtankTotal" => $wtank,
+    //                 "stankTotal" => $stank,
+    //                 "date" => Carbon::parse($date)->format('d-m-Y'),
+    //                 // "verified_amount" => 0,
+    //             ];
+    //         });
+
+    //         $data = (array_values(objtoarray($data)));
+    //         return responseMsgs(true, "List cash Verification", $data, "010201", "1.0", "", "POST", $request->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "010201", "1.0", "", "POST", $request->deviceId ?? "");
+    //     }
+    // }
+
+
+
     public function cashVerificationList(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -29,6 +87,7 @@ class CashVerificationController extends Controller
         ]);
         if ($validator->fails())
             return validationErrorV2($validator);
+
         try {
             $ulbId =  Auth()->user()->ulb_id;
             $userId =  $request->userId;
@@ -53,29 +112,44 @@ class CashVerificationController extends Controller
 
             $collection = collect($data->groupBy("user_id")->all());
 
-            $data = $collection->map(function ($val) use ($date, $waterTankerModuleId, $septicTankerModuleId) {
-                $total =  $val->sum('amount');
+            $Wdata = $collection->map(function ($val) use ($date, $waterTankerModuleId) {
+                //$total =  $val->sum('amount');
                 $wtank = $val->where("module_id", $waterTankerModuleId)->sum('amount');
-                $stank = $val->where("module_id", $septicTankerModuleId)->sum('amount');
                 return [
                     "id" => $val[0]['user_id'],
                     "user_name" => $val[0]['name'],
                     "wtank" => $wtank,
-                    "stank" => $stank,
-                    "total" => $total,
-                    "wtankTotal" => $wtank,
-                    "stankTotal" => $stank,
+                    "total" => $wtank,
                     "date" => Carbon::parse($date)->format('d-m-Y'),
                     // "verified_amount" => 0,
                 ];
-            });
+            })->values(); // Use values() to get rid of the keys.
 
-            $data = (array_values(objtoarray($data)));
+            $Sdata = $collection->map(function ($val) use ($date, $septicTankerModuleId) {
+                //$total =  $val->sum('amount');
+                $stank = $val->where("module_id", $septicTankerModuleId)->sum('amount');
+                return [
+                    "id" => $val[0]['user_id'],
+                    "user_name" => $val[0]['name'],
+                    "stank" => $stank,
+                    "total" => $stank,
+                    "date" => Carbon::parse($date)->format('d-m-Y'),
+                    // "verified_amount" => 0,
+                ];
+            })->values(); // Use values() to get rid of the keys.
+
+            $data = [
+                "wtank" => $Wdata,
+                "stank" => $Sdata
+            ];
+
             return responseMsgs(true, "List cash Verification", $data, "010201", "1.0", "", "POST", $request->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "010201", "1.0", "", "POST", $request->deviceId ?? "");
         }
     }
+
+
 
 
 
