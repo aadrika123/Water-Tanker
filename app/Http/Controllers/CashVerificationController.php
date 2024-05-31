@@ -326,7 +326,7 @@ class CashVerificationController extends Controller
         $validator = Validator::make($req->all(), [
             "fromDate" => "nullable|date|date_format:Y-m-d",
             "uptoDate" => "nullable|date|date_format:Y-m-d",
-            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT',
+            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,All',
             'transactionNo' => 'nullable|string'
         ]);
         if ($validator->fails())
@@ -343,7 +343,10 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
                 ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            if ($paymentMode) {
+            // if ($paymentMode) {
+            //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+            // }
+            if ($paymentMode && $paymentMode != 'All') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
@@ -353,8 +356,11 @@ class CashVerificationController extends Controller
             $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
                 ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
 
-            if ($paymentMode) {
-                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            // if ($paymentMode) {
+            //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            // }
+            if ($paymentMode && $paymentMode != 'All') {
+                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             }
             if ($transactionNo) {
                 $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
