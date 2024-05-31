@@ -324,9 +324,9 @@ class CashVerificationController extends Controller
     public function deactivatedTransactionList(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'fromDate' => 'nullable|date',
-            'uptoDate' => 'nullable|date',
-            'paymentMode' => 'nullable|string',
+            "fromDate" => "nullable|date|date_format:Y-m-d",
+            "uptoDate" => "nullable|date|date_format:Y-m-d",
+            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT',
             'transactionNo' => 'nullable|string'
         ]);
         if ($validator->fails())
