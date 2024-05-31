@@ -511,8 +511,8 @@ class CashVerificationController extends Controller
             //     $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
             // }
             if ($paymentMode == 'ALL') {
-                $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
-                    ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+                $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran();
+                    // ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
             }
             if ($paymentMode != 'ALL') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
@@ -535,8 +535,8 @@ class CashVerificationController extends Controller
             //     $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
             // }
             if ($paymentMode == 'ALL') {
-                $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
-                ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
+                $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran();
+                //->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
             }
             if ($paymentMode != 'ALL') {
                 $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
