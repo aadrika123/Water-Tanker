@@ -348,7 +348,7 @@ class CashVerificationController extends Controller
             "TranId" => "required",                         // Transaction ID
             "moduleId" => "required",
             "remarks" => "required|string",
-            "document" => 'required|mimes:png,jpg,jpeg,gif'
+            "document" => 'required|mimes:png,jpg,jpeg,gif,pdf'
         ]);
         if ($validator->fails())
             return validationErrorV2($validator);
