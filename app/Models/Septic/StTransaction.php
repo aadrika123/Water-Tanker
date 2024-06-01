@@ -96,6 +96,7 @@ class StTransaction extends Model
                 't.tran_type as module_name',
                 't.status',
                 'st_bookings.booking_no',
+                'st_bookings.id as booking_id',
                 DB::raw("CASE WHEN t.tran_type = 'Water Tanker Booking' THEN 11 ELSE 16 END AS module_id")
             )
             ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
