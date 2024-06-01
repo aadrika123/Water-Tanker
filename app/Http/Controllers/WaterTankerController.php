@@ -2984,9 +2984,9 @@ class WaterTankerController extends Controller
             if (!$key) {
                 $formDate = $uptoDate = Carbon::now()->format("Y-m-d");
             }
-            if ($request->fromDate && $request->uptoDate) {
+            if ($request->fromDate && $request->toDate) {
                 $formDate = $request->fromDate;
-                $uptoDate = $request->uptoData;
+                $uptoDate = $request->toDate;
             }
             $ulbId = $user["ulb_id"];
             $mWtBooking = new WtBooking();
