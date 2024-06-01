@@ -100,6 +100,7 @@ class WtTransaction extends Model
                 't.status',
                 'wt_bookings.booking_no',
                 'wt_bookings.id as booking_id',
+                'wt_bookings.applicant_name',
                 DB::raw("CASE WHEN t.tran_type = 'Water Tanker Booking' THEN 11 ELSE 16 END AS module_id")
             )
             ->join('wt_bookings', 'wt_bookings.id', '=', 't.booking_id')
