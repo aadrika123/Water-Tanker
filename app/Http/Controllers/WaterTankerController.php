@@ -2107,8 +2107,8 @@ class WaterTankerController extends Controller
     public function listDeliveredBooking(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'fromDate' => 'required|date_format:Y-m-d|before_or_equal:' . date('Y-m-d'),
-            'toDate' => 'required|date_format:Y-m-d|after_or_equal:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            'fromDate' => 'nullable|date_format:Y-m-d',
+            'toDate' => 'nullable|date_format:Y-m-d|after_or_equal:fromDate'
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
@@ -2116,11 +2116,20 @@ class WaterTankerController extends Controller
         try {
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
-            // Variable initialization
+            // Variable initialization  
+            if (!isset($req->fromDate))
+                $fromDate = Carbon::now()->format('Y-m-d');                                                
+            else
+                $fromDate = $req->fromDate;
+            if (!isset($req->toDate))
+                $toDate = Carbon::now()->format('Y-m-d');                                              
+            else
+                $toDate = $req->toDate;
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
                 ->where(['wb.ulb_id' => $req->auth['ulb_id'], 'is_vehicle_sent' => '2'])
                 // ->where()
+                ->whereBetween('wb.booking_date', [$fromDate, $toDate])
                 ->orderByDesc('id')
                 ->get();
 
