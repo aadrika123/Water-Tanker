@@ -85,4 +85,10 @@ class WtTransaction extends Model
         ->where("wt_transactions.status",0);
         //->get();
     }
+
+    public function Tran()
+    {
+       return self::select("wt_transactions.*")
+       ->where("status",1);
+    }
 }

@@ -65,7 +65,7 @@ class StBooking extends Model
         return DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
-            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"),"str.application_id","stb.id")
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->select('stb.*', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id');
     }
@@ -83,7 +83,8 @@ class StBooking extends Model
      */
     public function getPaymentDetails($payId)
     {
-        $details = DB::table('st_bookings as sb')->select('*')
+        $details = DB::table('st_bookings as sb')
+            ->join('st_transactions', 'st_transactions.booking_id', '=', 'sb.id')->select('*', 'st_transactions.id as tran_id')
             ->where('sb.payment_id', $payId)
             ->first();
 
@@ -94,7 +95,7 @@ class StBooking extends Model
         return $details;
     }
 
-    
+
     /**
      * | Get Payment Reciept Details By Payment Id After Payments
      */
@@ -115,35 +116,35 @@ class StBooking extends Model
     {
         $todayDate = Carbon::now()->format('Y-m-d');
         return self::select('*')->where('cleaning_date', $todayDate)
-        ->where('ulb_id', $ulb_id);
+            ->where('ulb_id', $ulb_id);
     }
 
 
     public function getReassignedBookingOrm()
     {
-        return $this->hasMany(StReassignBooking::class,"application_id","id");
+        return $this->hasMany(StReassignBooking::class, "application_id", "id");
     }
     public function getLastReassignedBooking()
     {
-        return $this->getReassignedBookingOrm()->orderBy("id","DESC")->first();
+        return $this->getReassignedBookingOrm()->orderBy("id", "DESC")->first();
     }
 
     public function getDeliveredDriver()
     {
-        return $this->belongsTo(StDriver::class,"delivered_by_driver_id","id")->first();
+        return $this->belongsTo(StDriver::class, "delivered_by_driver_id", "id")->first();
     }
 
     public function getAssignedVehicle()
     {
-        return $this->hasOne(StResource::class,"id","vehicle_id")->first();
+        return $this->hasOne(StResource::class, "id", "vehicle_id")->first();
     }
     public function getAssignedDriver()
     {
-        return $this->hasOne(StDriver::class,"id","driver_id")->first();
+        return $this->hasOne(StDriver::class, "id", "driver_id")->first();
     }
 
     public function getAllTrans()
     {
-        return $this->hasMany(StTransaction::class,"booking_id","id")->whereIn("status",[1,2])->orderBy("tran_date","ASC")->orderBy("id","ASC")->get();
+        return $this->hasMany(StTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 }

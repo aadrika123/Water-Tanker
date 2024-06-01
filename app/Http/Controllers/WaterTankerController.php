@@ -3247,5 +3247,80 @@ class WaterTankerController extends Controller
     }
 
     /** ================================================XXXXXXXXXXXXXXXXXXXXXXXXXXX===================================================================== */
+
+
+
+    public function deactivatedTransactionList(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            "fromDate" => "nullable|date|date_format:Y-m-d",
+            "uptoDate" => "nullable|date|date_format:Y-m-d",
+            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,ALL',
+            'transactionNo' => 'nullable|string'
+        ]);
+        if ($validator->fails())
+            return validationErrorV2($validator);
+
+        try {
+            $fromDate = $req->fromDate ?? Carbon::now()->format("Y-m-d");
+            $uptoDate = $req->uptoDate ?? Carbon::now()->format("Y-m-d");
+            $paymentMode = $req->paymentMode ?? null;
+            $transactionNo = $req->transactionNo ?? null;
+
+            // Get deactivated transactions for water tankers
+            $mWtTransaction = new WtTransaction();
+            $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
+                ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+
+            if ($paymentMode && $paymentMode != 'ALL') {
+                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+            }
+            if ($transactionNo) {
+                $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
+            }
+
+            // Get deactivated transactions for septic tankers
+            $mStTransaction = new StTransaction();
+            $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
+                ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
+
+            if ($paymentMode && $paymentMode != 'All') {
+                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
+            }
+            if ($transactionNo) {
+                $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
+            }
+
+            $perPage = $req->perPage ?? 10;
+            $page = $req->input('page', 1);
+
+            // Paginate water tanker transactions
+            $wtankData = $transactionDeactivationDtlWtank->paginate($perPage, ['*'], 'wtankPage', $page);
+            $wtankList = [
+                "current_page" => $wtankData->currentPage(),
+                "last_page" => $wtankData->lastPage(),
+                "data" => $wtankData->items(),
+                "total" => $wtankData->total(),
+            ];
+
+            // Paginate septic tanker transactions
+            $stankData = $transactionDeactivationDtlStank->paginate($perPage, ['*'], 'stankPage', $page);
+            $stankList = [
+                "current_page" => $stankData->currentPage(),
+                "last_page" => $stankData->lastPage(),
+                "data" => $stankData->items(),
+                "total" => $stankData->total(),
+            ];
+
+            $list = [
+                "wtank" => $wtankList,
+                "stank" => $stankList
+            ];
+
+            return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+        }
+    }
 }
 

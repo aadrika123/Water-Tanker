@@ -153,9 +153,10 @@ class WtBooking extends Model
     {
         $details = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->join('wt_transactions', 'wt_transactions.booking_id', '=', 'wb.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'whc.name as hydration_center_name')
+            ->select('wb.*','wt_transactions.id as tran_id', 'wc.capacity', 'whc.name as hydration_center_name')
             ->where('wb.payment_id', $payId)
             ->first();
 
