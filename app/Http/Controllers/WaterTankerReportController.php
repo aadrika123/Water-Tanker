@@ -220,8 +220,8 @@ class WaterTankerReportController extends Controller
             if ($request->fromDate) {
                 $fromDate = $request->fromDate;
             }
-            if ($request->uptoDate) {
-                $uptoDate = $request->uptoDate;
+            if ($request->toDate) {
+                $uptoDate = $request->toDate;
             }
             $cancleBookingList = WtCancellation::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancelled_by,remarks as reason,delivery_latitude as lat,delivery_longitude as long,CONCAT(wt_drivers.driver_name, ' - ', wt_resources.vehicle_no) as driver_vehcile"))
                 ->leftjoin("wt_drivers", "wt_drivers.id", "wt_cancellations.driver_id")
