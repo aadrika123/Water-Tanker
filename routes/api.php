@@ -127,6 +127,8 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');
             Route::post('water-tanker/offline-payment', 'offlinePayment');
             Route::post('water-tanker/search-booking', 'searchApp');
+            //writen by prity pandey
+            Route::post('water-tanker/collection-report', 'listCollection');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
@@ -199,6 +201,8 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/sent-vehicle', 'sentVehicle'); 
             Route::post('septic-tanker/offline-payment', 'offlinePayment');
             Route::post('septic-tanker/search-booking', 'searchApp');
+            //writen by prity pandey
+            Route::post('septic-tanker/collection-report', 'listCollection');
         });
 
          //written by Prity Pandey

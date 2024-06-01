@@ -82,4 +82,25 @@ class StTransaction extends Model
         ->where("st_transactions.status",0);
         //->get();
     }
+
+
+    public function Tran($fromDate, $toDate)
+    {
+        return DB::table('st_transactions as t')
+            ->select(
+                't.id as transaction_id',
+                't.tran_no as transaction_no',
+                't.paid_amount',
+                't.payment_mode',
+                't.tran_date',
+                't.tran_type as module_name',
+                't.status',
+                'st_bookings.booking_no',
+                DB::raw("CASE WHEN t.tran_type = 'Water Tanker Booking' THEN 11 ELSE 16 END AS module_id")
+            )
+            ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
+            ->where('t.tran_date', '>=', $fromDate)
+            ->where('t.tran_date', '<=', $toDate)
+            ->where("t.status", 1);
+    }
 }

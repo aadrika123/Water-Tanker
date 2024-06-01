@@ -2497,7 +2497,7 @@ class WaterTankerController extends Controller
                 if ($wtCount > 0) {
                     $mWtBooking = WtBooking::find($req->id);
                     $mWtBooking->payment_date = Carbon::now();
-                    $mWtBooking->payment_mode = "Online";
+                    $mWtBooking->payment_mode = "ONLINE";
                     $mWtBooking->payment_status = 1;
                     $mWtBooking->payment_id = $req->paymentId;
                     $mWtBooking->payment_details = $req->all();
@@ -2512,7 +2512,7 @@ class WaterTankerController extends Controller
                     $wtTransaction->tran_no = $req->transactionNo;
                     $wtTransaction->booking_id = $req->id;
                     $wtTransaction->paid_amount = $req->amount;
-                    $wtTransaction->payment_mode = "Online";
+                    $wtTransaction->payment_mode = "ONLINE";
                     $wtTransaction->tran_date = Carbon::now(); 
                     $wtTransaction->save();
                     // $response = $this->offlinePayment($req);
@@ -2522,7 +2522,7 @@ class WaterTankerController extends Controller
                 if ($stCount > 0) {
                     $mStBooking = StBooking::find($req->id);
                     $mStBooking->payment_date = Carbon::now();
-                    $mStBooking->payment_mode = "Online";
+                    $mStBooking->payment_mode = "ONLINE";
                     $mStBooking->payment_status = 1;
                     $mStBooking->payment_id = $req->paymentId;
                     $mStBooking->payment_details = $req->all();
@@ -2536,7 +2536,7 @@ class WaterTankerController extends Controller
                     $stTransaction->tran_no = $req->transactionNo;
                     $stTransaction->booking_id = $req->id;
                     $stTransaction->paid_amount = $req->amount;
-                    $stTransaction->payment_mode = "Online";
+                    $stTransaction->payment_mode = "ONLINE";
                     $stTransaction->tran_date = Carbon::now(); 
                     $stTransaction->save();
                     // $response = (new SepticTankController())->offlinePayment($req);
@@ -3250,77 +3250,50 @@ class WaterTankerController extends Controller
 
 
 
-    public function deactivatedTransactionList(Request $req)
+    public function listCollection(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            "fromDate" => "nullable|date|date_format:Y-m-d",
-            "uptoDate" => "nullable|date|date_format:Y-m-d",
-            'paymentMode' => 'nullable|in:CASH,CHEQUE,DD,NEFT,ALL',
-            'transactionNo' => 'nullable|string'
+            'fromDate' => 'nullable|date_format:Y-m-d',
+            'toDate' => 'nullable|date_format:Y-m-d|after_or_equal:fromDate',
+            'paymentMode'  => 'nullable'
         ]);
-        if ($validator->fails())
-            return validationErrorV2($validator);
-
+        if ($validator->fails()) {
+            return  $validator->errors();
+        }
         try {
-            $fromDate = $req->fromDate ?? Carbon::now()->format("Y-m-d");
-            $uptoDate = $req->uptoDate ?? Carbon::now()->format("Y-m-d");
-            $paymentMode = $req->paymentMode ?? null;
-            $transactionNo = $req->transactionNo ?? null;
+            $perPage = $req->perPage ? $req->perPage : 10;
 
-            // Get deactivated transactions for water tankers
-            $mWtTransaction = new WtTransaction();
-            $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
-                ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+            $paymentMode = null;
+            if (!isset($req->fromDate))
+                $fromDate = Carbon::now()->format('Y-m-d');                                                
+            else
+                $fromDate = $req->fromDate;
+            if (!isset($req->toDate))
+                $toDate = Carbon::now()->format('Y-m-d');                                              
+            else
+                $toDate = $req->toDate;
 
-            if ($paymentMode && $paymentMode != 'ALL') {
-                $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
+            if ($req->paymentMode) {
+                $paymentMode = $req->paymentMode;
             }
-            if ($transactionNo) {
-                $transactionDeactivationDtlWtank->where('wt_transactions.tran_no', $transactionNo);
-            }
+            $mWtankPayment = new WtTransaction();
+            $data = $mWtankPayment->Tran($fromDate, $toDate,);                             
+            if ($req->paymentMode != 0)
+                $data = $data->where('t.payment_mode', $paymentMode);
 
-            // Get deactivated transactions for septic tankers
-            $mStTransaction = new StTransaction();
-            $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
-                ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
-
-            if ($paymentMode && $paymentMode != 'All') {
-                $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
-            }
-            if ($transactionNo) {
-                $transactionDeactivationDtlStank->where('st_transactions.tran_no', $transactionNo);
-            }
-
-            $perPage = $req->perPage ?? 10;
-            $page = $req->input('page', 1);
-
-            // Paginate water tanker transactions
-            $wtankData = $transactionDeactivationDtlWtank->paginate($perPage, ['*'], 'wtankPage', $page);
-            $wtankList = [
-                "current_page" => $wtankData->currentPage(),
-                "last_page" => $wtankData->lastPage(),
-                "data" => $wtankData->items(),
-                "total" => $wtankData->total(),
-            ];
-
-            // Paginate septic tanker transactions
-            $stankData = $transactionDeactivationDtlStank->paginate($perPage, ['*'], 'stankPage', $page);
-            $stankList = [
-                "current_page" => $stankData->currentPage(),
-                "last_page" => $stankData->lastPage(),
-                "data" => $stankData->items(),
-                "total" => $stankData->total(),
-            ];
-
+            $paginator = $data->paginate($perPage);
             $list = [
-                "wtank" => $wtankList,
-                "stank" => $stankList
+                "current_page" => $paginator->currentPage(),
+                "last_page" => $paginator->lastPage(),
+                "data" => $paginator->items(),
+                "total" => $paginator->total(),
+                'collectAmount' => $paginator->sum('paid_amount')
             ];
-
-            return responseMsgs(true, "Deactivated Transaction List", $list, "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+            return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $list, "055017", "1.0", responseTime(), "POST", $req->deviceId);
         } catch (Exception $e) {
-            return responseMsgs(false, $e->getMessage(), "", "", 01, responseTime(), $req->getMethod(), $req->deviceId);
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $req->deviceId);
         }
     }
+    
 }
 

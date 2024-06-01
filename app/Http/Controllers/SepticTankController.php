@@ -2099,4 +2099,51 @@ class SepticTankController extends Controller
         }
         return $status;
     }
+
+
+    
+    public function listCollection(Request $req)
+    {
+        $validator = Validator::make($req->all(), [
+            'fromDate' => 'nullable|date_format:Y-m-d',
+            'toDate' => 'nullable|date_format:Y-m-d|after_or_equal:fromDate',
+            'paymentMode'  => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return  $validator->errors();
+        }
+        try {
+            $perPage = $req->perPage ? $req->perPage : 10;
+
+            $paymentMode = null;
+            if (!isset($req->fromDate))
+                $fromDate = Carbon::now()->format('Y-m-d');                                                
+            else
+                $fromDate = $req->fromDate;
+            if (!isset($req->toDate))
+                $toDate = Carbon::now()->format('Y-m-d');                                              
+            else
+                $toDate = $req->toDate;
+
+            if ($req->paymentMode) {
+                $paymentMode = $req->paymentMode;
+            }
+            $mWtankPayment = new StTransaction();
+            $data = $mWtankPayment->Tran($fromDate, $toDate,);                             
+            if ($req->paymentMode != 0)
+                $data = $data->where('t.payment_mode', $paymentMode);
+
+            $paginator = $data->paginate($perPage);
+            $list = [
+                "current_page" => $paginator->currentPage(),
+                "last_page" => $paginator->lastPage(),
+                "data" => $paginator->items(),
+                "total" => $paginator->total(),
+                'collectAmount' => $paginator->sum('paid_amount')
+            ];
+            return responseMsgs(true, "SepticTanker Collection List Fetch Succefully !!!", $list, "055017", "1.0", responseTime(), "POST", $req->deviceId);
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $req->deviceId);
+        }
+    }
 }
