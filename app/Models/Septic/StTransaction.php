@@ -59,6 +59,7 @@ class StTransaction extends Model
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
             ->where('t.status', 1)
+            ->where('st_bookings.is_vehicle_sent',[0,1])
             ->get();
     }
 

@@ -62,6 +62,7 @@ class WtTransaction extends Model
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
             ->where('t.status', 1)
+            ->where('wt_bookings.is_vehicle_sent',[0,1])
             ->get();
     }
 
