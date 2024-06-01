@@ -72,35 +72,35 @@ class SendWhatsAppMessage
     private function updated()
     {        
 
-        if($this->booking->isDirty('driver_id') && $this->booking->driver_id)
-        {
-            return (Whatsapp_Send( $this->booking->mobile,"wt_driver_assignment",
-                    ["content_type"=>"text",
-                        [
-                            Str::title($this->booking->applicant_name),Str::title($this->drives->driver_name),$this->drives->driver_mobile,"Water Tanker",$this->booking->booking_no
-                        ]
-                    ]));
-        } 
+        // if($this->booking->isDirty('driver_id') && $this->booking->driver_id)
+        // {
+        //     return (Whatsapp_Send( $this->booking->mobile,"wt_driver_assignment",
+        //             ["content_type"=>"text",
+        //                 [
+        //                     Str::title($this->booking->applicant_name),Str::title($this->drives->driver_name),$this->drives->driver_mobile,"Water Tanker",$this->booking->booking_no
+        //                 ]
+        //             ]));
+        // } 
         
         
-        if($this->booking->isDirty('payment_status') && in_array($this->booking->payment_status,[1,2]))
-        {
-            return (Whatsapp_Send( $this->booking->mobile,"wt_booking_initiated",
-                    ["content_type"=>"text",
-                        [
-                            Str::title($this->booking->applicant_name),$this->booking->payment_amount,"Water Tanker",$this->booking->booking_no,($this->ulbDtls->toll_free_no)
-                        ]
-                    ]));
-        }
-        if($this->booking->isDirty('is_vehicle_sent') && $this->booking->is_vehicle_sent==2)
-        {
-            return (Whatsapp_Send( $this->booking->mobile,"wt_successful_delivery",
-                    ["content_type"=>"text",
-                        [
-                            Str::title($this->booking->applicant_name),$this->booking->booking_no,"Delivered",$this->ulbDtls->current_website
-                        ]
-                    ]));
-        }
+        // if($this->booking->isDirty('payment_status') && in_array($this->booking->payment_status,[1,2]))
+        // {
+        //     return (Whatsapp_Send( $this->booking->mobile,"wt_booking_initiated",
+        //             ["content_type"=>"text",
+        //                 [
+        //                     Str::title($this->booking->applicant_name),$this->booking->payment_amount,"Water Tanker",$this->booking->booking_no,($this->ulbDtls->toll_free_no)
+        //                 ]
+        //             ]));
+        // }
+        // if($this->booking->isDirty('is_vehicle_sent') && $this->booking->is_vehicle_sent==2)
+        // {
+        //     return (Whatsapp_Send( $this->booking->mobile,"wt_successful_delivery",
+        //             ["content_type"=>"text",
+        //                 [
+        //                     Str::title($this->booking->applicant_name),$this->booking->booking_no,"Delivered",$this->ulbDtls->current_website
+        //                 ]
+        //             ]));
+        // }
     }
 
     private function updating()

@@ -169,8 +169,8 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');                              // 17 ( Vehicle Driver Master ULB Wise )
             Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                                                  // 18 ( Septic Tank Cleaned )
             Route::post('septic-tanker/list-cleaned-booking', 'listCleanedBooking');                                                // 19 ( List Cleaned Booking)
-            // Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                       // 20 ( Generate Payment Order ID ) 
-            Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderIdV2');
+            Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                       // 20 ( Generate Payment Order ID ) 
+            // Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderIdV2');
             Route::post('septic-tanker/list-applied-and-cancelled-application', 'listAppliedAndCancelledApplication');              // 21 ( List Applied and cancelled applications ) 
             Route::post('septic-tanker/add-capacity', 'addCapacity');                                                               // 22 ( Add Capacity ) 
             Route::post('septic-tanker/list-capacity', 'listCapacity');                                                             // 23 ( List Capacity )

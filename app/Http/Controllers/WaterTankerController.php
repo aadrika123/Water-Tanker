@@ -33,6 +33,7 @@ use App\Models\ForeignModels\UlbMaster;
 use App\Models\ForeignModels\WfRole;
 use App\Models\ForeignModels\WfRoleusermap;
 use App\Models\Septic\StBooking;
+use App\Models\Septic\StTransaction;
 use App\Models\UlbWaterTankerBooking;
 use App\Models\User;
 use App\Models\WtChequeDtl;
@@ -2494,31 +2495,56 @@ class WaterTankerController extends Controller
                 DB::beginTransaction();
                 $wtCount = DB::table('wt_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($wtCount > 0) {
-                    // $mWtBooking = WtBooking::find($req->id);
-                    // $mWtBooking->payment_date = Carbon::now();
-                    // $mWtBooking->payment_mode = "Online";
-                    // $mWtBooking->payment_status = 1;
-                    // $mWtBooking->payment_id = $req->paymentId;
-                    // $mWtBooking->payment_details = $req->all();
-                    // $mWtBooking->save();
-                    $response = $this->offlinePayment($req);
+                    $mWtBooking = WtBooking::find($req->id);
+                    $mWtBooking->payment_date = Carbon::now();
+                    $mWtBooking->payment_mode = "Online";
+                    $mWtBooking->payment_status = 1;
+                    $mWtBooking->payment_id = $req->paymentId;
+                    $mWtBooking->payment_details = $req->all();
+                    $mWtBooking->save();
+                    $wtTransaction = new WtTransaction();
+                
+                    $wtTransaction->ulb_id = $mWtBooking->ulb_id;
+                    $wtTransaction->tran_type = "Water Tanker Booking";
+                    $wtTransaction->ward_id = $mWtBooking->ward_id;
+                    $wtTransaction->verify_date = Carbon::now();;
+                    $wtTransaction->is_verified = 'true';
+                    $wtTransaction->tran_no = $req->transactionNo;
+                    $wtTransaction->booking_id = $req->id;
+                    $wtTransaction->paid_amount = $req->amount;
+                    $wtTransaction->payment_mode = "Online";
+                    $wtTransaction->tran_date = Carbon::now(); 
+                    $wtTransaction->save();
+                    // $response = $this->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 $stCount = DB::table('st_bookings')->where('id', $req->id)->where('order_id', $req->orderId)->count();
                 if ($stCount > 0) {
-                    // $mStBooking = StBooking::find($req->id);
-                    // $mStBooking->payment_date = Carbon::now();
-                    // $mStBooking->payment_mode = "Online";
-                    // $mStBooking->payment_status = 1;
-                    // $mStBooking->payment_id = $req->paymentId;
-                    // $mStBooking->payment_details = $req->all();
-                    // $mStBooking->save();
-                    $response = (new SepticTankController())->offlinePayment($req);
+                    $mStBooking = StBooking::find($req->id);
+                    $mStBooking->payment_date = Carbon::now();
+                    $mStBooking->payment_mode = "Online";
+                    $mStBooking->payment_status = 1;
+                    $mStBooking->payment_id = $req->paymentId;
+                    $mStBooking->payment_details = $req->all();
+                    $mStBooking->save();
+                    $stTransaction = new StTransaction();
+                    $stTransaction->ulb_id = $mStBooking->ulb_id;
+                    $stTransaction->tran_type = "Water Tanker Booking";
+                    $stTransaction->ward_id = $mStBooking->ward_id;
+                    $stTransaction->verify_date = Carbon::now();;
+                    $stTransaction->is_verified = 'true';
+                    $stTransaction->tran_no = $req->transactionNo;
+                    $stTransaction->booking_id = $req->id;
+                    $stTransaction->paid_amount = $req->amount;
+                    $stTransaction->payment_mode = "Online";
+                    $stTransaction->tran_date = Carbon::now(); 
+                    $stTransaction->save();
+                    // $response = (new SepticTankController())->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 DB::commit();
-                $data = $response->original["data"];
-                return responseMsgs(true, $msg, $data, '110168', 01, responseTime(), 'POST', $req->deviceId);
+                // $data = $response->original["data"];
+                return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
             DB::rollBack();
