@@ -2529,7 +2529,7 @@ class WaterTankerController extends Controller
                     $mStBooking->save();
                     $stTransaction = new StTransaction();
                     $stTransaction->ulb_id = $mStBooking->ulb_id;
-                    $stTransaction->tran_type = "Water Tanker Booking";
+                    $stTransaction->tran_type = "Septic Tanker Booking";
                     $stTransaction->ward_id = $mStBooking->ward_id;
                     $stTransaction->verify_date = Carbon::now();;
                     $stTransaction->is_verified = 'true';
