@@ -220,7 +220,7 @@ class SepticTankerReportController extends Controller
                 $fromDate = $request->fromDate;
             }
             if ($request->uptoDate) {
-                $uptoDate = $request->uptoDate;
+                $uptoDate = $request->toDate;
             }
             $cancleBookingList = StCancelledBooking::select(DB::raw("booking_no,applicant_name,mobile,address,booking_date,cancel_date,cancel_by,remarks as reason,delivery_latitude as lat,delivery_longitude as long,CONCAT(st_drivers.driver_name, ' - ', st_resources.vehicle_no) as driver_vehcile"))
                 ->leftjoin("st_drivers","st_drivers.id","st_cancelled_bookings.driver_id")
