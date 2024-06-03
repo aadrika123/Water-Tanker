@@ -755,8 +755,10 @@ class WaterTankerController extends Controller
         try {
             // Variable initialization
             $mWtBooking = WtBooking::find($req->applicationId);
-            if ($mWtBooking->is_vehicle_sent > 0)
-                throw new Exception('This Booking is Not Cancel, Because Tanker is Going to Re-fill !!!');
+            // if ($mWtBooking->is_vehicle_sent > 0)
+            //     throw new Exception('This Booking is Not Cancel, Because Tanker is Going to Re-fill !!!');
+            if ($mWtBooking->is_vehicle_sent == 2)
+                throw new Exception('This Booking is delivered. You can not cancel it !!!');
             $cancelledBooking = $mWtBooking->replicate();                                   // Replicate Data fromm Booking to Cancel table
             $cancelledBooking->cancel_date = Carbon::now()->format('Y-m-d');
             $cancelledBooking->remarks = $req->remarks;
@@ -764,7 +766,9 @@ class WaterTankerController extends Controller
             $cancelledBooking->cancelled_by = $req->cancelledBy;
             $cancelledBooking->cancelled_by_id = $req->cancelledById;
             $cancelledBooking->id =  $mWtBooking->id;
-            if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser')
+            // if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser')
+            //     $cancelledBooking->refund_amount =  $mWtBooking->payment_amount;
+            if ($cancelledBy == 'Citizen' || $cancelledBy == 'UlbUser' || $cancelledBy == 'Water-Agency')
                 $cancelledBooking->refund_amount =  $mWtBooking->payment_amount;
             else
                 $cancelledBooking->refund_amount = 0;
@@ -1150,7 +1154,7 @@ class WaterTankerController extends Controller
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
-                $user->suspended = !(bool)$WtDriver->status; 
+                $user->suspended = !(bool)$WtDriver->status;
             }
             $WtDriver->save();
             $user ? $user->update() : "";
@@ -1430,8 +1434,8 @@ class WaterTankerController extends Controller
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()
-            ->where('delivery_track_status', '0')
-            ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
+                ->where('delivery_track_status', '0')
+                ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
             $ulb = collect($this->_ulbs);
             $list = ($list)->where("wb.ulb_id", $ulbId);
 
@@ -2118,11 +2122,11 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization  
             if (!isset($req->fromDate))
-                $fromDate = Carbon::now()->format('Y-m-d');                                                
+                $fromDate = Carbon::now()->format('Y-m-d');
             else
                 $fromDate = $req->fromDate;
             if (!isset($req->toDate))
-                $toDate = Carbon::now()->format('Y-m-d');                                              
+                $toDate = Carbon::now()->format('Y-m-d');
             else
                 $toDate = $req->toDate;
             $mWtBooking = new WtBooking();
@@ -2460,8 +2464,8 @@ class WaterTankerController extends Controller
                     $data1['vehicle'] = $resource->where('agency_id', NULL)->values();
                 if ($req->auth['user_type'] == 'Water-Agency')
                     $data1['vehicle'] = $resource->where('agency_id', WtAgency::select('id')
-                //->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
-                ->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
+                        //->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
+                        ->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
 
                 $mWtLocation = new WtLocation();
                 $location = collect($mWtLocation->listLocation($req->auth['ulb_id']))->where('is_in_ulb', '1')->values();
@@ -2513,7 +2517,7 @@ class WaterTankerController extends Controller
                     $mWtBooking->payment_details = $req->all();
                     $mWtBooking->save();
                     $wtTransaction = new WtTransaction();
-                
+
                     $wtTransaction->ulb_id = $mWtBooking->ulb_id;
                     $wtTransaction->tran_type = "Water Tanker Booking";
                     $wtTransaction->ward_id = $mWtBooking->ward_id;
@@ -2523,7 +2527,7 @@ class WaterTankerController extends Controller
                     $wtTransaction->booking_id = $req->id;
                     $wtTransaction->paid_amount = $req->amount;
                     $wtTransaction->payment_mode = "ONLINE";
-                    $wtTransaction->tran_date = Carbon::now(); 
+                    $wtTransaction->tran_date = Carbon::now();
                     $wtTransaction->save();
                     // $response = $this->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
@@ -2547,7 +2551,7 @@ class WaterTankerController extends Controller
                     $stTransaction->booking_id = $req->id;
                     $stTransaction->paid_amount = $req->amount;
                     $stTransaction->payment_mode = "ONLINE";
-                    $stTransaction->tran_date = Carbon::now(); 
+                    $stTransaction->tran_date = Carbon::now();
                     $stTransaction->save();
                     // $response = (new SepticTankController())->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
@@ -3275,11 +3279,11 @@ class WaterTankerController extends Controller
 
             $paymentMode = null;
             if (!isset($req->fromDate))
-                $fromDate = Carbon::now()->format('Y-m-d');                                                
+                $fromDate = Carbon::now()->format('Y-m-d');
             else
                 $fromDate = $req->fromDate;
             if (!isset($req->toDate))
-                $toDate = Carbon::now()->format('Y-m-d');                                              
+                $toDate = Carbon::now()->format('Y-m-d');
             else
                 $toDate = $req->toDate;
 
@@ -3287,7 +3291,7 @@ class WaterTankerController extends Controller
                 $paymentMode = $req->paymentMode;
             }
             $mWtankPayment = new WtTransaction();
-            $data = $mWtankPayment->Tran($fromDate, $toDate,);                             
+            $data = $mWtankPayment->Tran($fromDate, $toDate,);
             if ($req->paymentMode != 0)
                 $data = $data->where('t.payment_mode', $paymentMode);
 
@@ -3304,6 +3308,4 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $req->deviceId);
         }
     }
-    
 }
-
