@@ -131,7 +131,7 @@ class WtTransaction extends Model
             ->where("t.status", 1);
 
         if ($wardNo) {
-            $query->where('wt_bookings.ward_no', $wardNo);
+            $query->where('wt_bookings.ward_id', $wardNo);
         }
         if ($paymentMode) {
             $query->where('t.payment_mode', $paymentMode);
