@@ -129,6 +129,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/search-booking', 'searchApp');
             //writen by prity pandey
             Route::post('water-tanker/collection-report', 'listCollection');
+            Route::post('water-tanker/all-report', 'ReportDataWaterTanker');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {

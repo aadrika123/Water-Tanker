@@ -62,7 +62,7 @@ class WtTransaction extends Model
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
             ->where('t.status', 1)
-            ->where('wt_bookings.is_vehicle_sent',[0,1])
+            ->where('wt_bookings.is_vehicle_sent', [0, 1])
             ->get();
     }
 
@@ -107,5 +107,73 @@ class WtTransaction extends Model
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
             ->where("t.status", 1);
+    }
+
+    public function DailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null)
+    {
+        $query = DB::table('wt_transactions as t')
+            ->select(
+                't.tran_no as transaction_no',
+                'wt_bookings.ward_id',
+                'wt_bookings.booking_no',
+                't.paid_amount',
+                't.payment_mode',
+                't.tran_date',
+                't.tran_type as module_name',
+                't.status',
+                'wt_bookings.applicant_name','wt_bookings.user_type',
+                'users.name as collected_by'
+            )
+            ->join('wt_bookings', 'wt_bookings.id', '=', 't.booking_id')
+            ->join('users', 'users.id', '=', 'wt_bookings.user_id')
+            ->where('t.tran_date', '>=', $fromDate)
+            ->where('t.tran_date', '<=', $toDate)
+            ->where("t.status", 1);
+
+        if ($wardNo) {
+            $query->where('wt_bookings.ward_no', $wardNo);
+        }
+        if ($paymentMode) {
+            $query->where('t.payment_mode', $paymentMode);
+        }
+        if ($applicationMode) {
+            if ($applicationMode == 'jsk') {
+                $query->where('wt_bookings.user_type', 'JSK');
+            } else {
+                $query->where('wt_bookings.user_type', 'Citizen');
+            }
+        }
+       $transactions = $query->paginate(1000);
+
+        $collectAmount = $transactions->sum('paid_amount');
+        $totalTransactions = $transactions->total();
+        $cashAmount = 0;
+        $cashCount = 0;
+        if ($paymentMode == 'CASH') {
+            $cashQuery = clone $query;
+            $cashQuery->where('t.payment_mode', 'CASH');
+            $cashAmount = $cashQuery->sum('t.paid_amount');
+            $cashCount = $cashQuery->count();
+        }
+        $onlineAmount = 0;
+        $onlineCount = 0;
+        if ($paymentMode == 'ONLINE') {
+            $onlineQuery = clone $query;
+            $onlineQuery->where('t.payment_mode', 'ONLINE');
+            $onlineAmount = $onlineQuery->sum('t.paid_amount');
+            $onlineCount = $onlineQuery->count();
+        }
+        return [
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
+            'data' => $transactions->items(),
+            'total' => $transactions->total(),
+            'collectAmount' => $collectAmount,
+            'totalTransactions' => $totalTransactions,
+             'cashCollection' => $cashAmount,
+             'cashTranCount' => $cashCount,
+            'onlineCollection' => $onlineAmount,
+            'onlineTranCount' => $onlineCount
+        ];
     }
 }
