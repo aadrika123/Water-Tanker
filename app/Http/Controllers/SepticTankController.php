@@ -2146,4 +2146,33 @@ class SepticTankController extends Controller
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $req->deviceId);
         }
     }
+
+    public function ReportDataSepticTanker(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'fromDate' => 'required|date_format:Y-m-d',
+            'toDate' => 'required|date_format:Y-m-d|after_or_equal:fromDate',
+            'paymentMode'  => 'nullable',
+            'reportType' => 'required',
+            'wardNo' => 'nullable',
+            'applicationMode' => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+        }
+        $tran = new StTransaction();
+        $response = [];
+        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+
+        if ($request->reportType == 'dailyCollection') {
+            $response = $tran->DailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
+        }
+
+        if ($response) {
+            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+        } else {
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+        }
+    }
 }

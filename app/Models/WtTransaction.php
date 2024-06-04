@@ -125,7 +125,7 @@ class WtTransaction extends Model
                 'users.name as collected_by'
             )
             ->join('wt_bookings', 'wt_bookings.id', '=', 't.booking_id')
-            ->join('users', 'users.id', '=', 'wt_bookings.user_id')
+            ->leftjoin('users', 'users.id', '=', 'wt_bookings.user_id')
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
             ->where("t.status", 1);

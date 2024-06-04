@@ -204,6 +204,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/search-booking', 'searchApp');
             //writen by prity pandey
             Route::post('septic-tanker/collection-report', 'listCollection');
+            Route::post('septic-tanker/all-report', 'ReportDataSepticTanker');
         });
 
          //written by Prity Pandey

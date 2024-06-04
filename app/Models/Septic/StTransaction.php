@@ -15,30 +15,30 @@ class StTransaction extends Model
 
     public function getChequeDtls()
     {
-        return $this->hasOne(StChequeDtl::class,"tran_id","id")->orderBy("id","DESC")->first();
+        return $this->hasOne(StChequeDtl::class, "tran_id", "id")->orderBy("id", "DESC")->first();
     }
 
     public function transactionDtl($date)
     {
-        return self::select("st_transactions.*","users.name")
-        ->join("users","users.id","st_transactions.emp_dtl_id")
-        ->where("st_transactions.tran_date",Carbon::parse($date)->format("Y-m-d"))
-        // ->whereIn("st_transactions.status",[1,2]);
-        ->where("st_transactions.status",1);
+        return self::select("st_transactions.*", "users.name")
+            ->join("users", "users.id", "st_transactions.emp_dtl_id")
+            ->where("st_transactions.tran_date", Carbon::parse($date)->format("Y-m-d"))
+            // ->whereIn("st_transactions.status",[1,2]);
+            ->where("st_transactions.status", 1);
     }
 
     public function transactionList($date, $userId, $ulbId)
     {
-        return self::select("st_transactions.*","users.name","app.booking_no")
-        ->join("users","users.id","st_transactions.emp_dtl_id")
-        ->join(DB::raw("(
+        return self::select("st_transactions.*", "users.name", "app.booking_no")
+            ->join("users", "users.id", "st_transactions.emp_dtl_id")
+            ->join(DB::raw("(
             (select id,booking_no from st_bookings)
             union(select id,booking_no from st_cancelled_bookings)
-            )app"),"app.id","st_transactions.booking_id")
-        ->where("st_transactions.tran_date",Carbon::parse($date)->format("Y-m-d"))
-        ->where("st_transactions.emp_dtl_id",$userId)
-        ->where("st_transactions.ulb_id",$ulbId)
-        ->whereIn("st_transactions.status",[1,2])->get();
+            )app"), "app.id", "st_transactions.booking_id")
+            ->where("st_transactions.tran_date", Carbon::parse($date)->format("Y-m-d"))
+            ->where("st_transactions.emp_dtl_id", $userId)
+            ->where("st_transactions.ulb_id", $ulbId)
+            ->whereIn("st_transactions.status", [1, 2])->get();
     }
 
     public function getTransByTranNo($tranNo)
@@ -55,11 +55,11 @@ class StTransaction extends Model
                 'st_bookings.booking_no',
                 DB::raw("CASE WHEN t.tran_type = 'Water Tanker Booking' THEN 11 ELSE 16 END AS module_id")
             )
-            ->join('st_bookings','st_bookings.id','=','t.booking_id')
+            ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
             ->where('t.tran_no', $tranNo)
             ->where('t.is_verified', false)
             ->where('t.status', 1)
-            ->where('st_bookings.is_vehicle_sent',[0,1])
+            ->where('st_bookings.is_vehicle_sent', [0, 1])
             ->get();
     }
 
@@ -67,20 +67,20 @@ class StTransaction extends Model
     {
 
         StTransaction::where('id', $transactionId)
-                        ->update(
-                            [
-                                'status' => 0,
-                            ]
-                        );
+            ->update(
+                [
+                    'status' => 0,
+                ]
+            );
     }
 
     public function getDeactivatedTran()
     {
-       return self::select("st_transactions.tran_no","st_transactions.tran_type","st_transactions.tran_date","st_transactions.payment_mode","stank_transaction_deactivate_dtls.deactive_date","stank_transaction_deactivate_dtls.reason","st_transactions.paid_amount","st_bookings.booking_no","users.name as deactivated_by")
-        ->join('stank_transaction_deactivate_dtls','stank_transaction_deactivate_dtls.tran_id','=','st_transactions.id')
-        ->join('st_bookings','st_bookings.id','=','st_transactions.booking_id')
-        ->join('users','users.id','=','stank_transaction_deactivate_dtls.deactivated_by')
-        ->where("st_transactions.status",0);
+        return self::select("st_transactions.tran_no", "st_transactions.tran_type", "st_transactions.tran_date", "st_transactions.payment_mode", "stank_transaction_deactivate_dtls.deactive_date", "stank_transaction_deactivate_dtls.reason", "st_transactions.paid_amount", "st_bookings.booking_no", "users.name as deactivated_by")
+            ->join('stank_transaction_deactivate_dtls', 'stank_transaction_deactivate_dtls.tran_id', '=', 'st_transactions.id')
+            ->join('st_bookings', 'st_bookings.id', '=', 'st_transactions.booking_id')
+            ->join('users', 'users.id', '=', 'stank_transaction_deactivate_dtls.deactivated_by')
+            ->where("st_transactions.status", 0);
         //->get();
     }
 
@@ -105,5 +105,74 @@ class StTransaction extends Model
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
             ->where("t.status", 1);
+    }
+
+    public function DailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null)
+    {
+        $query = DB::table('st_transactions as t')
+            ->select(
+                't.tran_no as transaction_no',
+                't.paid_amount',
+                't.payment_mode',
+                't.tran_date',
+                't.tran_type as module_name',
+                't.status',
+                'st_bookings.booking_no',
+                'st_bookings.ward_id',
+                'st_bookings.applicant_name',
+               'st_bookings.user_type',
+                'users.name as collected_by'
+            )
+            ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
+            ->leftjoin('users', 'users.id', '=', 'st_bookings.user_id')
+            ->where('t.tran_date', '>=', $fromDate)
+            ->where('t.tran_date', '<=', $toDate)
+            ->where("t.status", 1);
+
+        if ($wardNo) {
+            $query->where('st_bookings.ward_id', $wardNo);
+        }
+        if ($paymentMode) {
+            $query->where('t.payment_mode', $paymentMode);
+        }
+        if ($applicationMode) {
+            if ($applicationMode == 'jsk') {
+                $query->where('st_bookings.user_type', 'JSK');
+            } else {
+                $query->where('st_bookings.user_type', 'Citizen');
+            }
+        }
+        $transactions = $query->paginate(1000);
+
+        $collectAmount = $transactions->sum('paid_amount');
+        $totalTransactions = $transactions->total();
+        $cashAmount = 0;
+        $cashCount = 0;
+        if ($paymentMode == 'CASH') {
+            $cashQuery = clone $query;
+            $cashQuery->where('t.payment_mode', 'CASH');
+            $cashAmount = $cashQuery->sum('t.paid_amount');
+            $cashCount = $cashQuery->count();
+        }
+        $onlineAmount = 0;
+        $onlineCount = 0;
+        if ($paymentMode == 'ONLINE') {
+            $onlineQuery = clone $query;
+            $onlineQuery->where('t.payment_mode', 'ONLINE');
+            $onlineAmount = $onlineQuery->sum('t.paid_amount');
+            $onlineCount = $onlineQuery->count();
+        }
+        return [
+            'current_page' => $transactions->currentPage(),
+            'last_page' => $transactions->lastPage(),
+            'data' => $transactions->items(),
+            'total' => $transactions->total(),
+            'collectAmount' => $collectAmount,
+            'totalTransactions' => $totalTransactions,
+            'cashCollection' => $cashAmount,
+            'cashTranCount' => $cashCount,
+            'onlineCollection' => $onlineAmount,
+            'onlineTranCount' => $onlineCount
+        ];
     }
 }
