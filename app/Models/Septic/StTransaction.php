@@ -107,7 +107,7 @@ class StTransaction extends Model
             ->where("t.status", 1);
     }
 
-    public function DailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null)
+    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null)
     {
         $query = DB::table('st_transactions as t')
             ->select(
@@ -120,7 +120,7 @@ class StTransaction extends Model
                 'st_bookings.booking_no',
                 'st_bookings.ward_id',
                 'st_bookings.applicant_name',
-               'st_bookings.user_type',
+                'st_bookings.user_type',
                 'users.name as collected_by'
             )
             ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
@@ -136,7 +136,7 @@ class StTransaction extends Model
             $query->where('t.payment_mode', $paymentMode);
         }
         if ($applicationMode) {
-            if ($applicationMode == 'jsk') {
+            if ($applicationMode == 'JSK') {
                 $query->where('st_bookings.user_type', 'JSK');
             } else {
                 $query->where('st_bookings.user_type', 'Citizen');
@@ -146,22 +146,17 @@ class StTransaction extends Model
 
         $collectAmount = $transactions->sum('paid_amount');
         $totalTransactions = $transactions->total();
-        $cashAmount = 0;
-        $cashCount = 0;
-        if ($paymentMode == 'CASH') {
-            $cashQuery = clone $query;
-            $cashQuery->where('t.payment_mode', 'CASH');
-            $cashAmount = $cashQuery->sum('t.paid_amount');
-            $cashCount = $cashQuery->count();
-        }
-        $onlineAmount = 0;
-        $onlineCount = 0;
-        if ($paymentMode == 'ONLINE') {
-            $onlineQuery = clone $query;
-            $onlineQuery->where('t.payment_mode', 'ONLINE');
-            $onlineAmount = $onlineQuery->sum('t.paid_amount');
-            $onlineCount = $onlineQuery->count();
-        }
+        $cashQuery = clone $query;
+        $cashQuery->where('t.payment_mode', 'CASH');
+        $cashTransactions = $cashQuery->get();
+        $cashAmount = $cashTransactions->sum('paid_amount');
+        $cashCount = $cashTransactions->count();
+
+        $onlineQuery = clone $query;
+        $onlineQuery->where('t.payment_mode', 'ONLINE');
+        $onlineTransactions = $onlineQuery->get();
+        $onlineAmount = $onlineTransactions->sum('paid_amount');
+        $onlineCount = $onlineTransactions->count();
         return [
             'current_page' => $transactions->currentPage(),
             'last_page' => $transactions->lastPage(),

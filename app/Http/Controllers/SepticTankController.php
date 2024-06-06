@@ -2155,20 +2155,30 @@ class SepticTankController extends Controller
             'paymentMode'  => 'nullable',
             'reportType' => 'required',
             'wardNo' => 'nullable',
-            'applicationMode' => 'nullable'
+            'applicationMode' => 'nullable',
+            'driverName'=>'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
         $tran = new StTransaction();
+        $booked = new StBooking();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
 
         if ($request->reportType == 'dailyCollection') {
-            $response = $tran->DailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
+            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
         }
-
+        if ($request->reportType == 'bookedApplication'){
+            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode);
+        }
+        if ($request->reportType == 'assignedApplication'){
+            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode,$request->driverName);
+        }
+        if ($request->reportType == 'cleanedApplication'){
+            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode,$request->driverName);
+        }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {

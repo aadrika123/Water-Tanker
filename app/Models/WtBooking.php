@@ -64,7 +64,7 @@ class WtBooking extends Model
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no","wt_locations.location")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location")
             ->orderBy('wb.ulb_id');
     }
 
@@ -156,7 +156,7 @@ class WtBooking extends Model
             ->join('wt_transactions', 'wt_transactions.booking_id', '=', 'wb.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*','wt_transactions.id as tran_id', 'wc.capacity', 'whc.name as hydration_center_name')
+            ->select('wb.*', 'wt_transactions.id as tran_id', 'wc.capacity', 'whc.name as hydration_center_name')
             ->where('wb.payment_id', $payId)
             ->first();
 
@@ -197,5 +197,119 @@ class WtBooking extends Model
     public function getAllTrans()
     {
         return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
+    }
+
+
+    //==================end=======================//
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    {
+        $query = DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->select('wb.id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity')
+            ->where('wb.is_vehicle_sent', '<=', '1')
+            ->where('wb.assign_date', NULL)
+            ->where('wb.payment_status', '=', '1')
+            ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+        if ($wardNo) {
+            $query->where('wb.ward_id', $wardNo);
+        }
+
+        if ($applicationMode) {
+            $query->where('wb.user_type', $applicationMode);
+        }
+        if ($waterCapacity) {
+            $query->where('wc.capacity', $waterCapacity);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        $totalJSKBookings = $query->clone()->where('wb.user_type', 'JSK')->count();
+        $totalCitizenBookings = $query->clone()->where('wb.user_type', 'Citizen')->count();
+        $totalCapacity = $query->clone()->where('wc.capacity', $waterCapacity)->count();
+
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking,
+            'totalJSKBookings' => $totalJSKBookings,
+            'totalCitizenBookings' => $totalCitizenBookings,
+            'bookedCapacityCount' => $totalCapacity
+        ];
+    }
+
+    public function assignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName)
+    {
+        $query = DB::table('wt_bookings as wb')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->join('wt_resources as wr', 'wr.id', '=', 'wb.vehicle_id')
+            ->join('wt_drivers as wd', 'wd.id', '=', 'wb.driver_id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
+            ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
+            ->select('wb.id', 'wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id")
+            ->where('assign_date', '!=', NULL)
+            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->whereNull('wtr.application_id')
+            ->where('delivery_track_status', '0')
+            ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));;
+        if ($wardNo) {
+            $query->where('wb.ward_id', $wardNo);
+        }
+        if ($driverName) {
+            $query->where('dr.driver_name', $driverName);
+        }
+        if ($applicationMode) {
+            $query->where('wb.user_type', $applicationMode);
+        }
+        if ($waterCapacity) {
+            $query->where('wc.capacity', $waterCapacity);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking
+        ];
+    }
+
+    public function getDeliveredList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName)
+    {
+        $query = DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
+            ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
+            ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
+            ->select('wb.id', 'wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location")
+            ->where('wb.is_vehicle_sent', 2)
+            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+        if ($wardNo) {
+            $query->where('wb.ward_id', $wardNo);
+        }
+        if ($driverName) {
+            $query->where('dr.driver_name', $driverName);
+        }
+        if ($applicationMode) {
+            $query->where('wb.user_type', $applicationMode);
+        }
+        if ($waterCapacity) {
+            $query->where('wc.capacity', $waterCapacity);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking
+        ];
     }
 }

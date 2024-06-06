@@ -171,6 +171,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/edit-resource', 'editResource');                                                             // 16 ( Edit Resource )
             Route::post('septic-tanker/vehicle-driver-master-ulb-wise', 'vehicleDriverMasterUlbWise');                              // 17 ( Vehicle Driver Master ULB Wise )
             Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                                                  // 18 ( Septic Tank Cleaned )
+            Route::post('septic-tanker/septic-tank-cleaned', 'septicTankCleaned');                                                  // 18 ( Septic Tank Cleaned )
             Route::post('septic-tanker/list-cleaned-booking', 'listCleanedBooking');                                                // 19 ( List Cleaned Booking)
             Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderId');                                       // 20 ( Generate Payment Order ID ) 
             // Route::post('septic-tanker/generate-payment-order-id', 'generatePaymentOrderIdV2');

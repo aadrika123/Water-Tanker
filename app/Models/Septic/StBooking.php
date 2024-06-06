@@ -148,4 +148,103 @@ class StBooking extends Model
     {
         return $this->hasMany(StTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
+
+
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null)
+    {
+        $query =  DB::table('st_bookings as stb')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->where('assign_date', NULL)
+            ->where('payment_status', 1)
+            ->whereBetween('stb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('stb.id');
+        if ($wardNo) {
+            $query->where('stb.ward_id', $wardNo);
+        }
+
+        if ($applicationMode) {
+            $query->where('stb.user_type', $applicationMode);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        $totalJSKBookings = $query->clone()->where('stb.user_type', 'JSK')->count();
+        $totalCitizenBookings = $query->clone()->where('stb.user_type', 'Citizen')->count();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking,
+            'totalJSKBookings' => $totalJSKBookings,
+            'totalCitizenBookings' => $totalCitizenBookings
+        ];
+    }
+
+    public function getAssignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName)
+    {
+        $query =  DB::table('st_bookings as stb')
+            ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
+            ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
+            ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->where('assign_status', '1')
+            ->where('delivery_track_status', '0')
+            ->whereNull('str.application_id')
+            ->whereBetween('stb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('stb.id');
+        if ($wardNo) {
+            $query->where('stb.ward_id', $wardNo);
+        }
+
+        if($driverName){
+            $query->where('sd.driver_name', $driverName);
+        }
+
+        if ($applicationMode) {
+            $query->where('stb.user_type', $applicationMode);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking
+        ];
+    }
+
+    public function getCleanedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName)
+    {
+        $query =  DB::table('st_bookings as stb')
+            ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
+            ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
+            ->where('stb.assign_status', '2')
+            //->where('stb.ulb_id', '2')
+            ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
+            ->orderByDesc('stb.id');
+        if ($wardNo) {
+            $query->where('stb.ward_id', $wardNo);
+        }
+        if ($driverName) {
+            $query->where('sd.driver_name', $driverName);
+        }
+        if ($applicationMode) {
+            $query->where('stb.user_type', $applicationMode);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking
+        ];
+    }
 }
