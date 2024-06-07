@@ -99,4 +99,18 @@ class StCancelledBooking extends Model
         ];;
     }
 
+    public function totalcancle($fromDate, $toDate, $wardNo = null)
+    {
+        $query =  DB::table('st_cancelled_bookings as stcb')
+            ->select('stcb.booking_no','stcb.applicant_name','stcb.address','stcb.booking_date','stcb.cleaning_date','wtl.location'
+            )
+            ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
+            ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
+            ->where('stcb.cancelled_by', 'Citizen');
+
+        if ($wardNo) {
+            $query->where('wtc.ward_id', $wardNo);
+        }
+        return $query;
+    }
 }

@@ -275,4 +275,32 @@ class StBooking extends Model
             'total' => $totalcancle
         ];
     }
+
+    public function totalbooking($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    {
+        $query =  DB::table('st_bookings as stb')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                'stb.booking_date',
+                'stb.cleaning_date',
+                'wtl.location'
+            )
+            ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->where('assign_date', NULL)
+            ->where('payment_status', 1)
+            ->whereBetween('stb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('stb.id');
+        if ($wardNo) {
+            $query->where('stb.ward_id', $wardNo);
+        }
+
+        if ($applicationMode) {
+            $query->where('stb.user_type', $applicationMode);
+        }
+        return $query;
+    }
 }

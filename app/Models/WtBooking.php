@@ -339,4 +339,50 @@ class WtBooking extends Model
             'total' => $totalbooking
         ];
     }
+
+
+    public function totalbooking($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    {
+        $query = DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->select(
+                'wb.id',
+                'wb.booking_no',
+                'wb.applicant_name',
+                'wb.booking_date',
+                'wc.capacity',
+                'wa.agency_name',
+                'wb.ward_id'
+            )
+            ->where('wb.is_vehicle_sent', '<=', '1')
+            ->where('wb.assign_date', NULL)
+            ->where('wb.payment_status', '=', '1')
+            ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+        if ($wardNo) {
+            $query->where('wb.ward_id', $wardNo);
+        }
+
+        if ($applicationMode) {
+            $query->where('wb.user_type', $applicationMode);
+        }
+        if ($waterCapacity) {
+            $query->where('wc.capacity', $waterCapacity);
+        }
+        // $booking = $query->paginate(1000);
+        // $totalbooking = $booking->total();
+        // //$totalCapacity = $query->clone()->where('wc.capacity', $waterCapacity)->count();
+
+        // return [
+        //     'current_page' => $booking->currentPage(),
+        //     'last_page' => $booking->lastPage(),
+        //     'data' => $booking->items(),
+        //     'total' => $totalbooking
+        //     //'bookedCapacityCount' => $totalCapacity
+        // ];
+        return $query;
+    }
 }

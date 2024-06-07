@@ -42,6 +42,7 @@ use App\Models\WtLocationHydrationMap;
 use App\Models\WtReassignBooking;
 use App\Models\WtTransaction;
 use App\Repository\Payment\Concrete\PaymentRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -3319,7 +3320,8 @@ class WaterTankerController extends Controller
             'wardNo' => 'nullable',
             'applicationMode' => 'nullable',
             'waterCapacity' => 'nullable',
-            'driverName' => 'nullable'
+            'driverName' => 'nullable',
+            'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
@@ -3328,6 +3330,7 @@ class WaterTankerController extends Controller
         $booked = new WtBooking();
         $cancle = new WtCancellation();
         $response = [];
+        //$response = collect();
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
 
@@ -3335,28 +3338,42 @@ class WaterTankerController extends Controller
             $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
         }
 
-        if ($request->reportType == 'bookedApplication') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
             $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity);
         }
 
-        if ($request->reportType == 'assignedApplication') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'assignedApplication') {
             $response = $booked->assignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName);
         }
-        if ($request->reportType == 'deliveredApplication') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'deliveredApplication') {
             $response = $booked->getDeliveredList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName);
         }
 
-        if ($request->reportType == 'cancleByAgency') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByAgency') {
             $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo);
         }
 
-        if ($request->reportType == 'cancleByCitizen') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByCitizen') {
             $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo);
         }
-        if ($request->reportType == 'cancleByDriver') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByDriver') {
             $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo);
         }
+        //if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
+        //     $bookedlist = $booked->totalbooking($fromDate, $toDate, $request->wardNo,$request->applicationMode, $request->waterCapacity);
+        //     $canclelist = $cancle->totalcancle($fromDate, $toDate, $request->wardNo);
+        //     $mergedQuery  = $bookedlist->unionAll($canclelist);
+        //     // $paginated = DB::table(DB::raw("({$mergedQuery->toSql()}) as sub"))
+        //     //     ->mergeBindings($mergedQuery)
+        //     $paginated = $mergedQuery  ->paginate(1000);
 
+        //     return response()->json([
+        //         'current_page' => $paginated->currentPage(),
+        //         'last_page' => $paginated->lastPage(),
+        //         'data' => $paginated->items(),
+        //         'total' => $paginated->total()
+        //     ]);
+        // }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {

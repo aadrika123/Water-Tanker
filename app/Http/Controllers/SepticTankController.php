@@ -556,7 +556,7 @@ class SepticTankController extends Controller
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
-                $user->suspended = !(bool)$WtDriver->status; 
+                $user->suspended = !(bool)$WtDriver->status;
             }
             $mStDriver->save();
             $user ? $user->update() : "";
@@ -1594,7 +1594,7 @@ class SepticTankController extends Controller
                 $formDate = $request->fromDate;
                 $uptoDate = $request->toDate;
             }
-           // $ulbId = $user["ulb_id"];
+            // $ulbId = $user["ulb_id"];
             $mWtBooking = new StBooking();
             $data = $mWtBooking->getBookingList()
                 // ->leftJoin(
@@ -1605,7 +1605,7 @@ class SepticTankController extends Controller
                 //     )
                 ->where("delivery_track_status", 1)
                 ->where("assign_status", "<", 2);
-               //->where("stb.ulb_id", $ulbId);
+            //->where("stb.ulb_id", $ulbId);
             // ->whereNull("reassign.application_id");
             if ($formDate && $uptoDate) {
                 $data->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
@@ -2101,7 +2101,7 @@ class SepticTankController extends Controller
     }
 
 
-    
+
     public function listCollection(Request $req)
     {
         $validator = Validator::make($req->all(), [
@@ -2117,11 +2117,11 @@ class SepticTankController extends Controller
 
             $paymentMode = null;
             if (!isset($req->fromDate))
-                $fromDate = Carbon::now()->format('Y-m-d');                                                
+                $fromDate = Carbon::now()->format('Y-m-d');
             else
                 $fromDate = $req->fromDate;
             if (!isset($req->toDate))
-                $toDate = Carbon::now()->format('Y-m-d');                                              
+                $toDate = Carbon::now()->format('Y-m-d');
             else
                 $toDate = $req->toDate;
 
@@ -2129,7 +2129,7 @@ class SepticTankController extends Controller
                 $paymentMode = $req->paymentMode;
             }
             $mWtankPayment = new StTransaction();
-            $data = $mWtankPayment->Tran($fromDate, $toDate,);                             
+            $data = $mWtankPayment->Tran($fromDate, $toDate,);
             if ($req->paymentMode != 0)
                 $data = $data->where('t.payment_mode', $paymentMode);
 
@@ -2156,7 +2156,8 @@ class SepticTankController extends Controller
             'reportType' => 'required',
             'wardNo' => 'nullable',
             'applicationMode' => 'nullable',
-            'driverName'=>'nullable'
+            'driverName' => 'nullable',
+            'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
@@ -2171,25 +2172,41 @@ class SepticTankController extends Controller
         if ($request->reportType == 'dailyCollection') {
             $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
         }
-        if ($request->reportType == 'bookedApplication'){
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
             $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode);
         }
-        if ($request->reportType == 'assignedApplication'){
-            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode,$request->driverName);
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
+            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName);
         }
-        if ($request->reportType == 'cleanedApplication'){
-            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode,$request->driverName);
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
+            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName);
         }
-        if ($request->reportType == 'cancleByAgency') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
             $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo);
         }
 
-        if ($request->reportType == 'cancleByCitizen') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
             $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo);
         }
-        if ($request->reportType == 'cancleByDriver') {
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
             $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo);
         }
+        // if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
+        //     $bookedlist = $booked->totalbooking($fromDate, $toDate, $request->wardNo,$request->applicationMode, $request->waterCapacity);
+        //     $canclelist = $cancle->totalcancle($fromDate, $toDate, $request->wardNo);
+        //     $mergedQuery  = $bookedlist->unionAll($canclelist);
+        //     // $paginated = DB::table(DB::raw("({$mergedQuery->toSql()}) as sub"))
+        //     //     ->mergeBindings($mergedQuery)
+        //     //     ->paginate(1000);
+        //     $paginated = $mergedQuery  ->paginate(1000);
+
+        //     return response()->json([
+        //         'current_page' => $paginated->currentPage(),
+        //         'last_page' => $paginated->lastPage(),
+        //         'data' => $paginated->items(),
+        //         'total' => $paginated->total()
+        //     ]);
+        // }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {

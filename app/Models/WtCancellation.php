@@ -115,4 +115,35 @@ class WtCancellation extends Model
             'total' => $totalcancle
         ];
     }
+
+    public function totalcancle($fromDate, $toDate, $wardNo = null)
+    {
+        $query = DB::table('wt_cancellations as wtc')
+            ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
+            ->select(
+                'wtc.id',
+                'wtc.booking_no',
+                'wtc.applicant_name',
+                'wtc.booking_date',
+                'wc.capacity',
+                'wa.agency_name',
+                'wtc.ward_id'
+            )
+            ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
+            ->where('wtc.cancelled_by', 'Water-Agency');
+
+        if ($wardNo) {
+            $query->where('wtc.ward_id', $wardNo);
+        }
+        // $cancle = $query->paginate(1000);
+        // $totalcancle = $cancle->total();
+        // return [
+        //     'current_page' => $cancle->currentPage(),
+        //     'last_page' => $cancle->lastPage(),
+        //     'data' => $cancle->items(),
+        //     'total' => $totalcancle
+        // ];
+        return $query;
+    }
 }
