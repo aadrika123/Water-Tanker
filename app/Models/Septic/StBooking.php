@@ -200,7 +200,7 @@ class StBooking extends Model
             $query->where('stb.ward_id', $wardNo);
         }
 
-        if($driverName){
+        if ($driverName) {
             $query->where('sd.driver_name', $driverName);
         }
 
@@ -245,6 +245,34 @@ class StBooking extends Model
             'last_page' => $booking->lastPage(),
             'data' => $booking->items(),
             'total' => $totalbooking
+        ];
+    }
+
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null)
+    {
+        $query =  DB::table('st_bookings as stb')
+            ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
+            ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->where("delivery_track_status", 1)
+            ->where("assign_status", "<", 2)
+            ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            //->where("stb.ulb_id", 2)
+            ->orderByDesc('stb.id');
+
+
+        if ($wardNo) {
+            $query->where('stb.ward_id', $wardNo);
+        }
+        $cancle = $query->paginate(1000);
+        $totalcancle = $cancle->total();
+        return [
+            'current_page' => $cancle->currentPage(),
+            'last_page' => $cancle->lastPage(),
+            'data' => $cancle->items(),
+            'total' => $totalcancle
         ];
     }
 }

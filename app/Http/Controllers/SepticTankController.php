@@ -1592,9 +1592,9 @@ class SepticTankController extends Controller
             }
             if ($request->fromDate && $request->uptoDate) {
                 $formDate = $request->fromDate;
-                $uptoDate = $request->uptoData;
+                $uptoDate = $request->uptoDate;
             }
-            $ulbId = $user["ulb_id"];
+           // $ulbId = $user["ulb_id"];
             $mWtBooking = new StBooking();
             $data = $mWtBooking->getBookingList()
                 // ->leftJoin(
@@ -1604,8 +1604,8 @@ class SepticTankController extends Controller
                 //     }
                 //     )
                 ->where("delivery_track_status", 1)
-                ->where("assign_status", "<", 2)
-                ->where("stb.ulb_id", $ulbId);
+                ->where("assign_status", "<", 2);
+               //->where("stb.ulb_id", $ulbId);
             // ->whereNull("reassign.application_id");
             if ($formDate && $uptoDate) {
                 $data->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$formDate, $uptoDate]);
@@ -2163,6 +2163,7 @@ class SepticTankController extends Controller
         }
         $tran = new StTransaction();
         $booked = new StBooking();
+        $cancle = new StCancelledBooking();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
@@ -2178,6 +2179,16 @@ class SepticTankController extends Controller
         }
         if ($request->reportType == 'cleanedApplication'){
             $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode,$request->driverName);
+        }
+        if ($request->reportType == 'cancleByAgency') {
+            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo);
+        }
+
+        if ($request->reportType == 'cancleByCitizen') {
+            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo);
+        }
+        if ($request->reportType == 'cancleByDriver') {
+            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo);
         }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);

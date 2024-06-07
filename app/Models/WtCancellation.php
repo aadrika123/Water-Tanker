@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 class WtCancellation extends Model
 {
     use HasFactory;
-
+    protected $guarded = [];
 
     /**
      * | Get Cancelled List
@@ -39,35 +39,80 @@ class WtCancellation extends Model
     /**
      * | Get Today Cancelled Booking List
      */
-    public function todayCancelledBooking($agencyId){
-        return self::select('*')->where('delivery_date',Carbon::now()->format('Y-m-d'))->where('agency_id',$agencyId);  
+    public function todayCancelledBooking($agencyId)
+    {
+        return self::select('*')->where('delivery_date', Carbon::now()->format('Y-m-d'))->where('agency_id', $agencyId);
     }
 
     public function getReassignedBookingOrm()
     {
-        return $this->hasMany(WtReassignBooking::class,"application_id","id");
+        return $this->hasMany(WtReassignBooking::class, "application_id", "id");
     }
     public function getLastReassignedBooking()
     {
-        return $this->getReassignedBookingOrm()->orderBy("id","DESC")->first();
+        return $this->getReassignedBookingOrm()->orderBy("id", "DESC")->first();
     }
 
     public function getDeliveredDriver()
     {
-        return $this->belongsTo(WtDriver::class,"delivered_by_driver_id","id")->first();
+        return $this->belongsTo(WtDriver::class, "delivered_by_driver_id", "id")->first();
     }
 
     public function getAssignedVehicle()
     {
-        return $this->hasOne(WtResource::class,"id","vehicle_id")->first();
+        return $this->hasOne(WtResource::class, "id", "vehicle_id")->first();
     }
     public function getAssignedDriver()
     {
-        return $this->hasOne(WtDriver::class,"id","driver_id")->first();
+        return $this->hasOne(WtDriver::class, "id", "driver_id")->first();
     }
 
     public function getAllTrans()
     {
-        return $this->hasMany(WtTransaction::class,"booking_id","id")->whereIn("status",[1,2])->orderBy("tran_date","ASC")->orderBy("id","ASC")->get();
+        return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
+    }
+
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null)
+    {
+        $query = DB::table('wt_cancellations as wtc')
+            ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id')
+            ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
+            ->where('wtc.cancelled_by', 'Water-Agency');
+
+        if ($wardNo) {
+            $query->where('wtc.ward_id', $wardNo);
+        }
+        $cancle = $query->paginate(1000);
+        $totalcancle = $cancle->total();
+        return [
+            'current_page' => $cancle->currentPage(),
+            'last_page' => $cancle->lastPage(),
+            'data' => $cancle->items(),
+            'total' => $totalcancle
+        ];
+    }
+
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null)
+    {
+        $query = DB::table('wt_cancellations as wtc')
+            ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id')
+            ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
+            ->where('wtc.cancelled_by', 'Citizen');
+
+        if ($wardNo) {
+            $query->where('wtc.ward_id', $wardNo);
+        }
+        $cancle = $query->paginate(1000);
+        $totalcancle = $cancle->total();
+        return [
+            'current_page' => $cancle->currentPage(),
+            'last_page' => $cancle->lastPage(),
+            'data' => $cancle->items(),
+            'total' => $totalcancle
+        ];
     }
 }

@@ -312,4 +312,31 @@ class WtBooking extends Model
             'total' => $totalbooking
         ];
     }
+
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null)
+    {
+        $query = DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
+            ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
+            ->select('wb.id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity')
+            ->where("delivery_track_status", 1)
+            ->where("is_vehicle_sent", "<", 2)
+            //->where("wb.ulb_id", 2)
+            ->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+        if ($wardNo) {
+            $query->where('wb.ward_id', $wardNo);
+        }
+        $booking = $query->paginate(1000);
+        $totalbooking = $booking->total();
+        return [
+            'current_page' => $booking->currentPage(),
+            'last_page' => $booking->lastPage(),
+            'data' => $booking->items(),
+            'total' => $totalbooking
+        ];
+    }
 }
