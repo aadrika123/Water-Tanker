@@ -3028,6 +3028,7 @@ class WaterTankerController extends Controller
                     $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
                     $val->assign_date = $reassign ? $reassign->re_assign_date : $val->assign_date;
                     $val->assign_date  = Carbon::parse($val->assign_date)->format('d-m-Y');
+                    $val->cancelledDate  = Carbon::parse($val->cancelledDate)->format('d-m-Y');
                     $uploadDoc = ($DocUpload->getSingleDocUrl($val));
                     $val->doc_path = $uploadDoc["doc_path"] ?? "";
                     $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )" : $val->vehicle_no . " ( " . $val->driver_name . " )";
