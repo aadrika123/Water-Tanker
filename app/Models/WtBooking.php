@@ -69,7 +69,7 @@ class WtBooking extends Model
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", 'wb.driver_delivery_update_date_time as cancelledDate',"res.vehicle_no", "wt_locations.location")
             ->orderBy('wb.ulb_id');
     }
 
