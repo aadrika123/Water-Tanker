@@ -69,7 +69,7 @@ class WtBooking extends Model
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", 'wb.driver_delivery_update_date_time as cancelledDate',"res.vehicle_no", "wt_locations.location")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", 'wb.driver_delivery_update_date_time as cancelledDate', "res.vehicle_no", "wt_locations.location")
             ->orderBy('wb.ulb_id');
     }
 
@@ -79,6 +79,7 @@ class WtBooking extends Model
     public function assignList()
     {
         return DB::table('wt_bookings as wb')
+            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->join('wt_resources as wr', 'wr.id', '=', 'wb.vehicle_id')
             ->join('wt_drivers as wd', 'wd.id', '=', 'wb.driver_id')
@@ -86,7 +87,7 @@ class WtBooking extends Model
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             // ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
             ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id","wt_locations.location")
             ->where('assign_date', '!=', NULL)
             ->whereNull('wtr.application_id');
     }
@@ -361,7 +362,7 @@ class WtBooking extends Model
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
             + ($cancleByDriver["total"] ?? 0);
-            //dd($totalbooking);
+        //dd($totalbooking);
         $data = collect($bookedApplication["data"] ?? [])
             ->merge(collect($assignedApplication["data"] ?? []))
             ->merge(collect($deliveredApplication["data"] ?? []))
