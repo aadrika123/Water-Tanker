@@ -87,7 +87,7 @@ class WtBooking extends Model
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             // ->join('wt_driver_vehicle_maps as dvm', 'wb.vdm_id', '=', 'dvm.id')
             ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
-            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id","wt_locations.location")
+            ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id", "wt_locations.location")
             ->where('assign_date', '!=', NULL)
             ->whereNull('wtr.application_id');
     }
@@ -368,13 +368,6 @@ class WtBooking extends Model
             ->merge(collect($cancleByAgency["data"] ?? []))
             ->merge(collect($cancleByCitizen["data"] ?? []))
             ->merge(collect($cancleByDriver["data"] ?? []));
-        // return [
-        //     'current_page' => $data["current_page"]??1,
-        //     'last_page' => $data["last_page"]??1,
-        //     'data' => $data,
-        //     'total' => $totalbooking
-        // ];
-        // // dd( $data);
         $currentPageData = $data->forPage($page, $perPage);
         $paginator = new LengthAwarePaginator(
             $currentPageData,
@@ -389,5 +382,41 @@ class WtBooking extends Model
             'data' => $paginator->items(),
             'total' => $paginator->total()
         ];
+    }
+
+    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $page)
+    {
+        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+            ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
+            ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
+            ->where("wt_bookings.status", 1)
+            ->whereNotNull('assign_date')
+            ->where('is_vehicle_sent', '!=', 2)
+            ->where('delivery_track_status', 0)
+            ->whereBetween('assign_date', [$fromDate, $toDate]);
+
+        $reassignQuery = WtBooking::select("wt_bookings.booking_no",  "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+            ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
+            ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
+            ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
+            ->where("wt_bookings.status", 1)
+            ->whereNotNull('assign_date')
+            ->where('is_vehicle_sent', '!=', 2)
+            ->where('wt_reassign_bookings.delivery_track_status', 0)
+            ->whereBetween('re_assign_date', [$fromDate, $toDate]);
+
+        if ($wardNo) {
+            $dataQuery->where('wt_bookings.ward_id', $wardNo);
+            $reassignQuery->where('wt_bookings.ward_id', $wardNo);
+        }
+        $data = $dataQuery->union($reassignQuery)->paginate($perPage);
+
+        return [
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'data' => $data->items(),
+            'total' => $data->total()
+        ];
+         
     }
 }

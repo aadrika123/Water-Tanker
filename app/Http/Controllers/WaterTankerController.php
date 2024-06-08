@@ -3415,4 +3415,35 @@ class WaterTankerController extends Controller
             return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
         }
     }
+
+    public function pendingReportDataWaterTanker(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'fromDate' => 'required|date_format:Y-m-d',
+            'toDate' => 'required|date_format:Y-m-d|after_or_equal:fromDate',
+            'reportType' => 'required',
+            'wardNo' => 'nullable',
+            'applicationMode' => 'nullable',
+            'waterCapacity' => 'nullable',
+            'driverName' => 'nullable',
+            'applicationStatus' => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+        }
+        $booked = new WtBooking();
+        $response = [];
+        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+        $perPage = $request->per_page ?: 10;
+        $page = $request->page ?: 1;
+        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
+            $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage,$page);
+        }
+        if ($response) {
+            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+        } else {
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+        }
+    }
 }

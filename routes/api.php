@@ -131,6 +131,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/collection-report', 'listCollection');
             Route::post('water-tanker/daily-collection-report', 'ReportDataWaterTanker');
             Route::post('water-tanker/application-report', 'applicationReportDataWaterTanker');
+            Route::post('water-tanker/pending-report', 'pendingReportDataWaterTanker');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
