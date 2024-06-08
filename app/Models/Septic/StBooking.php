@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class StBooking extends Model
 {
@@ -150,7 +152,7 @@ class StBooking extends Model
     }
 
 
-    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null)
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
@@ -168,7 +170,7 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         $totalJSKBookings = $query->clone()->where('stb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('stb.user_type', 'Citizen')->count();
@@ -182,7 +184,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getAssignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName)
+    public function getAssignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName,$perPage)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -207,7 +209,7 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         return [
             'current_page' => $booking->currentPage(),
@@ -217,7 +219,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getCleanedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName)
+    public function getCleanedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName,$perPage)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -238,7 +240,7 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         return [
             'current_page' => $booking->currentPage(),
@@ -248,7 +250,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null,$perPage)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -266,7 +268,7 @@ class StBooking extends Model
         if ($wardNo) {
             $query->where('stb.ward_id', $wardNo);
         }
-        $cancle = $query->paginate(1000);
+        $cancle = $query->paginate($perPage);
         $totalcancle = $cancle->total();
         return [
             'current_page' => $cancle->currentPage(),
@@ -276,31 +278,43 @@ class StBooking extends Model
         ];
     }
 
-    public function totalbooking($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    public function allBooking(Request $request)
     {
-        $query =  DB::table('st_bookings as stb')
-            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
-            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select(
-                'stb.booking_no',
-                'stb.applicant_name',
-                'stb.address',
-                'stb.booking_date',
-                'stb.cleaning_date',
-                'wtl.location'
-            )
-            ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
-            ->where('assign_date', NULL)
-            ->where('payment_status', 1)
-            ->whereBetween('stb.booking_date', [$fromDate, $toDate])
-            ->orderByDesc('stb.id');
-        if ($wardNo) {
-            $query->where('stb.ward_id', $wardNo);
-        }
+        $cancle = new StCancelledBooking();
+        $perPage = $request->per_page ?: 10;
+        $page = $request->page ?: 1;
+        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage);
+        //dd($perPage);
+        $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
+        $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage);
 
-        if ($applicationMode) {
-            $query->where('stb.user_type', $applicationMode);
-        }
-        return $query;
+        $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
+            + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
+            + ($cancleByDriver["total"] ?? 0);
+        //dd($totalbooking);
+        $data = collect($bookedApplication["data"] ?? [])
+            ->merge(collect($assignedApplication["data"] ?? []))
+            ->merge(collect($deliveredApplication["data"] ?? []))
+            ->merge(collect($cancleByAgency["data"] ?? []))
+            ->merge(collect($cancleByCitizen["data"] ?? []))
+            ->merge(collect($cancleByDriver["data"] ?? []));
+            // dd($data);
+        $currentPageData = $data->forPage($page, $perPage);
+        $paginator = new LengthAwarePaginator(
+            $currentPageData,
+            $data->count(),
+            $perPage,
+            $page
+        );
+
+        return [
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'data' => $paginator->items(),
+            'total' => $paginator->total()
+        ];
     }
 }

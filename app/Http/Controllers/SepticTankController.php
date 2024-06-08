@@ -2173,50 +2173,63 @@ class SepticTankController extends Controller
             return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
         }
         $tran = new StTransaction();
+        $response = [];
+        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+        $perPage = $request->per_page ?: 10;
+        if ($request->reportType == 'dailyCollection') {
+            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage);
+        }
+        if ($response) {
+            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+        } else {
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+        }
+    }
+
+    public function applicationReportDataWaterTanker(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'fromDate' => 'required|date_format:Y-m-d',
+            'toDate' => 'required|date_format:Y-m-d|after_or_equal:fromDate',
+            'paymentMode'  => 'nullable',
+            'reportType' => 'required',
+            'wardNo' => 'nullable',
+            'applicationMode' => 'nullable',
+            'driverName' => 'nullable',
+            'applicationStatus' => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+        }
         $booked = new StBooking();
         $cancle = new StCancelledBooking();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-
-        if ($request->reportType == 'dailyCollection') {
-            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode);
-        }
+        $perPage = $request->per_page ?: 10;
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
-            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode);
+            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
-            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName);
+            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
-            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName);
+            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
-            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo);
+            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage);
         }
 
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
-            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo);
+            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
-            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo);
+            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage);
         }
-        // if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
-        //     $bookedlist = $booked->totalbooking($fromDate, $toDate, $request->wardNo,$request->applicationMode, $request->waterCapacity);
-        //     $canclelist = $cancle->totalcancle($fromDate, $toDate, $request->wardNo);
-        //     $mergedQuery  = $bookedlist->unionAll($canclelist);
-        //     // $paginated = DB::table(DB::raw("({$mergedQuery->toSql()}) as sub"))
-        //     //     ->mergeBindings($mergedQuery)
-        //     //     ->paginate(1000);
-        //     $paginated = $mergedQuery  ->paginate(1000);
-
-        //     return response()->json([
-        //         'current_page' => $paginated->currentPage(),
-        //         'last_page' => $paginated->lastPage(),
-        //         'data' => $paginated->items(),
-        //         'total' => $paginated->total()
-        //     ]);
-        // }
+        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
+            $response = $booked->allBooking($request);
+        }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {

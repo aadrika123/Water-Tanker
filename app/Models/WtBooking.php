@@ -348,7 +348,6 @@ class WtBooking extends Model
 
     public function allBooking(Request $request)
     {
-        $tran = new WtTransaction();
         $cancle = new WtCancellation();
         $perPage = $request->per_page ?: 10;
         $page = $request->page ?: 1;

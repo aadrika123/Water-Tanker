@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class StCancelledBooking extends Model
 {
@@ -56,7 +57,7 @@ class StCancelledBooking extends Model
         return $this->hasMany(StTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 
-    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
             ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location')
@@ -67,7 +68,7 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
-        $cancle = $query->paginate(1000);
+        $cancle = $query->paginate($perPage);
         $totalcancle = $cancle->total();
         return [
             'current_page' => $cancle->currentPage(),
@@ -78,7 +79,7 @@ class StCancelledBooking extends Model
     }
 
 
-    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
             ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location')
@@ -89,28 +90,13 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
-        $cancle = $query->paginate(1000);
+        $cancle = $query->paginate($perPage);
         $totalcancle = $cancle->total();
         return [
             'current_page' => $cancle->currentPage(),
             'last_page' => $cancle->lastPage(),
             'data' => $cancle->items(),
             'total' => $totalcancle
-        ];;
-    }
-
-    public function totalcancle($fromDate, $toDate, $wardNo = null)
-    {
-        $query =  DB::table('st_cancelled_bookings as stcb')
-            ->select('stcb.booking_no','stcb.applicant_name','stcb.address','stcb.booking_date','stcb.cleaning_date','wtl.location'
-            )
-            ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
-            ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
-            ->where('stcb.cancelled_by', 'Citizen');
-
-        if ($wardNo) {
-            $query->where('wtc.ward_id', $wardNo);
-        }
-        return $query;
+        ];
     }
 }
