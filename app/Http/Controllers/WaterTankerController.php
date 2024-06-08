@@ -623,12 +623,20 @@ class WaterTankerController extends Controller
     public function listAgencyBooking(Request $req)
     {
         // WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
+        // $validator = Validator::make($req->all(), [
+        //     'date' => 'nullable|date|date_format:Y-m-d',
+        // ]);
+        // if ($validator->fails()) {
+        //     return validationErrorV2($validator);
+        // }
         $validator = Validator::make($req->all(), [
-            'date' => 'nullable|date|date_format:Y-m-d',
+            'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
         }
+
         try {
             // Variable initialization
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
@@ -645,7 +653,8 @@ class WaterTankerController extends Controller
                 ->where('wb.payment_status', '=', '1')
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id');
-
+            if ($req->fromDate != NULL)
+                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate])->values();
             if ($req->date != NULL)
                 $list = $list->where('delivery_date', $req->date)->values();
 
@@ -1430,13 +1439,22 @@ class WaterTankerController extends Controller
      */
     public function listAssignAgency(Request $req)
     {
+        $validator = Validator::make($req->all(), [
+            'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+        ]);
+        if ($validator->fails()) {
+            return validationErrorV2($validator);
+        }
         try {
-            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
             $ulbId = $req->auth["ulb_id"];
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->assignList()
                 ->where('delivery_track_status', '0')
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
+
+            if ($req->fromDate != NULL)
+                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate])->values();
             $ulb = collect($this->_ulbs);
             $list = ($list)->where("wb.ulb_id", $ulbId);
 
@@ -1871,8 +1889,8 @@ class WaterTankerController extends Controller
             if ($req->fromDate) {
                 $fromDate = $req->fromDate;
             }
-            if ($req->uptoDate) {
-                $uptoDate = $req->uptoDate;
+            if ($req->toDate) {
+                $uptoDate = $req->toDate;
             }
             $ulbId = $req->auth["ulb_id"];
             $mWtReassignBooking = new WtReassignBooking();
