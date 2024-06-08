@@ -129,7 +129,8 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/search-booking', 'searchApp');
             //writen by prity pandey
             Route::post('water-tanker/collection-report', 'listCollection');
-            Route::post('water-tanker/all-report', 'ReportDataWaterTanker');
+            Route::post('water-tanker/daily-collection-report', 'ReportDataWaterTanker');
+            Route::post('water-tanker/application-report', 'applicationReportDataWaterTanker');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
@@ -206,6 +207,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             //writen by prity pandey
             Route::post('septic-tanker/collection-report', 'listCollection');
             Route::post('septic-tanker/all-report', 'ReportDataSepticTanker');
+            
         });
 
          //written by Prity Pandey

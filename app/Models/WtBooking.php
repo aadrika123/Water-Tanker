@@ -3,9 +3,14 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Client\Request as ClientRequest;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Request as FacadesRequest;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class WtBooking extends Model
 {
@@ -201,7 +206,7 @@ class WtBooking extends Model
 
 
     //==================end=======================//
-    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $perPage)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -224,7 +229,7 @@ class WtBooking extends Model
         if ($waterCapacity) {
             $query->where('wc.capacity', $waterCapacity);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         $totalJSKBookings = $query->clone()->where('wb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('wb.user_type', 'Citizen')->count();
@@ -241,7 +246,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function assignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName)
+    public function assignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage)
     {
         $query = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
@@ -268,7 +273,7 @@ class WtBooking extends Model
         if ($waterCapacity) {
             $query->where('wc.capacity', $waterCapacity);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         return [
             'current_page' => $booking->currentPage(),
@@ -278,7 +283,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getDeliveredList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName)
+    public function getDeliveredList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -303,7 +308,7 @@ class WtBooking extends Model
         if ($waterCapacity) {
             $query->where('wc.capacity', $waterCapacity);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         return [
             'current_page' => $booking->currentPage(),
@@ -313,7 +318,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -330,7 +335,7 @@ class WtBooking extends Model
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
         }
-        $booking = $query->paginate(1000);
+        $booking = $query->paginate($perPage);
         $totalbooking = $booking->total();
         return [
             'current_page' => $booking->currentPage(),
@@ -340,49 +345,49 @@ class WtBooking extends Model
         ];
     }
 
-
-    public function totalbooking($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity)
+    public function allBooking(Request $request)
     {
-        $query = DB::table('wt_bookings as wb')
-            ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
-            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
-            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
-            ->select(
-                'wb.id',
-                'wb.booking_no',
-                'wb.applicant_name',
-                'wb.booking_date',
-                'wc.capacity',
-                'wa.agency_name',
-                'wb.ward_id'
-            )
-            ->where('wb.is_vehicle_sent', '<=', '1')
-            ->where('wb.assign_date', NULL)
-            ->where('wb.payment_status', '=', '1')
-            ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
-            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
-            ->orderByDesc('wb.id');
-        if ($wardNo) {
-            $query->where('wb.ward_id', $wardNo);
-        }
+        $tran = new WtTransaction();
+        $cancle = new WtCancellation();
+        $perPage = $request->per_page ?: 10;
+        $page = $request->page ?: 1;
+        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage);
+        $assignedApplication = $this->assignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage);
+        $deliveredApplication = $this->getDeliveredList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage);
 
-        if ($applicationMode) {
-            $query->where('wb.user_type', $applicationMode);
-        }
-        if ($waterCapacity) {
-            $query->where('wc.capacity', $waterCapacity);
-        }
-        // $booking = $query->paginate(1000);
-        // $totalbooking = $booking->total();
-        // //$totalCapacity = $query->clone()->where('wc.capacity', $waterCapacity)->count();
-
+        $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
+            + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
+            + ($cancleByDriver["total"] ?? 0);
+            //dd($totalbooking);
+        $data = collect($bookedApplication["data"] ?? [])
+            ->merge(collect($assignedApplication["data"] ?? []))
+            ->merge(collect($deliveredApplication["data"] ?? []))
+            ->merge(collect($cancleByAgency["data"] ?? []))
+            ->merge(collect($cancleByCitizen["data"] ?? []))
+            ->merge(collect($cancleByDriver["data"] ?? []));
         // return [
-        //     'current_page' => $booking->currentPage(),
-        //     'last_page' => $booking->lastPage(),
-        //     'data' => $booking->items(),
+        //     'current_page' => $data["current_page"]??1,
+        //     'last_page' => $data["last_page"]??1,
+        //     'data' => $data,
         //     'total' => $totalbooking
-        //     //'bookedCapacityCount' => $totalCapacity
         // ];
-        return $query;
+        // // dd( $data);
+        $currentPageData = $data->forPage($page, $perPage);
+        $paginator = new LengthAwarePaginator(
+            $currentPageData,
+            $data->count(),
+            $perPage,
+            $page
+        );
+
+        return [
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'data' => $paginator->items(),
+            'total' => $paginator->total()
+        ];
     }
 }

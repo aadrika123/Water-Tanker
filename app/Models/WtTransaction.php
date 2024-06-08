@@ -109,7 +109,7 @@ class WtTransaction extends Model
             ->where("t.status", 1);
     }
 
-    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null)
+    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null, $perPage)
     {
         $query = DB::table('wt_transactions as t')
             ->select(
@@ -144,34 +144,33 @@ class WtTransaction extends Model
                 $query->where('wt_bookings.user_type', 'Citizen');
             }
         }
-        $transactions = $query->paginate(1000);
-        $collectAmount = $transactions->sum('paid_amount');
-        $totalTransactions = $transactions->total();
+        $summaryQuery = clone $query;
+        $transactions = $query->paginate($perPage);
+        $collectAmount = $summaryQuery->sum('t.paid_amount');
+        $totalTransactions = $summaryQuery->count();
+        $cashSummaryQuery = clone $summaryQuery;
+        $cashSummaryQuery->where('t.payment_mode', 'CASH');
+        $cashAmount = $cashSummaryQuery->sum('t.paid_amount');
+        $cashCount = $cashSummaryQuery->count();
 
-        $cashQuery = clone $query;
-        $cashQuery->where('t.payment_mode', 'CASH');
-        $cashTransactions = $cashQuery->get();
-        $cashAmount = $cashTransactions->sum('paid_amount');
-        $cashCount = $cashTransactions->count();
-
-        $onlineQuery = clone $query;
-        $onlineQuery->where('t.payment_mode', 'ONLINE');
-        $onlineTransactions = $onlineQuery->get();
-        $onlineAmount = $onlineTransactions->sum('paid_amount');
-        $onlineCount = $onlineTransactions->count();
+        $onlineSummaryQuery = clone $summaryQuery;
+        $onlineSummaryQuery->where('t.payment_mode', 'ONLINE');
+        $onlineAmount = $onlineSummaryQuery->sum('t.paid_amount');
+        $onlineCount = $onlineSummaryQuery->count();
+    
         // JSK cash collection
-            // $jskCollectionCash = clone $query;
-            // $jskCollectionCash->where('t.payment_mode', 'CASH')->where('wt_bookings.user_type', 'JSK');
-            // $jskCashTransactions = $jskCollectionCash->get();
-            // $jskCollectionAmount = $jskCashTransactions->sum('paid_amount');
-            // $jskCollectionCount = $jskCashTransactions->count();
+        // $jskCollectionCash = clone $query;
+        // $jskCollectionCash->where('t.payment_mode', 'CASH')->where('wt_bookings.user_type', 'JSK');
+        // $jskCashTransactions = $jskCollectionCash->get();
+        // $jskCollectionAmount = $jskCashTransactions->sum('paid_amount');
+        // $jskCollectionCount = $jskCashTransactions->count();
 
         // Citizen online collection
-            // $citizenCollectionOnline = clone $query;
-            // $citizenCollectionOnline->where('t.payment_mode', 'ONLINE')->where('wt_bookings.user_type', 'Citizen');
-            // $onlineCitizenTransactions = $citizenCollectionOnline->get();
-            // $onlineCitizenAmount = $onlineCitizenTransactions->sum('paid_amount');
-            // $onlineCitizenCount = $onlineCitizenTransactions->count();
+        // $citizenCollectionOnline = clone $query;
+        // $citizenCollectionOnline->where('t.payment_mode', 'ONLINE')->where('wt_bookings.user_type', 'Citizen');
+        // $onlineCitizenTransactions = $citizenCollectionOnline->get();
+        // $onlineCitizenAmount = $onlineCitizenTransactions->sum('paid_amount');
+        // $onlineCitizenCount = $onlineCitizenTransactions->count();
         return [
             'current_page' => $transactions->currentPage(),
             'last_page' => $transactions->lastPage(),

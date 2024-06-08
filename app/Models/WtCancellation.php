@@ -72,7 +72,7 @@ class WtCancellation extends Model
         return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 
-    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
@@ -84,7 +84,7 @@ class WtCancellation extends Model
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
         }
-        $cancle = $query->paginate(1000);
+        $cancle = $query->paginate($perPage);
         $totalcancle = $cancle->total();
         return [
             'current_page' => $cancle->currentPage(),
@@ -94,7 +94,7 @@ class WtCancellation extends Model
         ];
     }
 
-    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null)
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
@@ -106,7 +106,7 @@ class WtCancellation extends Model
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
         }
-        $cancle = $query->paginate(1000);
+        $cancle = $query->paginate($perPage);
         $totalcancle = $cancle->total();
         return [
             'current_page' => $cancle->currentPage(),
