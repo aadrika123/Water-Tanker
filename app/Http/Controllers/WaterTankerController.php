@@ -653,8 +653,9 @@ class WaterTankerController extends Controller
                 ->where('wb.payment_status', '=', '1')
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->orderByDesc('id');
-            if ($req->fromDate != NULL)
-                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate])->values();
+            if ($req->fromDate != NULL) {
+                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate]);
+            }
             // if ($req->date != NULL)
             //     $list = $list->where('delivery_date', $req->date)->values();
 
@@ -1453,8 +1454,9 @@ class WaterTankerController extends Controller
                 ->where('delivery_track_status', '0')
                 ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
 
-            if ($req->fromDate != NULL)
-                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate])->values();
+            if ($req->fromDate != NULL) {
+                $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate]);
+            }
             $ulb = collect($this->_ulbs);
             $list = ($list)->where("wb.ulb_id", $ulbId);
 
