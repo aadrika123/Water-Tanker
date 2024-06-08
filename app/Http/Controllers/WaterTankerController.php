@@ -655,8 +655,8 @@ class WaterTankerController extends Controller
                 ->orderByDesc('id');
             if ($req->fromDate != NULL)
                 $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate])->values();
-            if ($req->date != NULL)
-                $list = $list->where('delivery_date', $req->date)->values();
+            // if ($req->date != NULL)
+            //     $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
             $perPage = $req->perPage ? $req->perPage : 10;
