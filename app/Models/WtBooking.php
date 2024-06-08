@@ -409,6 +409,10 @@ class WtBooking extends Model
             $dataQuery->where('wt_bookings.ward_id', $wardNo);
             $reassignQuery->where('wt_bookings.ward_id', $wardNo);
         }
+        if ($applicationMode) {
+            $dataQuery->where('wt_bookings.user_type', $applicationMode);
+            $reassignQuery->where('wt_bookings.user_type', $applicationMode);
+        }
         $data = $dataQuery->union($reassignQuery)->paginate($perPage);
 
         return [
