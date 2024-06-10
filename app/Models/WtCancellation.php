@@ -72,14 +72,15 @@ class WtCancellation extends Model
         return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 
-    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage)
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
             ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id')
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
-            ->where('wtc.cancelled_by', 'Water-Agency');
+            ->where('wtc.cancelled_by', 'Water-Agency')
+            ->where('wtc.ulb_id',$ulbId );
 
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
@@ -94,14 +95,15 @@ class WtCancellation extends Model
         ];
     }
 
-    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage)
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
             ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id')
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
-            ->where('wtc.cancelled_by', 'Citizen');
+            ->where('wtc.cancelled_by', 'Citizen')
+            ->where('wtc.ulb_id',$ulbId );
 
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);

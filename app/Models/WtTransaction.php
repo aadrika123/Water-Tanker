@@ -109,7 +109,7 @@ class WtTransaction extends Model
             ->where("t.status", 1);
     }
 
-    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null, $perPage)
+    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null, $perPage,$ulbId)
     {
         $query = DB::table('wt_transactions as t')
             ->select(
@@ -129,6 +129,7 @@ class WtTransaction extends Model
             ->leftjoin('users', 'users.id', '=', 'wt_bookings.user_id')
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
+            ->where('t.ulb_id', $ulbId)
             ->where("t.status", 1);
 
         if ($wardNo) {

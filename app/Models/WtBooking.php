@@ -207,7 +207,7 @@ class WtBooking extends Model
 
 
     //==================end=======================//
-    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $perPage)
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $perPage, $ulbId)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -219,6 +219,7 @@ class WtBooking extends Model
             ->where('wb.payment_status', '=', '1')
             ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->where('wb.ulb_id',$ulbId )
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -247,7 +248,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function assignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage)
+    public function assignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage, $ulbId)
     {
         $query = DB::table('wt_bookings as wb')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
@@ -261,7 +262,8 @@ class WtBooking extends Model
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
             ->whereNull('wtr.application_id')
             ->where('delivery_track_status', '0')
-            ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));;
+            ->where('wb.ulb_id',$ulbId )
+            ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
         }
@@ -284,7 +286,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getDeliveredList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage)
+    public function getDeliveredList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $waterCapacity, $driverName, $perPage, $ulbId)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -296,6 +298,7 @@ class WtBooking extends Model
             ->select('wb.id', 'wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location")
             ->where('wb.is_vehicle_sent', 2)
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->where('wb.ulb_id',$ulbId )
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -319,7 +322,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -332,6 +335,7 @@ class WtBooking extends Model
             ->where("is_vehicle_sent", "<", 2)
             //->where("wb.ulb_id", 2)
             ->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            ->where('wb.ulb_id',$ulbId )
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -351,12 +355,14 @@ class WtBooking extends Model
         $cancle = new WtCancellation();
         $perPage = $request->per_page ?: 10;
         $page = $request->page ?: 1;
-        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage);
-        $assignedApplication = $this->assignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage);
-        $deliveredApplication = $this->getDeliveredList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage);
-        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage);
-        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage);
-        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage);
+        $user = Auth()->user();
+        $ulbId = $user->ulb_id ?? null;
+        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage, $ulbId);
+        $assignedApplication = $this->assignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
+        $deliveredApplication = $this->getDeliveredList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage,$ulbId);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
 
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
@@ -384,7 +390,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage)
+    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage,$ulbId)
     {
         $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
@@ -393,6 +399,7 @@ class WtBooking extends Model
             ->whereNotNull('assign_date')
             ->where('is_vehicle_sent', '!=', 2)
             ->where('delivery_track_status', 0)
+            ->where('wt_bookings.ulb_id', $ulbId)
             ->whereBetween('assign_date', [$fromDate, $toDate]);
 
         $reassignQuery = WtBooking::select("wt_bookings.booking_no",  "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
@@ -403,6 +410,7 @@ class WtBooking extends Model
             ->whereNotNull('assign_date')
             ->where('is_vehicle_sent', '!=', 2)
             ->where('wt_reassign_bookings.delivery_track_status', 0)
+            ->where('wt_bookings.ulb_id', $ulbId)
             ->whereBetween('re_assign_date', [$fromDate, $toDate]);
 
         if ($wardNo) {
@@ -423,7 +431,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage)
+    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage,$ulbId)
     {
         $dataQuery = DB::table('wt_bookings as wb')
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -446,6 +454,7 @@ class WtBooking extends Model
             ->where('wb.payment_status', '=', '1')
             ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->where('wb.ulb_id', $ulbId)
             ->orderByDesc('wb.id');
 
         $cancelledQuery = DB::table('wt_bookings as wb')
@@ -469,6 +478,7 @@ class WtBooking extends Model
             ->where('delivery_track_status', 1)
             ->where('is_vehicle_sent', '<', 2)
             ->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            ->where('wb.ulb_id', $ulbId)
             ->orderByDesc('wb.id');
 
 
@@ -481,11 +491,11 @@ class WtBooking extends Model
             $cancelledQuery->where('wb.user_type', $applicationMode);
         }
         $data = $dataQuery->union($cancelledQuery)->paginate($perPage);
-        return response()->json([
+        return [
             'current_page' => $data->currentPage(),
             'last_page' => $data->lastPage(),
             'data' => $data->items(),
             'total' => $data->total()
-        ]);
+        ];
     }
 }
