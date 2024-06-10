@@ -384,7 +384,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $page)
+    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage)
     {
         $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
@@ -421,6 +421,71 @@ class WtBooking extends Model
             'data' => $data->items(),
             'total' => $data->total()
         ];
-         
+    }
+
+    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage)
+    {
+        $dataQuery = DB::table('wt_bookings as wb')
+            ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftJoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->select(
+                'wb.id',
+                'wb.booking_no',
+                'wb.applicant_name',
+                'wb.booking_date',
+                'wb.delivery_date',
+                'wc.capacity',
+                'wa.agency_name',
+                'wt_locations.location',
+                'wb.address',
+                'wb.ward_id'
+            )
+            ->where('wb.is_vehicle_sent', '<=', '1')
+            ->whereNull('wb.assign_date')
+            ->where('wb.payment_status', '=', '1')
+            ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->whereBetween('wb.booking_date', [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+
+        $cancelledQuery = DB::table('wt_bookings as wb')
+            ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            ->leftJoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftJoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
+            ->leftJoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
+            ->select(
+                'wb.id',
+                'wb.booking_no',
+                'wb.applicant_name',
+                'wb.booking_date',
+                'wb.delivery_date',
+                'wc.capacity',
+                'wa.agency_name',
+                'wt_locations.location',
+                'wb.address',
+                'wb.ward_id'
+            )
+            ->where('delivery_track_status', 1)
+            ->where('is_vehicle_sent', '<', 2)
+            ->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            ->orderByDesc('wb.id');
+
+
+        if ($wardNo) {
+            $dataQuery->where('wb.ward_id', $wardNo);
+            $cancelledQuery->where('wb.ward_id', $wardNo);
+        }
+        if ($applicationMode) {
+            $dataQuery->where('wb.user_type', $applicationMode);
+            $cancelledQuery->where('wb.user_type', $applicationMode);
+        }
+        $data = $dataQuery->union($cancelledQuery)->paginate($perPage);
+        return response()->json([
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'data' => $data->items(),
+            'total' => $data->total()
+        ]);
     }
 }

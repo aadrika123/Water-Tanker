@@ -3440,6 +3440,10 @@ class WaterTankerController extends Controller
         if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
             $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage,$page);
         }
+
+        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
+            $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage,$page);
+        }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
