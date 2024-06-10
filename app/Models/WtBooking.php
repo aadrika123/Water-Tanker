@@ -382,11 +382,26 @@ class WtBooking extends Model
             $page
         );
 
+        // return [
+        //     'current_page' => $paginator->currentPage(),
+        //     'last_page' => $paginator->lastPage(),
+        //     'data' => $paginator->items(),
+        //     'total' => $paginator->total()
+        // ];
         return [
             'current_page' => $paginator->currentPage(),
             'last_page' => $paginator->lastPage(),
             'data' => $paginator->items(),
-            'total' => $paginator->total()
+            //'total' => $paginator->total(),
+            'total_bookings' => $totalbooking,
+            'summary' => [
+                'booked_total' => $bookedApplication["total"] ?? 0,
+                'assigned_total' => $assignedApplication["total"] ?? 0,
+                'delivered_total' => $deliveredApplication["total"] ?? 0,
+                'cancel_by_agency_total' => $cancleByAgency["total"] ?? 0,
+                'cancel_by_citizen_total' => $cancleByCitizen["total"] ?? 0,
+                'cancel_by_driver_total' => $cancleByDriver["total"] ?? 0,
+            ]
         ];
     }
 
