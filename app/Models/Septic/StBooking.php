@@ -171,14 +171,32 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate($perPage);
-        $totalbooking = $booking->total();
+        // $booking = $query->paginate($perPage);
+        // $totalbooking = $booking->total();
+        // $totalJSKBookings = $query->clone()->where('stb.user_type', 'JSK')->count();
+        // $totalCitizenBookings = $query->clone()->where('stb.user_type', 'Citizen')->count();
+        // return [
+        //     'current_page' => $booking->currentPage(),
+        //     'last_page' => $booking->lastPage(),
+        //     'data' => $booking->items(),
+        //     'total' => $totalbooking,
+        //     'totalJSKBookings' => $totalJSKBookings,
+        //     'totalCitizenBookings' => $totalCitizenBookings
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         $totalJSKBookings = $query->clone()->where('stb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('stb.user_type', 'Citizen')->count();
+    
         return [
-            'current_page' => $booking->currentPage(),
-            'last_page' => $booking->lastPage(),
-            'data' => $booking->items(),
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'totalJSKBookings' => $totalJSKBookings,
             'totalCitizenBookings' => $totalCitizenBookings
@@ -211,12 +229,25 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate($perPage);
-        $totalbooking = $booking->total();
+        // $booking = $query->paginate($perPage);
+        // $totalbooking = $booking->total();
+        // return [
+        //     'current_page' => $booking->currentPage(),
+        //     'last_page' => $booking->lastPage(),
+        //     'data' => $booking->items(),
+        //     'total' => $totalbooking
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
-            'current_page' => $booking->currentPage(),
-            'last_page' => $booking->lastPage(),
-            'data' => $booking->items(),
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking
         ];
     }
@@ -243,12 +274,25 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        $booking = $query->paginate($perPage);
-        $totalbooking = $booking->total();
+        // $booking = $query->paginate($perPage);
+        // $totalbooking = $booking->total();
+        // return [
+        //     'current_page' => $booking->currentPage(),
+        //     'last_page' => $booking->lastPage(),
+        //     'data' => $booking->items(),
+        //     'total' => $totalbooking
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
-            'current_page' => $booking->currentPage(),
-            'last_page' => $booking->lastPage(),
-            'data' => $booking->items(),
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking
         ];
     }
@@ -272,13 +316,26 @@ class StBooking extends Model
         if ($wardNo) {
             $query->where('stb.ward_id', $wardNo);
         }
-        $cancle = $query->paginate($perPage);
-        $totalcancle = $cancle->total();
+        // $cancle = $query->paginate($perPage);
+        // $totalcancle = $cancle->total();
+        // return [
+        //     'current_page' => $cancle->currentPage(),
+        //     'last_page' => $cancle->lastPage(),
+        //     'data' => $cancle->items(),
+        //     'total' => $totalcancle
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
-            'current_page' => $cancle->currentPage(),
-            'last_page' => $cancle->lastPage(),
-            'data' => $cancle->items(),
-            'total' => $totalcancle
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
+            'total' => $totalbooking
         ];
     }
 
@@ -289,13 +346,13 @@ class StBooking extends Model
         $page = $request->page ?: 1;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
-        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
         //dd($perPage);
-        $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
-        $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
-        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
-        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
-        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
+        $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, null, $ulbId);
+        $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, null, $ulbId);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
 
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
@@ -307,21 +364,28 @@ class StBooking extends Model
             ->merge(collect($cancleByAgency["data"] ?? []))
             ->merge(collect($cancleByCitizen["data"] ?? []))
             ->merge(collect($cancleByDriver["data"] ?? []));
-        // dd($data);
-        $currentPageData = $data->forPage($page, $perPage);
-        $paginator = new LengthAwarePaginator(
-            $currentPageData,
-            $data->count(),
-            $perPage,
-            $page
-        );
-
-        return [
-            'current_page' => $paginator->currentPage(),
-            'last_page' => $paginator->lastPage(),
-            'data' => $paginator->items(),
-            'total' => $paginator->total()
-        ];
+            $currentPageData = $data->forPage($page, $perPage)->values();
+            $paginator = new LengthAwarePaginator(
+                $currentPageData,
+                $data->count(),
+                $perPage,
+                $page
+            );
+        
+            return [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'data' => $paginator->items(),
+                'total_bookings' => $totalbooking,
+                'summary' => [
+                    'booked_total' => $bookedApplication["total"] ?? 0,
+                    'assigned_total' => $assignedApplication["total"] ?? 0,
+                    'delivered_total' => $deliveredApplication["total"] ?? 0,
+                    'cancel_by_agency_total' => $cancleByAgency["total"] ?? 0,
+                    'cancel_by_citizen_total' => $cancleByCitizen["total"] ?? 0,
+                    'cancel_by_driver_total' => $cancleByDriver["total"] ?? 0,
+                ]
+            ];
     }
 
     public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
