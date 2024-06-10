@@ -362,11 +362,13 @@ class StBooking extends Model
     }
 
     public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
-    {select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+    {
         $dataQuery = DB::table('st_bookings as stb')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
+            ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location','sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name")
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -379,7 +381,7 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location','sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name")
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
