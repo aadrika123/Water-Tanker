@@ -213,13 +213,13 @@ class WtBooking extends Model
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
-            ->select('wb.id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity')
+            ->select('wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity', 'wb.user_type as applied_by')
             ->where('wb.is_vehicle_sent', '<=', '1')
             ->where('wb.assign_date', NULL)
             ->where('wb.payment_status', '=', '1')
             ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
-            ->where('wb.ulb_id',$ulbId )
+            ->where('wb.ulb_id', $ulbId)
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -251,12 +251,12 @@ class WtBooking extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         $totalJSKBookings = $query->clone()->where('wb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('wb.user_type', 'Citizen')->count();
         $totalCapacity = $query->clone()->where('wc.capacity', $waterCapacity)->count();
-    
+
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
@@ -277,12 +277,12 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
-            ->select('wb.id', 'wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id")
+            ->select('wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id", 'wb.user_type as applied_by')
             ->where('assign_date', '!=', NULL)
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
             ->whereNull('wtr.application_id')
             ->where('delivery_track_status', '0')
-            ->where('wb.ulb_id',$ulbId )
+            ->where('wb.ulb_id', $ulbId)
             ->where('delivery_date', '>=', Carbon::now()->format('Y-m-d'));
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -309,7 +309,7 @@ class WtBooking extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
@@ -328,10 +328,10 @@ class WtBooking extends Model
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.id', 'wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location")
+            ->select('wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.user_type as applied_by')
             ->where('wb.is_vehicle_sent', 2)
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
-            ->where('wb.ulb_id',$ulbId )
+            ->where('wb.ulb_id', $ulbId)
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -358,7 +358,7 @@ class WtBooking extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
@@ -376,12 +376,12 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
-            ->select('wb.id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity')
+            ->select('wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity', 'wb.user_type as applied_by')
             ->where("delivery_track_status", 1)
             ->where("is_vehicle_sent", "<", 2)
             //->where("wb.ulb_id", 2)
             ->whereBetween(DB::raw("CAST(wb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
-            ->where('wb.ulb_id',$ulbId )
+            ->where('wb.ulb_id', $ulbId)
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
@@ -399,7 +399,7 @@ class WtBooking extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
@@ -440,7 +440,7 @@ class WtBooking extends Model
             $perPage,
             $page
         );
-    
+
         return [
             'current_page' => $paginator->currentPage(),
             'last_page' => $paginator->lastPage(),
@@ -457,9 +457,8 @@ class WtBooking extends Model
         ];
 
     }
-    
 
-    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage,$ulbId)
+    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
         $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
@@ -500,7 +499,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage,$ulbId)
+    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
         $dataQuery = DB::table('wt_bookings as wb')
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
