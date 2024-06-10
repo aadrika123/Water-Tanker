@@ -107,7 +107,7 @@ class StTransaction extends Model
             ->where("t.status", 1);
     }
 
-    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null,$perPage)
+    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null,$perPage,$ulbId)
     {
         $query = DB::table('st_transactions as t')
             ->select(
@@ -127,6 +127,7 @@ class StTransaction extends Model
             ->leftjoin('users', 'users.id', '=', 'st_bookings.user_id')
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
+            ->where('t.ulb_id', $ulbId)
             ->where("t.status", 1);
 
         if ($wardNo) {

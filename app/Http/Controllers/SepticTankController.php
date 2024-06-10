@@ -2179,8 +2179,10 @@ class SepticTankController extends Controller
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
         $perPage = $request->per_page ?: 10;
+        $user = Auth()->user();
+        $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'dailyCollection') {
-            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage);
+            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage,$ulbId);
         }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
@@ -2210,24 +2212,26 @@ class SepticTankController extends Controller
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
         $perPage = $request->per_page ?: 10;
+        $user = Auth()->user();
+        $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
-            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage);
+            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage,$ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
-            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
+            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
-            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage);
+            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
-            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage);
+            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
         }
 
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
-            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage);
+            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
-            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage);
+            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
             $response = $booked->allBooking($request);
