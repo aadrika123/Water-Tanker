@@ -2172,8 +2172,13 @@ class SepticTankController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
+        try {
         $tran = new StTransaction();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
@@ -2185,9 +2190,11 @@ class SepticTankController extends Controller
             $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
         }
         if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            //return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+            return responseMsgs(true, "SepticTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+        }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 
@@ -2204,8 +2211,13 @@ class SepticTankController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
+        try{
         $booked = new StBooking();
         $cancle = new StCancelledBooking();
         $response = [];
@@ -2237,9 +2249,10 @@ class SepticTankController extends Controller
             $response = $booked->allBooking($request);
         }
         if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            return responseMsgs(true, "SepticTanker Application List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+        }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 
@@ -2256,8 +2269,13 @@ class SepticTankController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
+        try{
         $booked = new StBooking();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
@@ -2274,9 +2292,10 @@ class SepticTankController extends Controller
             $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
         }
         if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            return responseMsgs(true, "SepticTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+        }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 }

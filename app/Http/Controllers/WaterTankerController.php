@@ -3348,23 +3348,29 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        $tran = new WtTransaction();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $tran = new WtTransaction();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->per_page ?: 10;
 
-        if ($request->reportType == 'dailyCollection') {
-            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage,$ulbId);
-        }
-        if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            if ($request->reportType == 'dailyCollection') {
+                $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
+            }
+            if ($response) {
+                return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 
@@ -3382,8 +3388,13 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
+        try{
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
         $booked = new WtBooking();
@@ -3417,9 +3428,10 @@ class WaterTankerController extends Controller
             $response = $booked->allBooking($request);
         }
         if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 
@@ -3436,8 +3448,13 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+            return response()->json([
+                'status'  => false,
+                'message' => 'validation error',
+                'errors'  => $validator->errors()
+            ], 200);
         }
+        try{
         $booked = new WtBooking();
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
@@ -3454,9 +3471,10 @@ class WaterTankerController extends Controller
             $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
         }
         if ($response) {
-            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-        } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+            return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
 }
