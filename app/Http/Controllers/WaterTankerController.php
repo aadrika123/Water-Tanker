@@ -2360,6 +2360,7 @@ class WaterTankerController extends Controller
 
             $ulb = $this->_ulbs;
             $f_list['listCancelled'] = $list->map(function ($val) use ($ulb) {
+                $val->tranId = WtTransaction::select("id")->where("booking_id", $val->id)->whereIn("status", [1, 2])->first()->id ?? "";
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                 $val->cancel_date = Carbon::parse($val->cancel_date)->format('d-m-Y');
