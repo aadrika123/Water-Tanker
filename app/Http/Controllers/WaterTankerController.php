@@ -2858,9 +2858,10 @@ class WaterTankerController extends Controller
                 $uptoDate = $res->uptoDate;
             }
             $user = $res->auth;
-            $data = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type")
+            $data = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type","wt_locations.location")
                 ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
                 ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
+                ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
                 ->where("wt_drivers.u_id", $user["id"])
                 ->where("wt_bookings.status", 1)
                 ->where("wt_bookings.ulb_id", $user["ulb_id"])
@@ -2868,10 +2869,11 @@ class WaterTankerController extends Controller
                 ->where('is_vehicle_sent', '!=', 2)
                 ->where('delivery_track_status', 0);
 
-            $reassign = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type")
+            $reassign = WtBooking::select("wt_bookings.*", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type","wt_locations.location")
                 ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
                 ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
                 ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
+                ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
                 ->where("wt_drivers.u_id", $user["id"])
                 ->where("wt_bookings.status", 1)
                 ->where("wt_bookings.ulb_id", $user["ulb_id"])

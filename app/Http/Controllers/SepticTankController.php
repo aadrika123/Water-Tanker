@@ -1450,9 +1450,10 @@ class SepticTankController extends Controller
                 $uptoDate = $res->uptoDate;
             }
             $user = $res->auth;
-            $data = StBooking::select("st_bookings.*", "st_resources.vehicle_name", "st_resources.vehicle_no", "st_resources.resource_type")
+            $data = StBooking::select("st_bookings.*", "st_resources.vehicle_name", "st_resources.vehicle_no", "st_resources.resource_type","wtl.location")
                 ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
                 ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
+                ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
                 ->where("st_drivers.u_id", $user["id"])
                 // ->where("st_bookings.status",1)
                 ->where("st_bookings.ulb_id", $user["ulb_id"])
