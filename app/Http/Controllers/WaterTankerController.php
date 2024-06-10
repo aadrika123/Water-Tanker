@@ -3348,7 +3348,7 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
         }
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
@@ -3364,7 +3364,7 @@ class WaterTankerController extends Controller
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
         }
     }
 
@@ -3382,7 +3382,7 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
         }
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
@@ -3419,7 +3419,7 @@ class WaterTankerController extends Controller
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
         }
     }
 
@@ -3436,7 +3436,7 @@ class WaterTankerController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
         }
         $booked = new WtBooking();
         $response = [];
@@ -3456,7 +3456,7 @@ class WaterTankerController extends Controller
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
         }
     }
 }

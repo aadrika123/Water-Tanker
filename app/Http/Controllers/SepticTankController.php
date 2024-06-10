@@ -1450,7 +1450,7 @@ class SepticTankController extends Controller
                 $uptoDate = $res->uptoDate;
             }
             $user = $res->auth;
-            $data = StBooking::select("st_bookings.*", "st_resources.vehicle_name", "st_resources.vehicle_no", "st_resources.resource_type","wtl.location")
+            $data = StBooking::select("st_bookings.*", "st_resources.vehicle_name", "st_resources.vehicle_no", "st_resources.resource_type", "wtl.location")
                 ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
                 ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
                 ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
@@ -2172,7 +2172,7 @@ class SepticTankController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
         }
         $tran = new StTransaction();
         $response = [];
@@ -2182,12 +2182,12 @@ class SepticTankController extends Controller
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'dailyCollection') {
-            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage,$ulbId);
+            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
         }
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
         }
     }
 
@@ -2204,7 +2204,7 @@ class SepticTankController extends Controller
             'applicationStatus' => 'nullable'
         ]);
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
         }
         $booked = new StBooking();
         $cancle = new StCancelledBooking();
@@ -2215,23 +2215,23 @@ class SepticTankController extends Controller
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
-            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage,$ulbId);
+            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
-            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
+            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
-            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
+            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
-            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
+            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
         }
 
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
-            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
+            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
-            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage,$ulbId);
+            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
             $response = $booked->allBooking($request);
@@ -2239,7 +2239,44 @@ class SepticTankController extends Controller
         if ($response) {
             return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
         } else {
-            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 422);
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
+        }
+    }
+
+    public function pendingReportDataSepticTanker(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'fromDate' => 'required|date_format:Y-m-d',
+            'toDate' => 'required|date_format:Y-m-d|after_or_equal:fromDate',
+            'reportType' => 'required',
+            'wardNo' => 'nullable',
+            'applicationMode' => 'nullable',
+            'waterCapacity' => 'nullable',
+            'driverName' => 'nullable',
+            'applicationStatus' => 'nullable'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()->first(),'data'=>''], 200);
+        }
+        $booked = new StBooking();
+        $response = [];
+        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+        $perPage = $request->per_page ?: 10;
+        $page = $request->page ?: 1;
+        $user = Auth()->user();
+        $ulbId = $user->ulb_id ?? null;
+        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
+            $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+        }
+
+        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
+            $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+        }
+        if ($response) {
+            return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+        } else {
+            return response()->json(['status' => false, 'data' => [], 'msg' => 'Undefined parameter supply'], 200);
         }
     }
 }

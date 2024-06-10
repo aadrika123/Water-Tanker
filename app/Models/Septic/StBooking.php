@@ -152,7 +152,7 @@ class StBooking extends Model
     }
 
 
-    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage,$ulbId)
+    public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
@@ -185,7 +185,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getAssignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName,$perPage,$ulbId)
+    public function getAssignedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -221,7 +221,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getCleanedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName,$perPage,$ulbId)
+    public function getCleanedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $driverName, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -253,7 +253,7 @@ class StBooking extends Model
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
@@ -289,13 +289,13 @@ class StBooking extends Model
         $page = $request->page ?: 1;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
-        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage,$ulbId);
+        $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
         //dd($perPage);
-        $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
-        $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage,$ulbId);
-        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
-        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
-        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage,$ulbId);
+        $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+        $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $perPage, $ulbId);
 
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
@@ -307,7 +307,7 @@ class StBooking extends Model
             ->merge(collect($cancleByAgency["data"] ?? []))
             ->merge(collect($cancleByCitizen["data"] ?? []))
             ->merge(collect($cancleByDriver["data"] ?? []));
-            // dd($data);
+        // dd($data);
         $currentPageData = $data->forPage($page, $perPage);
         $paginator = new LengthAwarePaginator(
             $currentPageData,
@@ -321,6 +321,85 @@ class StBooking extends Model
             'last_page' => $paginator->lastPage(),
             'data' => $paginator->items(),
             'total' => $paginator->total()
+        ];
+    }
+
+    public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
+    {
+        $dataQuery = StBooking::select(
+            "st_bookings.booking_no",
+            "st_bookings.booking_date",
+            "st_bookings.applicant_name",
+            "st_resources.vehicle_name",
+            "st_resources.vehicle_no",
+            "st_resources.resource_type",
+            "wtl.location",
+            "st_drivers.driver_name"
+        )
+            ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
+            ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
+            ->where('assign_date', '!=', NULL)
+            ->where('assign_status', 1)
+            ->where('delivery_track_status', 0)
+            ->where('st_bookings.ulb_id', $ulbId)
+            ->whereBetween('assign_date', [$fromDate, $toDate]);
+
+        if ($wardNo) {
+            $dataQuery->where('st_bookings.ward_id', $wardNo);
+        }
+        if ($applicationMode) {
+            $dataQuery->where('st_bookings.user_type', $applicationMode);
+        }
+        $data = $dataQuery->paginate($perPage);
+
+        return [
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'data' => $data->items(),
+            'total' => $data->total()
+        ];
+    }
+
+    public function getPendingAgencyList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
+    {select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+        $dataQuery = DB::table('st_bookings as stb')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
+            ->where('assign_date', NULL)
+            ->where('payment_status', 1)
+            ->whereBetween('stb.booking_date', [$fromDate, $toDate])
+            ->where('stb.ulb_id', $ulbId)
+            ->orderByDesc('stb.id');
+
+        $cancelledQuery = DB::table('st_bookings as stb')
+            ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
+            ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->where("delivery_track_status", 1)
+            ->where("assign_status", "<", 2)
+            ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
+            ->where('stb.ulb_id', $ulbId)
+            ->orderByDesc('stb.id');
+
+        if ($wardNo) {
+            $dataQuery->where('wb.ward_id', $wardNo);
+            $cancelledQuery->where('wb.ward_id', $wardNo);
+        }
+        if ($applicationMode) {
+            $dataQuery->where('wb.user_type', $applicationMode);
+            $cancelledQuery->where('wb.user_type', $applicationMode);
+        }
+        $data = $dataQuery->union($cancelledQuery)->paginate($perPage);
+        return [
+            'current_page' => $data->currentPage(),
+            'last_page' => $data->lastPage(),
+            'data' => $data->items(),
+            'total' => $data->total()
         ];
     }
 }

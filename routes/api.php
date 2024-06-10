@@ -209,6 +209,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('septic-tanker/collection-report', 'listCollection');
             Route::post('septic-tanker/daily-collection-report', 'ReportDataSepticTanker');
             Route::post('septic-tanker/application-report', 'applicationReportDataWaterTanker');
+            Route::post('septic-tanker/pending-report', 'pendingReportDataSepticTanker');
             
         });
 
