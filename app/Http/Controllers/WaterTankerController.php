@@ -3426,6 +3426,7 @@ class WaterTankerController extends Controller
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
             $response = $booked->allBooking($request);
+            //$response = response()->json($response);
         }
         if ($response) {
             return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);

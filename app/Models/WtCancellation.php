@@ -85,13 +85,26 @@ class WtCancellation extends Model
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
         }
-        $cancle = $query->paginate($perPage);
-        $totalcancle = $cancle->total();
+        // $cancle = $query->paginate($perPage);
+        // $totalcancle = $cancle->total();
+        // return [
+        //     'current_page' => $cancle->currentPage(),
+        //     'last_page' => $cancle->lastPage(),
+        //     'data' => $cancle->items(),
+        //     'total' => $totalcancle
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
-            'current_page' => $cancle->currentPage(),
-            'last_page' => $cancle->lastPage(),
-            'data' => $cancle->items(),
-            'total' => $totalcancle
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
+            'total' => $totalbooking
         ];
     }
 
@@ -108,13 +121,26 @@ class WtCancellation extends Model
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
         }
-        $cancle = $query->paginate($perPage);
-        $totalcancle = $cancle->total();
+        // $cancle = $query->paginate($perPage);
+        // $totalcancle = $cancle->total();
+        // return [
+        //     'current_page' => $cancle->currentPage(),
+        //     'last_page' => $cancle->lastPage(),
+        //     'data' => $cancle->items(),
+        //     'total' => $totalcancle
+        // ];
+        if ($perPage) {
+            $booking = $query->paginate($perPage);
+        } else {
+            $booking = $query->get();
+        }
+    
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
-            'current_page' => $cancle->currentPage(),
-            'last_page' => $cancle->lastPage(),
-            'data' => $cancle->items(),
-            'total' => $totalcancle
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
+            'total' => $totalbooking
         ];
     }
 
