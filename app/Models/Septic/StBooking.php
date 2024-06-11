@@ -155,7 +155,7 @@ class StBooking extends Model
     public function getBookedList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
-            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
+            ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id",DB::raw("'booked' as application_type"))
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
             ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
@@ -210,7 +210,7 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no', DB::raw("'assigned' as application_type"))
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_status', '1')
             ->where('delivery_track_status', '0')
@@ -259,7 +259,7 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no',DB::raw("'cleaned' as application_type"))
             ->where('stb.assign_status', '2')
             //->where('stb.ulb_id', '2')
             ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
@@ -304,7 +304,7 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location')
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', DB::raw("'cancleByDriver' as application_type"))
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
@@ -398,7 +398,8 @@ class StBooking extends Model
             "st_resources.vehicle_no",
             "st_resources.resource_type",
             "wtl.location",
-            "st_drivers.driver_name"
+            "st_drivers.driver_name",
+            DB::raw("'pendingAtDriver' as application_type")
         )
             ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
             ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
@@ -447,7 +448,7 @@ class StBooking extends Model
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name")
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name", DB::raw("'pendingAtAgency' as application_type"))
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -460,7 +461,7 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name")
+            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name", DB::raw("'pendingAtAgency' as application_type"))
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])

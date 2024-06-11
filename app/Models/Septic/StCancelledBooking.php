@@ -60,7 +60,7 @@ class StCancelledBooking extends Model
     public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
-            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location')
+            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location',DB::raw("'cancleByAgency' as application_type"))
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
@@ -96,7 +96,7 @@ class StCancelledBooking extends Model
     public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
-            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location')
+            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location',DB::raw("'cancleByCitizen' as application_type"))
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
