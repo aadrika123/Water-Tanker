@@ -2937,9 +2937,11 @@ class WaterTankerController extends Controller
                 "wt_bookings.delivery_longitude",
                 "wt_bookings.driver_delivery_update_date_time",
                 "assign_date AS assign_date",
-                "wt_bookings.driver_delivery_update_date_time AS update_date_time"
+                "wt_bookings.driver_delivery_update_date_time AS update_date_time",
+                "wt_locations.location"
             )
                 ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
+                ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
                 ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
                 ->where("wt_drivers.u_id", $user["id"])
                 ->where("wt_bookings.status", 1)
@@ -2958,9 +2960,11 @@ class WaterTankerController extends Controller
                 "wt_reassign_bookings.delivery_longitude",
                 "wt_reassign_bookings.driver_delivery_update_date_time",
                 "re_assign_date AS assign_date",
-                "wt_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+                "wt_reassign_bookings.driver_delivery_update_date_time AS update_date_time",
+                "wt_locations.location"
             )
                 ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
+                ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
                 ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
                 ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
                 ->where("wt_drivers.u_id", $user["id"])
