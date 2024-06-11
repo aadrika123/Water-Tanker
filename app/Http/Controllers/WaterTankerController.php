@@ -2522,6 +2522,7 @@ class WaterTankerController extends Controller
     public function paymentSuccessOrFailure(Request $req)
     {
         try {
+            $refUser                = authUser($req);
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 $msg = '';
@@ -2541,6 +2542,7 @@ class WaterTankerController extends Controller
                     $wtTransaction = new WtTransaction();
 
                     $wtTransaction->ulb_id = $mWtBooking->ulb_id;
+                    $wtTransaction->citizen_id = $refUser->id;
                     $wtTransaction->tran_type = "Water Tanker Booking";
                     $wtTransaction->ward_id = $mWtBooking->ward_id;
                     $wtTransaction->verify_date = Carbon::now();;
