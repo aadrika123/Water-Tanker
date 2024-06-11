@@ -77,7 +77,7 @@ class WtCancellation extends Model
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by')
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by',DB::raw("'cancleByAgency' as application_type"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Water-Agency')
             ->where('wtc.ulb_id',$ulbId );
@@ -113,7 +113,7 @@ class WtCancellation extends Model
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by')
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by',DB::raw("'cancleByCitizen' as application_type"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Citizen')
             ->where('wtc.ulb_id',$ulbId );
