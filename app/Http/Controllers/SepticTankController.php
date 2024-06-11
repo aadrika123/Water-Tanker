@@ -1524,9 +1524,11 @@ class SepticTankController extends Controller
                 "st_bookings.delivery_longitude",
                 "st_bookings.driver_delivery_update_date_time",
                 "assign_date AS assign_date",
-                "st_bookings.driver_delivery_update_date_time AS update_date_time"
+                "st_bookings.driver_delivery_update_date_time AS update_date_time",
+                "wtl.location"
             )
                 ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
+                ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
                 ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
                 ->where("st_drivers.u_id", $user["id"])
                 ->where("st_bookings.ulb_id", $user["ulb_id"])
@@ -1544,9 +1546,11 @@ class SepticTankController extends Controller
                 "st_reassign_bookings.delivery_longitude",
                 "st_reassign_bookings.driver_delivery_update_date_time",
                 "re_assign_date AS assign_date",
-                "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time"
+                "st_reassign_bookings.driver_delivery_update_date_time AS update_date_time",
+                "wtl.location"
             )
                 ->join("st_reassign_bookings", "st_reassign_bookings.application_id", "st_bookings.id")
+                ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
                 ->join("st_drivers", "st_drivers.id", "st_reassign_bookings.driver_id")
                 ->join("st_resources", "st_resources.id", "st_reassign_bookings.vehicle_id")
                 ->where("st_drivers.u_id", $user["id"])
