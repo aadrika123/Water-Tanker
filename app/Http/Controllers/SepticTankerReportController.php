@@ -159,13 +159,13 @@ class SepticTankerReportController extends Controller
                                  count(distinct(st_bookings.payment_amount))as pending_amount,
                                  count(distinct(st_bookings.user_id))as total_users"))
                 ->$userJoin("users", "users.id", "st_bookings.user_id")
-                ->where("st_bookings.status", 1)
+                ->where("st_bookings.status", 0)
                 ->where("st_bookings.payment_status", 0);
             $applyApp = StBooking::select(DB::raw("count(st_bookings.id) as total_booking,
                              count(distinct(st_bookings.payment_amount))as pending_amount,
                              count(distinct(st_bookings.user_id))as total_users"))
                 ->$userJoin("users", "users.id", "st_bookings.user_id")
-                ->where("st_bookings.status", 1);
+                ->where("st_bookings.status", 0);
             if ($fromDate && $uptoDate) {
                 $tran->whereBetween("st_transactions.tran_date", [$fromDate, $uptoDate]);
                 $pendingPaymentApp->whereBetween("st_bookings.booking_date", [$fromDate, $uptoDate]);
