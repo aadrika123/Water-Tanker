@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -290,8 +291,22 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             ->leftJoin(Db::raw("(select distinct application_id from wt_reassign_bookings)wtr"), "wtr.application_id", "wb.id")
-            ->select('wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'wr.vehicle_name', 'wr.vehicle_no', 'wd.driver_name', 'wd.driver_mobile', "wtr.application_id", 
-             DB::raw("'assigned' as application_type"),'wb.user_type as applied_by')
+            ->select(
+                'wb.ward_id',
+                'wb.booking_no',
+                'wb.applicant_name',
+                'wb.booking_date',
+                'wb.delivery_date',
+                'wc.capacity',
+                'wa.agency_name',
+                'wr.vehicle_name',
+                'wr.vehicle_no',
+                'wd.driver_name',
+                'wd.driver_mobile',
+                "wtr.application_id",
+                DB::raw("'assigned' as application_type"),
+                'wb.user_type as applied_by'
+            )
             ->where('assign_date', '!=', NULL)
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
             ->whereNull('wtr.application_id')
@@ -502,13 +517,28 @@ class WtBooking extends Model
             $dataQuery->where('wt_bookings.user_type', $applicationMode);
             $reassignQuery->where('wt_bookings.user_type', $applicationMode);
         }
-        $data = $dataQuery->union($reassignQuery)->paginate($perPage);
+        $data = $dataQuery->union($reassignQuery);
+        // ->paginate($perPage);
+
+        // return [
+        //     'current_page' => $data->currentPage(),
+        //     'last_page' => $data->lastPage(),
+        //     'data' => $data->items(),
+        //     'total' => $data->total()
+        // ];
+        if ($perPage) {
+            $booking = $data->paginate($perPage);
+        } else {
+            $booking = $data->get();
+        }
+
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
 
         return [
-            'current_page' => $data->currentPage(),
-            'last_page' => $data->lastPage(),
-            'data' => $data->items(),
-            'total' => $data->total()
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
+            'total' => $totalbooking,
         ];
     }
 
@@ -571,12 +601,95 @@ class WtBooking extends Model
             $dataQuery->where('wb.user_type', $applicationMode);
             $cancelledQuery->where('wb.user_type', $applicationMode);
         }
-        $data = $dataQuery->union($cancelledQuery)->paginate($perPage);
+        $data = $dataQuery->union($cancelledQuery);
+        // ->paginate($perPage);
+        // return [
+        //     'current_page' => $data->currentPage(),
+        //     'last_page' => $data->lastPage(),
+        //     'data' => $data->items(),
+        //     'total' => $data->total()
+        // ];
+        if ($perPage) {
+            $booking = $data->paginate($perPage);
+        } else {
+            $booking = $data->get();
+        }
+
+        $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
+
         return [
-            'current_page' => $data->currentPage(),
-            'last_page' => $data->lastPage(),
-            'data' => $data->items(),
-            'total' => $data->total()
+            'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
+            'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
+            'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
+            'total' => $totalbooking,
         ];
     }
+
+    // public function allPending(Request $request)
+    // {
+    //     try {
+    //         $perPage = $request->per_page ?: 10;
+    //         $page = $request->page ?: 1;
+    //         $user = Auth()->user();
+    //         $ulbId = $user->ulb_id ?? null;
+    //         $bookedApplication = $this->getPendingList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+    //         $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+
+    //         $totalBooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0);
+    //         $data = collect($bookedApplication["data"] ?? [])
+    //             ->merge(collect($assignedApplication["data"] ?? []));
+    //         $currentPageData = $data->forPage($page, $perPage)->values();
+    //         $paginator = new LengthAwarePaginator(
+    //             $currentPageData,
+    //             $data->count(),
+    //             $perPage,
+    //             $page
+    //         );
+
+    //         return [
+    //             'current_page' => $paginator->currentPage(),
+    //             'last_page' => $paginator->lastPage(),
+    //             'data' => $paginator->items(),
+    //             'total_bookings' => $totalBooking,
+    //             'summary' => [
+    //                 'driver_pending' => $bookedApplication["total"] ?? 0,
+    //                 'agency' => $assignedApplication["total"] ?? 0
+    //             ]
+    //         ];
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
+    //     }
+    // }
+
+    public function allPending(Request $request)
+    {
+        try {
+            $perPage = $request->per_page ?: 10;
+            $page = $request->page ?: 1;
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $bookedApplication = $this->getPendingList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+    
+            $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+    
+            $data = collect($bookedApplication['data'])->merge($assignedApplication['data']);
+    
+            $totalBooking = count($data);
+            $currentPageData = $data->forPage($page, $perPage)->values();
+    
+            return [
+                'current_page' => $page,
+                'last_page' => ceil($totalBooking / $perPage),
+                'data' => $currentPageData,
+                'total_bookings' => $totalBooking,
+                'summary' => [
+                    'driver_pending' => $bookedApplication['total'] ?? 0,
+                    'agency_pending' => $assignedApplication['total'] ?? 0
+                ]
+            ];
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
+        }
+    }
+    
 }

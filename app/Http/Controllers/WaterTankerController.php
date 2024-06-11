@@ -3471,6 +3471,10 @@ class WaterTankerController extends Controller
         if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
             $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
         }
+        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
+            $response = $booked->allPending($request);
+            //$response = response()->json($response);
+        }
         if ($response) {
             return responseMsgs(true, "WaterTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
             }
