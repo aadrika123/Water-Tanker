@@ -664,7 +664,7 @@ class WtBooking extends Model
             $currentPageData = $data->forPage($page, $perPage)->values();
 
             return [
-                'current_page' => $page,
+                'current_page' => (int)$page,
                 'last_page' => ceil($totalBooking / $perPage),
                 'data' => $currentPageData,
                 'total_bookings' => $totalBooking,
