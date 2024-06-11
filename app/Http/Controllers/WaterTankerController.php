@@ -2842,8 +2842,25 @@ class WaterTankerController extends Controller
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
             $mWtResource = new WtResource();
             $resource = $mWtResource->getVehicleForMasterData($req->auth['ulb_id']);
+            // $data1['vehicle'] = $resource;
+            if ($req->auth['user_type'] == 'UlbUser')
+                $resource = $resource->where('agency_id', NULL)->values();
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $resource = $resource->where('agency_id', WtAgency::select('id')
+                    //->where('u_id', $req->auth['id'])->first()->id ?? 0)->values();
+                    ->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();
+
+            $users = User::where("ulb_id", $req->auth["ulb_id"])->get();
             $mWtDriver = new WtDriver();
-            $driver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id']);
+            $driver = $mWtDriver->getDriverListForMasterData($req->auth['ulb_id'])->map(function ($val) use ($users) {
+                $user = $users->where("id", $val->u_id)->first();
+                $val->email = $user ? $user->email : "";
+                return $val;
+            });
+            if ($req->auth['user_type'] == 'UlbUser')
+                $driver = $driver->where('agency_id', NULL)->values();
+            if ($req->auth['user_type'] == 'Water-Agency')
+                $driver = $driver->where('agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id ?? 0)->values();;
             $f_list['listResource'] = $resource->values();
             $f_list['listDriver'] = $driver->values();
             return responseMsgs(true, "Data Fetched Successfully !!!", $f_list, "110217", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
@@ -3402,42 +3419,42 @@ class WaterTankerController extends Controller
                 'errors'  => $validator->errors()
             ], 200);
         }
-        try{
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        $booked = new WtBooking();
-        $cancle = new WtCancellation();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
-            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage, $ulbId);
-        }
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $booked = new WtBooking();
+            $cancle = new WtCancellation();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->per_page ?: 10;
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
+                $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage, $ulbId);
+            }
 
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'assignedApplication') {
-            $response = $booked->assignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'deliveredApplication') {
-            $response = $booked->getDeliveredList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
-        }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'assignedApplication') {
+                $response = $booked->assignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'deliveredApplication') {
+                $response = $booked->getDeliveredList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
+            }
 
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByAgency') {
-            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
-        }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByAgency') {
+                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            }
 
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByCitizen') {
-            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByDriver') {
-            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
-            $response = $booked->allBooking($request);
-            //$response = response()->json($response);
-        }
-        if ($response) {
-            return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByCitizen') {
+                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByDriver') {
+                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
+                $response = $booked->allBooking($request);
+                //$response = response()->json($response);
+            }
+            if ($response) {
+                return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
             }
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
@@ -3463,28 +3480,28 @@ class WaterTankerController extends Controller
                 'errors'  => $validator->errors()
             ], 200);
         }
-        try{
-        $booked = new WtBooking();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
-        $page = $request->page ?: 1;
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
-            $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-        }
+        try {
+            $booked = new WtBooking();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->per_page ?: 10;
+            $page = $request->page ?: 1;
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
+                $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+            }
 
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
-            $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-        }
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
-            $response = $booked->allPending($request);
-            //$response = response()->json($response);
-        }
-        if ($response) {
-            return responseMsgs(true, "WaterTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
+                $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+            }
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
+                $response = $booked->allPending($request);
+                //$response = response()->json($response);
+            }
+            if ($response) {
+                return responseMsgs(true, "WaterTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
             }
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
