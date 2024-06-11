@@ -625,41 +625,6 @@ class WtBooking extends Model
         ];
     }
 
-    // public function allPending(Request $request)
-    // {
-    //     try {
-    //         $perPage = $request->per_page ?: 10;
-    //         $page = $request->page ?: 1;
-    //         $user = Auth()->user();
-    //         $ulbId = $user->ulb_id ?? null;
-    //         $bookedApplication = $this->getPendingList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-    //         $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-
-    //         $totalBooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0);
-    //         $data = collect($bookedApplication["data"] ?? [])
-    //             ->merge(collect($assignedApplication["data"] ?? []));
-    //         $currentPageData = $data->forPage($page, $perPage)->values();
-    //         $paginator = new LengthAwarePaginator(
-    //             $currentPageData,
-    //             $data->count(),
-    //             $perPage,
-    //             $page
-    //         );
-
-    //         return [
-    //             'current_page' => $paginator->currentPage(),
-    //             'last_page' => $paginator->lastPage(),
-    //             'data' => $paginator->items(),
-    //             'total_bookings' => $totalBooking,
-    //             'summary' => [
-    //                 'driver_pending' => $bookedApplication["total"] ?? 0,
-    //                 'agency' => $assignedApplication["total"] ?? 0
-    //             ]
-    //         ];
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
-    //     }
-    // }
 
     public function allPending(Request $request)
     {
