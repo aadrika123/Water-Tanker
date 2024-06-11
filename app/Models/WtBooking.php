@@ -488,9 +488,11 @@ class WtBooking extends Model
 
     public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
-        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", DB::raw("'pendingAtDriver' as application_type"))
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
             ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
+            ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
+            ->join('wt_capacities as wc', 'wt_bookings.capacity_id', '=', 'wc.id')
             ->where("wt_bookings.status", 1)
             ->whereNotNull('assign_date')
             ->where('is_vehicle_sent', '!=', 2)
@@ -498,8 +500,10 @@ class WtBooking extends Model
             ->where('wt_bookings.ulb_id', $ulbId)
             ->whereBetween('assign_date', [$fromDate, $toDate]);
 
-        $reassignQuery = WtBooking::select("wt_bookings.booking_no",  "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name")
+        $reassignQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", DB::raw("'pendingAtDriver' as application_type"))
             ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
+            ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
+            ->join('wt_capacities as wc', 'wt_bookings.capacity_id', '=', 'wc.id')
             ->join("wt_drivers", "wt_drivers.id", "wt_reassign_bookings.driver_id")
             ->join("wt_resources", "wt_resources.id", "wt_reassign_bookings.vehicle_id")
             ->where("wt_bookings.status", 1)
@@ -548,6 +552,8 @@ class WtBooking extends Model
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftJoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            ->leftjoin("wt_drivers", "wt_drivers.id", "wb.driver_id")
+            ->leftjoin("wt_resources", "wt_resources.id", "wb.vehicle_id")
             ->select(
                 'wb.id',
                 'wb.booking_no',
@@ -558,7 +564,11 @@ class WtBooking extends Model
                 'wa.agency_name',
                 'wt_locations.location',
                 'wb.address',
-                'wb.ward_id'
+                'wb.ward_id',
+                "wt_resources.vehicle_name",
+                "wt_resources.vehicle_no",
+                "wt_drivers.driver_name",
+                DB::raw("'pendingAtAgency' as application_type")
             )
             ->where('wb.is_vehicle_sent', '<=', '1')
             ->whereNull('wb.assign_date')
@@ -584,7 +594,11 @@ class WtBooking extends Model
                 'wa.agency_name',
                 'wt_locations.location',
                 'wb.address',
-                'wb.ward_id'
+                'wb.ward_id',
+                "res.vehicle_name",
+                "res.vehicle_no",
+                "dr.driver_name",
+                DB::raw("'pendingAtAgency' as application_type")
             )
             ->where('delivery_track_status', 1)
             ->where('is_vehicle_sent', '<', 2)
@@ -634,14 +648,14 @@ class WtBooking extends Model
             $user = Auth()->user();
             $ulbId = $user->ulb_id ?? null;
             $bookedApplication = $this->getPendingList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
-    
+
             $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
-    
+
             $data = collect($bookedApplication['data'])->merge($assignedApplication['data']);
-    
+
             $totalBooking = count($data);
             $currentPageData = $data->forPage($page, $perPage)->values();
-    
+
             return [
                 'current_page' => $page,
                 'last_page' => ceil($totalBooking / $perPage),
@@ -656,5 +670,4 @@ class WtBooking extends Model
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
-    
 }
