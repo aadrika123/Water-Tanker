@@ -2523,6 +2523,7 @@ class WaterTankerController extends Controller
     {
         try {
             $refUser                = authUser($req);
+            $refUserId          = $req->userId;
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 $msg = '';
@@ -2542,7 +2543,7 @@ class WaterTankerController extends Controller
                     $wtTransaction = new WtTransaction();
 
                     $wtTransaction->ulb_id = $mWtBooking->ulb_id;
-                    $wtTransaction->citizen_id = $refUser->id;
+                    $wtTransaction->citizen_id = $refUserId;
                     $wtTransaction->tran_type = "Water Tanker Booking";
                     $wtTransaction->ward_id = $mWtBooking->ward_id;
                     $wtTransaction->verify_date = Carbon::now();;
@@ -2566,6 +2567,7 @@ class WaterTankerController extends Controller
                     $mStBooking->payment_details = $req->all();
                     $mStBooking->save();
                     $stTransaction = new StTransaction();
+                    $stTransaction->citizen_id = $refUserId;
                     $stTransaction->ulb_id = $mStBooking->ulb_id;
                     $stTransaction->tran_type = "Septic Tanker Booking";
                     $stTransaction->ward_id = $mStBooking->ward_id;
