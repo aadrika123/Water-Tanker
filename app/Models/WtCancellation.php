@@ -72,15 +72,15 @@ class WtCancellation extends Model
         return $this->hasMany(WtTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 
-    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by',DB::raw("'cancleByAgency' as application_type"))
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByAgency' as application_type"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Water-Agency')
-            ->where('wtc.ulb_id',$ulbId );
+            ->where('wtc.ulb_id', $ulbId);
 
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
@@ -98,7 +98,7 @@ class WtCancellation extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
@@ -108,15 +108,15 @@ class WtCancellation extends Model
         ];
     }
 
-    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id','wtc.user_type as applied_by',DB::raw("'cancleByCitizen' as application_type"))
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByCitizen' as application_type"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Citizen')
-            ->where('wtc.ulb_id',$ulbId );
+            ->where('wtc.ulb_id', $ulbId);
 
         if ($wardNo) {
             $query->where('wtc.ward_id', $wardNo);
@@ -134,7 +134,7 @@ class WtCancellation extends Model
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
@@ -142,36 +142,5 @@ class WtCancellation extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking
         ];
-    }
-
-    public function totalcancle($fromDate, $toDate, $wardNo = null)
-    {
-        $query = DB::table('wt_cancellations as wtc')
-            ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
-            ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select(
-                'wtc.id',
-                'wtc.booking_no',
-                'wtc.applicant_name',
-                'wtc.booking_date',
-                'wc.capacity',
-                'wa.agency_name',
-                'wtc.ward_id'
-            )
-            ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
-            ->where('wtc.cancelled_by', 'Water-Agency');
-
-        if ($wardNo) {
-            $query->where('wtc.ward_id', $wardNo);
-        }
-        // $cancle = $query->paginate(1000);
-        // $totalcancle = $cancle->total();
-        // return [
-        //     'current_page' => $cancle->currentPage(),
-        //     'last_page' => $cancle->lastPage(),
-        //     'data' => $cancle->items(),
-        //     'total' => $totalcancle
-        // ];
-        return $query;
     }
 }

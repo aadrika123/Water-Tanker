@@ -462,6 +462,8 @@ class WtBooking extends Model
             ->merge(collect($cancleByAgency["data"] ?? []))
             ->merge(collect($cancleByCitizen["data"] ?? []))
             ->merge(collect($cancleByDriver["data"] ?? []));
+        $appliedByJSKCount = $data->where('applied_by', 'JSK')->count();
+        $appliedByCitizenCount = $data->where('applied_by', 'Citizen')->count();
         $currentPageData = $data->forPage($page, $perPage)->values();
         $paginator = new LengthAwarePaginator(
             $currentPageData,
@@ -482,13 +484,15 @@ class WtBooking extends Model
                 'cancel_by_agency_total' => $cancleByAgency["total"] ?? 0,
                 'cancel_by_citizen_total' => $cancleByCitizen["total"] ?? 0,
                 'cancel_by_driver_total' => $cancleByDriver["total"] ?? 0,
+                'applied_by_jsk' => $appliedByJSKCount,
+                'applied_by_citizen' => $appliedByCitizenCount
             ]
         ];
     }
 
     public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
-        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", DB::raw("'pendingAtDriver' as application_type"))
+        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", 'wt_bookings.user_type as applied_by', DB::raw("'pendingAtDriver' as application_type"))
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
             ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
@@ -500,7 +504,7 @@ class WtBooking extends Model
             ->where('wt_bookings.ulb_id', $ulbId)
             ->whereBetween('assign_date', [$fromDate, $toDate]);
 
-        $reassignQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", DB::raw("'pendingAtDriver' as application_type"))
+        $reassignQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", 'wt_bookings.user_type as applied_by', DB::raw("'pendingAtDriver' as application_type"))
             ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
             ->join('wt_capacities as wc', 'wt_bookings.capacity_id', '=', 'wc.id')
@@ -568,6 +572,7 @@ class WtBooking extends Model
                 "wt_resources.vehicle_name",
                 "wt_resources.vehicle_no",
                 "wt_drivers.driver_name",
+                'wb.user_type as applied_by',
                 DB::raw("'pendingAtAgency' as application_type")
             )
             ->where('wb.is_vehicle_sent', '<=', '1')
@@ -598,6 +603,7 @@ class WtBooking extends Model
                 "res.vehicle_name",
                 "res.vehicle_no",
                 "dr.driver_name",
+                'wb.user_type as applied_by',
                 DB::raw("'pendingAtAgency' as application_type")
             )
             ->where('delivery_track_status', 1)
@@ -652,7 +658,8 @@ class WtBooking extends Model
             $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
 
             $data = collect($bookedApplication['data'])->merge($assignedApplication['data']);
-
+            $appliedByJSKCount = $data->where('applied_by', 'JSK')->count();
+            $appliedByCitizenCount = $data->where('applied_by', 'Citizen')->count();
             $totalBooking = count($data);
             $currentPageData = $data->forPage($page, $perPage)->values();
 
@@ -663,7 +670,9 @@ class WtBooking extends Model
                 'total_bookings' => $totalBooking,
                 'summary' => [
                     'driver_pending' => $bookedApplication['total'] ?? 0,
-                    'agency_pending' => $assignedApplication['total'] ?? 0
+                    'agency_pending' => $assignedApplication['total'] ?? 0,
+                    'applied_by_jsk' => $appliedByJSKCount,
+                    'applied_by_citizen' => $appliedByCitizenCount
                 ]
             ];
         } catch (Exception $e) {
