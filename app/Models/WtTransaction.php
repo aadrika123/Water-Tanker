@@ -206,6 +206,7 @@ class WtTransaction extends Model
             'cashTranCount' => $cashCount,
             'onlineCollection' => $onlineAmount,
             'onlineTranCount' => $onlineCount,
+            
             'jskCashCollectionAmount' => $jskCashAmount,
             'jskCashCollectionCount' => $jskCashCount,
             'jskOnlineCollectionAmount' => $jskOnlineAmount,
