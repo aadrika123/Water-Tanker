@@ -2525,7 +2525,7 @@ class WaterTankerController extends Controller
     {
         try {
             $refUser                = authUser($req);
-            $refUserId          = $req->userId;
+            $refUserId          = $req->citizenId;
             if ($req->orderId != NULL && $req->paymentId != NULL) {
                 // Variable initialization
                 $msg = '';
