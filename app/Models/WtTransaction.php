@@ -109,7 +109,7 @@ class WtTransaction extends Model
             ->where("t.status", 1);
     }
 
-    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null, $perPage,$ulbId)
+    public function dailyCollection($fromDate, $toDate, $wardNo = null, $paymentMode = null, $applicationMode = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_transactions as t')
             ->select(
@@ -158,20 +158,43 @@ class WtTransaction extends Model
         $onlineSummaryQuery->where('t.payment_mode', 'ONLINE');
         $onlineAmount = $onlineSummaryQuery->sum('t.paid_amount');
         $onlineCount = $onlineSummaryQuery->count();
-    
+
+        //     // JSK cash collection
+        //     $jskCollectionCash = clone $summaryQuery;
+        //     $jskCollectionCash->where('t.payment_mode', 'CASH')->where('t.emp_dtl_id', !null);
+        //     //$jskCashTransactions = $jskCollectionCash->get();
+        //     $jskCollectionAmount = $jskCollectionCash->sum('paid_amount');
+        //     $jskCollectionCount = $jskCollectionCash->count();
+
+        //    // Citizen online collection
+        //     $citizenCollectionOnline = clone $summaryQuery;
+        //     $citizenCollectionOnline->where('t.payment_mode', 'ONLINE')->where('t.citizen_id', !null);
+        //     //$onlineCitizenTransactions = $citizenCollectionOnline->get();
+        //     $onlineCitizenAmount = $citizenCollectionOnline->sum('paid_amount');
+        //     $onlineCitizenCount = $citizenCollectionOnline->count();
         // JSK cash collection
-        // $jskCollectionCash = clone $query;
-        // $jskCollectionCash->where('t.payment_mode', 'CASH')->where('wt_bookings.user_type', 'JSK');
-        // $jskCashTransactions = $jskCollectionCash->get();
-        // $jskCollectionAmount = $jskCashTransactions->sum('paid_amount');
-        // $jskCollectionCount = $jskCashTransactions->count();
+        $jskCashCollection = clone $summaryQuery;
+        $jskCashCollection->where('t.payment_mode', 'CASH')->whereNotNull('t.emp_dtl_id');
+        $jskCashAmount = $jskCashCollection->sum('t.paid_amount');
+        $jskCashCount = $jskCashCollection->count();
+
+        // JSK online collection
+        $jskOnlineCollection = clone $summaryQuery;
+        $jskOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.emp_dtl_id');
+        $jskOnlineAmount = $jskOnlineCollection->sum('t.paid_amount');
+        $jskOnlineCount = $jskOnlineCollection->count();
+
+        // Citizen cash collection
+        $citizenCashCollection = clone $summaryQuery;
+        $citizenCashCollection->where('t.payment_mode', 'CASH')->whereNotNull('t.citizen_id');
+        $citizenCashAmount = $citizenCashCollection->sum('t.paid_amount');
+        $citizenCashCount = $citizenCashCollection->count();
 
         // Citizen online collection
-        // $citizenCollectionOnline = clone $query;
-        // $citizenCollectionOnline->where('t.payment_mode', 'ONLINE')->where('wt_bookings.user_type', 'Citizen');
-        // $onlineCitizenTransactions = $citizenCollectionOnline->get();
-        // $onlineCitizenAmount = $onlineCitizenTransactions->sum('paid_amount');
-        // $onlineCitizenCount = $onlineCitizenTransactions->count();
+        $citizenOnlineCollection = clone $summaryQuery;
+        $citizenOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.citizen_id');
+        $citizenOnlineAmount = $citizenOnlineCollection->sum('t.paid_amount');
+        $citizenOnlineCount = $citizenOnlineCollection->count();
         return [
             'current_page' => $transactions->currentPage(),
             'last_page' => $transactions->lastPage(),
@@ -183,10 +206,14 @@ class WtTransaction extends Model
             'cashTranCount' => $cashCount,
             'onlineCollection' => $onlineAmount,
             'onlineTranCount' => $onlineCount,
-            // 'jskCollectionAmount' => $jskCollectionAmount,
-            // 'jskCollectionCount' => $jskCollectionCount,
-            // 'citizenCollectionAmount' => $onlineCitizenAmount,
-            // 'citizenCollectionCount' => $onlineCitizenCount
+            'jskCashCollectionAmount' => $jskCashAmount,
+            'jskCashCollectionCount' => $jskCashCount,
+            'jskOnlineCollectionAmount' => $jskOnlineAmount,
+            'jskOnlineCollectionCount' => $jskOnlineCount,
+            'citizenCashCollectionAmount' => $citizenCashAmount,
+            'citizenCashCollectionCount' => $citizenCashCount,
+            'citizenOnlineCollectionAmount' => $citizenOnlineAmount,
+            'citizenOnlineCollectionCount' => $citizenOnlineCount
         ];
     }
 }
