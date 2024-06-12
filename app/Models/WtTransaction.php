@@ -159,19 +159,6 @@ class WtTransaction extends Model
         $onlineAmount = $onlineSummaryQuery->sum('t.paid_amount');
         $onlineCount = $onlineSummaryQuery->count();
 
-        //     // JSK cash collection
-        //     $jskCollectionCash = clone $summaryQuery;
-        //     $jskCollectionCash->where('t.payment_mode', 'CASH')->where('t.emp_dtl_id', !null);
-        //     //$jskCashTransactions = $jskCollectionCash->get();
-        //     $jskCollectionAmount = $jskCollectionCash->sum('paid_amount');
-        //     $jskCollectionCount = $jskCollectionCash->count();
-
-        //    // Citizen online collection
-        //     $citizenCollectionOnline = clone $summaryQuery;
-        //     $citizenCollectionOnline->where('t.payment_mode', 'ONLINE')->where('t.citizen_id', !null);
-        //     //$onlineCitizenTransactions = $citizenCollectionOnline->get();
-        //     $onlineCitizenAmount = $citizenCollectionOnline->sum('paid_amount');
-        //     $onlineCitizenCount = $citizenCollectionOnline->count();
         // JSK cash collection
         $jskCashCollection = clone $summaryQuery;
         $jskCashCollection->where('t.payment_mode', 'CASH')->whereNotNull('t.emp_dtl_id');
@@ -195,6 +182,9 @@ class WtTransaction extends Model
         $citizenOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.citizen_id');
         $citizenOnlineAmount = $citizenOnlineCollection->sum('t.paid_amount');
         $citizenOnlineCount = $citizenOnlineCollection->count();
+        $totaljskCount =  $jskCashCount +$jskOnlineCount;
+        $totalCitizenCount =  $citizenCashCount +$citizenOnlineCount;
+
         return [
             'current_page' => $transactions->currentPage(),
             'last_page' => $transactions->lastPage(),
@@ -213,7 +203,9 @@ class WtTransaction extends Model
             'citizenCashCollectionAmount' => $citizenCashAmount,
             'citizenCashCollectionCount' => $citizenCashCount,
             'citizenOnlineCollectionAmount' => $citizenOnlineAmount,
-            'citizenOnlineCollectionCount' => $citizenOnlineCount
+            'citizenOnlineCollectionCount' => $citizenOnlineCount,
+            'totalJskCount' =>$totaljskCount,
+            'totalCitizenCount' =>$totalCitizenCount
         ];
     }
 }
