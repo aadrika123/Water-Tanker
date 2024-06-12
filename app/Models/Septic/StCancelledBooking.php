@@ -69,14 +69,6 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
-        // $cancle = $query->paginate($perPage);
-        // $totalcancle = $cancle->total();
-        // return [
-        //     'current_page' => $cancle->currentPage(),
-        //     'last_page' => $cancle->lastPage(),
-        //     'data' => $cancle->items(),
-        //     'total' => $totalcancle
-        // ];;
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
@@ -84,11 +76,18 @@ class StCancelledBooking extends Model
         }
     
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
+        $totalJSKBookings = $query->clone()->where('stcb.user_type', 'JSK')->count();
+        $totalCitizenBookings = $query->clone()->where('stcb.user_type', 'Citizen')->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
-            'total' => $totalbooking
+            'total' => $totalbooking,
+            'summary' => [
+                'total_agency_cancle' => $totalbooking,
+                'total_jsk_bookings' => $totalJSKBookings,
+                'total_citizen_bookings' => $totalCitizenBookings
+            ]
         ];
     }
 
@@ -105,14 +104,6 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
-        // $cancle = $query->paginate($perPage);
-        // $totalcancle = $cancle->total();
-        // return [
-        //     'current_page' => $cancle->currentPage(),
-        //     'last_page' => $cancle->lastPage(),
-        //     'data' => $cancle->items(),
-        //     'total' => $totalcancle
-        // ];
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
@@ -120,11 +111,18 @@ class StCancelledBooking extends Model
         }
     
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
+        $totalJSKBookings = $query->clone()->where('stcb.user_type', 'JSK')->count();
+        $totalCitizenBookings = $query->clone()->where('stcb.user_type', 'Citizen')->count();
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
-            'total' => $totalbooking
+            'total' => $totalbooking,
+            'summary' => [
+                'total_citizen_cancle' => $totalbooking,
+                'total_jsk_bookings' => $totalJSKBookings,
+                'total_citizen_bookings' => $totalCitizenBookings
+            ]
         ];
     }
 }

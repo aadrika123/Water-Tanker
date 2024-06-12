@@ -2194,6 +2194,7 @@ class SepticTankController extends Controller
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'dailyCollection') {
             $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($response) {
             //return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
@@ -2234,25 +2235,32 @@ class SepticTankController extends Controller
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
             $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
             $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
             $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
             $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
 
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
             $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
             $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
             $response = $booked->allBooking($request);
+            $response['user_name'] =$user->name;
         }
         if ($response) {
             return responseMsgs(true, "SepticTanker Application List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
@@ -2292,13 +2300,16 @@ class SepticTankController extends Controller
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
             $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
 
         if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
             $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+            $response['user_name'] =$user->name;
         }
         if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
             $response = $booked->allPending($request);
+            $response['user_name'] =$user->name;
             //$response = response()->json($response);
         }
         if ($response) {
