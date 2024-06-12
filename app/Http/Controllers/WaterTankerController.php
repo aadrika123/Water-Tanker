@@ -2545,7 +2545,7 @@ class WaterTankerController extends Controller
                     $wtTransaction = new WtTransaction();
 
                     $wtTransaction->ulb_id = $mWtBooking->ulb_id;
-                    $wtTransaction->citizen_id = $refUserId;
+                    $wtTransaction->citizen_id = $req->citizenId;
                     $wtTransaction->tran_type = "Water Tanker Booking";
                     $wtTransaction->ward_id = $mWtBooking->ward_id;
                     $wtTransaction->verify_date = Carbon::now();;
@@ -2569,7 +2569,7 @@ class WaterTankerController extends Controller
                     $mStBooking->payment_details = $req->all();
                     $mStBooking->save();
                     $stTransaction = new StTransaction();
-                    $stTransaction->citizen_id = $refUserId;
+                    $stTransaction->citizen_id = $req->citizenId;
                     $stTransaction->ulb_id = $mStBooking->ulb_id;
                     $stTransaction->tran_type = "Septic Tanker Booking";
                     $stTransaction->ward_id = $mStBooking->ward_id;
