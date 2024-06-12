@@ -525,14 +525,6 @@ class WtBooking extends Model
             $reassignQuery->where('wt_bookings.user_type', $applicationMode);
         }
         $data = $dataQuery->union($reassignQuery);
-        // ->paginate($perPage);
-
-        // return [
-        //     'current_page' => $data->currentPage(),
-        //     'last_page' => $data->lastPage(),
-        //     'data' => $data->items(),
-        //     'total' => $data->total()
-        // ];
         if ($perPage) {
             $booking = $data->paginate($perPage);
         } else {
@@ -540,12 +532,22 @@ class WtBooking extends Model
         }
 
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
-
+        $totalJSKBookings = $dataQuery->clone()->where('wt_bookings.user_type', 'JSK')->count();
+        $totalCitizenBookings = $dataQuery->clone()->where('wt_bookings.user_type', 'Citizen')->count();
+        $totalJSKBookings1 = $reassignQuery->clone()->where('wt_bookings.user_type', 'JSK')->count();
+        $totalCitizenBookings1 = $reassignQuery->clone()->where('wt_bookings.user_type', 'Citizen')->count();
+        $totaljsk = $totalJSKBookings +$totalJSKBookings1;
+        $totalCitizen = $totalCitizenBookings +$totalCitizenBookings1;
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
+            'summary' => [
+                'total_pending_driver' => $totalbooking,
+                'total_jsk_bookings' => $totaljsk,
+                'total_citizen_bookings' => $totalCitizen
+            ]
         ];
     }
 
@@ -621,13 +623,6 @@ class WtBooking extends Model
             $cancelledQuery->where('wb.user_type', $applicationMode);
         }
         $data = $dataQuery->union($cancelledQuery);
-        // ->paginate($perPage);
-        // return [
-        //     'current_page' => $data->currentPage(),
-        //     'last_page' => $data->lastPage(),
-        //     'data' => $data->items(),
-        //     'total' => $data->total()
-        // ];
         if ($perPage) {
             $booking = $data->paginate($perPage);
         } else {
@@ -635,12 +630,22 @@ class WtBooking extends Model
         }
 
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
-
+        $totalJSKBookings = $dataQuery->clone()->where('wb.user_type', 'JSK')->count();
+        $totalCitizenBookings = $dataQuery->clone()->where('wb.user_type', 'Citizen')->count();
+        $totalJSKBookings1 = $cancelledQuery->clone()->where('wb.user_type', 'JSK')->count();
+        $totalCitizenBookings1 = $cancelledQuery->clone()->where('wb.user_type', 'Citizen')->count();
+        $totaljsk = $totalJSKBookings +$totalJSKBookings1;
+        $totalCitizen = $totalCitizenBookings +$totalCitizenBookings1;
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
+            'summary' => [
+                'total_pending_agency' => $totalbooking,
+                'total_jsk_bookings' => $totaljsk,
+                'total_citizen_bookings' => $totalCitizen
+            ]
         ];
     }
 
