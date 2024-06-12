@@ -815,6 +815,7 @@ class SepticTankController extends Controller
             $reqData = [
                 "id" => $mStBooking->id,
                 'amount' => $mStBooking->payment_amount,
+                'citizenId'=>$mStBooking->citizen_id,
                 'workflowId' => "0",
                 'ulbId' => $mStBooking->ulb_id,
                 'departmentId' => Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
