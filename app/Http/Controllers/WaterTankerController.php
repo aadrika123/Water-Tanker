@@ -2253,6 +2253,7 @@ class WaterTankerController extends Controller
             $reqData = [
                 "id" => $mWtBooking->id,
                 'amount' => $mWtBooking->payment_amount,
+                'citizenId'=>$mWtBooking->citizen_id,
                 'workflowId' => "0",
                 'ulbId' => $mWtBooking->ulb_id,
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
@@ -2277,6 +2278,7 @@ class WaterTankerController extends Controller
             $data->email = $mWtBooking->email;
             $data->contact = $mWtBooking->mobile;
             $data->type = "Water Tanker";
+            $data->data->citizenId = $mWtBooking->citizen_id;
             $mWtBooking->order_id =  $data->data->orderId;
             $mWtBooking->save();
             return responseMsgs(true, "Payment OrderId Generated Successfully !!!", $data->data, "110162", "1.0", responseTime(), "POST", $req->deviceId ?? "");

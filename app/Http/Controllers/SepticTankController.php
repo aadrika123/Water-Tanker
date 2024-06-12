@@ -840,6 +840,7 @@ class SepticTankController extends Controller
             $data->email = $mStBooking->email;
             $data->contact = $mStBooking->mobile;
             $data->type = "Septic Tanker";
+            $data->data->citizenId = $mStBooking->citizen_id;
 
             $mStBooking->order_id =  $data->data->orderId;
             $mStBooking->save();
