@@ -405,7 +405,7 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
-            ->select('wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity', 'wb.user_type as applied_by', DB::raw("'cancleByDriver' as application_type"))
+            ->select('wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity', 'wb.user_type as applied_by', DB::raw("'cancleByDriver' as application_type","wb.remarks as cancle_reason"))
             ->where("delivery_track_status", 1)
             ->where("is_vehicle_sent", "<", 2)
             //->where("wb.ulb_id", 2)

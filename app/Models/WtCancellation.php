@@ -75,9 +75,10 @@ class WtCancellation extends Model
     public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
+        ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wtc.location_id')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByAgency' as application_type"))
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByAgency' as application_type","wtc.remarks as cancle_reason","wt_locations.location"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Water-Agency')
             ->where('wtc.ulb_id', $ulbId);
@@ -111,9 +112,10 @@ class WtCancellation extends Model
     public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_cancellations as wtc')
+        ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wtc.location_id')
             ->join('wt_capacities as wc', 'wtc.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wtc.agency_id', '=', 'wa.id')
-            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByCitizen' as application_type"))
+            ->select('wtc.booking_no', 'wtc.applicant_name', 'wc.capacity', 'wtc.booking_date', 'wtc.cancel_date', 'wa.agency_name', 'wtc.ward_id', 'wtc.user_type as applied_by', DB::raw("'cancleByCitizen' as application_type","wtc.remarks as cancle_reason","wt_locations.location"))
             ->whereBetween('wtc.cancel_date', [$fromDate, $toDate])
             ->where('wtc.cancelled_by', 'Citizen')
             ->where('wtc.ulb_id', $ulbId);
