@@ -544,9 +544,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_pending_driver' => $totalbooking,
-                'total_jsk_bookings' => $totaljsk,
-                'total_citizen_bookings' => $totalCitizen
+                'driver_pending' => $totalbooking,
+                'applied_by_jsk' => $totaljsk,
+                'applied_by_citizen' => $totalCitizen
             ]
         ];
     }
@@ -642,9 +642,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_pending_agency' => $totalbooking,
-                'total_jsk_bookings' => $totaljsk,
-                'total_citizen_bookings' => $totalCitizen
+                'agency_pending' => $totalbooking,
+                'applied_by_jsk' => $totaljsk,
+                'applied_by_citizen' => $totalCitizen
             ]
         ];
     }
