@@ -76,7 +76,8 @@ class WtReassignBooking extends Model
                 'hc.name as hydration_center_name',
                 "wrb.delivery_track_status",
                 "wrb.delivery_comments",
-                "wt_locations.location"
+                "wt_locations.location",
+                "wb.ward_id"
             );
     }
 
