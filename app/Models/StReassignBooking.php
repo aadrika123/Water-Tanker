@@ -71,7 +71,8 @@ class StReassignBooking extends Model
                 "wrb.delivery_track_status",
                 "wrb.delivery_comments",
                 "wb.booking_no",
-                'wtl.location'
+                'wtl.location',
+                'wb.ward_id'
             );
     }
 
