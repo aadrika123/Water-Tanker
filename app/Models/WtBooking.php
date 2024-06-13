@@ -277,9 +277,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_bookings' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'booked_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -342,9 +342,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_assigned' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'assigned_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -390,9 +390,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_delivered' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'delivered_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -430,9 +430,9 @@ class WtBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_driver_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_driver_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }

@@ -101,9 +101,9 @@ class WtCancellation extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_agency_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_agency_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -138,9 +138,9 @@ class WtCancellation extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_citizen_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_citizen_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
