@@ -1405,10 +1405,10 @@ class WaterTankerController extends Controller
         $mWtBooking = new WtBooking();
         $mWtDriver = new WtDriver();
         $validator = Validator::make($req->all(), [
-            'applicationId' => "required|integer|exists:" . $mWtBooking->getConnectionName() . "." . $mWtBooking->getTable() . ",id,status,1,ulb_id," . $ulbId,
+            'applicationId' => "required|integer",
             // 'vdmId' => 'required|integer',
-            'vehicleId' => "required|integer|exists:" . $mWtResource->getConnectionName() . "." . $mWtResource->getTable() . ",id,status,1,ulb_id," . $ulbId,
-            'driverId' => "required|integer|exists:" . $mWtDriver->getConnectionName() . "." . $mWtDriver->getTable() . ",id,status,1,ulb_id," . $ulbId,
+            'vehicleId' => "required|integer",
+            'driverId' => "required|integer",
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
