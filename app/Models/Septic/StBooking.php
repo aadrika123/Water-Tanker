@@ -157,7 +157,17 @@ class StBooking extends Model
         $query =  DB::table('st_bookings as stb')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id", DB::raw("'booked' as application_type"))
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                'stb.user_type as applied_by'
+            )
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -187,9 +197,9 @@ class StBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_bookings' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'booked_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
             // 'totalJSKBookings' => $totalJSKBookings,
             // 'totalCitizenBookings' => $totalCitizenBookings
@@ -203,7 +213,20 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no', DB::raw("'assigned' as application_type"), 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                'sd.driver_name',
+                'sr.vehicle_no',
+                DB::raw("'assigned' as application_type"),
+                'stb.user_type as applied_by'
+            )
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_status', '1')
             ->where('delivery_track_status', '0')
@@ -222,7 +245,7 @@ class StBooking extends Model
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
-        
+
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
@@ -238,9 +261,9 @@ class StBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_assigned' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'assigned_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -252,7 +275,20 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sd.driver_name', 'sr.vehicle_no', DB::raw("'cleaned' as application_type"), 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                'sd.driver_name',
+                'sr.vehicle_no',
+                DB::raw("'cleaned' as application_type"),
+                'stb.user_type as applied_by'
+            )
             ->where('stb.assign_status', '2')
             //->where('stb.ulb_id', '2')
             ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
@@ -282,21 +318,32 @@ class StBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_cleaned' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'delivered_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $applicationMode, $perPage, $ulbId)
     {
         $query =  DB::table('st_bookings as stb')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', DB::raw("'cancleByDriver' as application_type"), 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                DB::raw("'cancleByDriver' as application_type"),
+                'stb.user_type as applied_by'
+            )
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
@@ -308,7 +355,9 @@ class StBooking extends Model
         if ($wardNo) {
             $query->where('stb.ward_id', $wardNo);
         }
-        
+        if ($applicationMode) {
+            $query->where('stb.user_type', $applicationMode);
+        }
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
@@ -324,9 +373,9 @@ class StBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_driver_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_driver_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -342,9 +391,9 @@ class StBooking extends Model
         //dd($perPage);
         $assignedApplication = $this->getAssignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, null, $ulbId);
         $deliveredApplication = $this->getCleanedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, null, $ulbId);
-        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
-        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
-        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
 
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
@@ -388,7 +437,8 @@ class StBooking extends Model
     {
         $dataQuery = StBooking::select(
             "st_bookings.booking_no",
-            "st_bookings.booking_date",
+            DB::raw("TO_CHAR(st_bookings.booking_date, 'DD-MM-YYYY') as booking_date"),
+            // "st_bookings.booking_date",
             "st_bookings.applicant_name",
             "st_resources.vehicle_name",
             "st_resources.vehicle_no",
@@ -414,7 +464,7 @@ class StBooking extends Model
             $dataQuery->where('st_bookings.user_type', $applicationMode);
         }
         $data = $dataQuery;
-        
+
         if ($perPage) {
             $booking = $data->paginate($perPage);
         } else {
@@ -430,9 +480,9 @@ class StBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_pending_driver' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'driver_pending' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
@@ -444,7 +494,22 @@ class StBooking extends Model
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name", DB::raw("'pendingAtAgency' as application_type"), 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                'sr.vehicle_name',
+                "sr.vehicle_no",
+                "sr.resource_type",
+                "sd.driver_name",
+                DB::raw("'pendingAtAgency' as application_type"),
+                'stb.user_type as applied_by'
+            )
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -457,7 +522,22 @@ class StBooking extends Model
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'stb.location_id')
-            ->select('stb.booking_no', 'stb.applicant_name', 'stb.address', 'stb.booking_date', 'stb.cleaning_date', 'wtl.location', 'sr.vehicle_name', "sr.vehicle_no", "sr.resource_type", "sd.driver_name", DB::raw("'pendingAtAgency' as application_type"), 'stb.user_type as applied_by')
+            ->select(
+                'stb.booking_no',
+                'stb.applicant_name',
+                'stb.address',
+                // 'stb.booking_date',
+                // 'stb.cleaning_date',
+                DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'wtl.location',
+                'sr.vehicle_name',
+                "sr.vehicle_no",
+                "sr.resource_type",
+                "sd.driver_name",
+                DB::raw("'pendingAtAgency' as application_type"),
+                'stb.user_type as applied_by'
+            )
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
@@ -473,7 +553,7 @@ class StBooking extends Model
             $cancelledQuery->where('wb.user_type', $applicationMode);
         }
         $data = $dataQuery->union($cancelledQuery);
-        
+
         if ($perPage) {
             $booking = $data->paginate($perPage);
         } else {
@@ -485,17 +565,17 @@ class StBooking extends Model
         $totalCitizenBookings = $dataQuery->clone()->where('stb.user_type', 'Citizen')->count();
         $totalJSKBookings1 = $cancelledQuery->clone()->where('stb.user_type', 'JSK')->count();
         $totalCitizenBookings1 = $cancelledQuery->clone()->where('stb.user_type', 'Citizen')->count();
-        $totaljsk = $totalJSKBookings +$totalJSKBookings1;
-        $totalCitizen = $totalCitizenBookings +$totalCitizenBookings1;
+        $totaljsk = $totalJSKBookings + $totalJSKBookings1;
+        $totalCitizen = $totalCitizenBookings + $totalCitizenBookings1;
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_pending_agency' => $totalbooking,
-                'total_jsk_bookings' => $totaljsk,
-                'total_citizen_bookings' => $totalCitizen
+                'agency_pending' => $totalbooking,
+                'applied_by_jsk' => $totaljsk,
+                'applied_by_citizen' => $totalCitizen
             ]
         ];
     }
@@ -508,7 +588,7 @@ class StBooking extends Model
         $ulbId = $user->ulb_id ?? null;
         $bookedApplication = $this->getPendingList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
         //dd($perPage);
-        $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->driverName, null, $ulbId);
+        $assignedApplication = $this->getPendingAgencyList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
         $data = collect($bookedApplication['data'])->merge($assignedApplication['data']);
         $appliedByJSKCount = $data->where('applied_by', 'JSK')->count();
         $appliedByCitizenCount = $data->where('applied_by', 'Citizen')->count();

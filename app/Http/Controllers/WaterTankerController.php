@@ -3446,16 +3446,16 @@ class WaterTankerController extends Controller
             }
 
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByAgency') {
-                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
                 $response['user_name'] =$user->name;
             }
 
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByCitizen') {
-                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
                 $response['user_name'] =$user->name;
             }
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByDriver') {
-                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $perPage, $ulbId);
+                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
                 $response['user_name'] =$user->name;
             }
             if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {

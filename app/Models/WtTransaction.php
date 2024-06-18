@@ -118,7 +118,7 @@ class WtTransaction extends Model
                 'wt_bookings.booking_no',
                 't.paid_amount',
                 't.payment_mode',
-                't.tran_date',
+                DB::raw("TO_CHAR(t.tran_date, 'DD-MM-YYYY') as tran_date"),
                 't.tran_type as module_name',
                 't.status',
                 'wt_bookings.applicant_name',
@@ -182,8 +182,8 @@ class WtTransaction extends Model
         $citizenOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.citizen_id');
         $citizenOnlineAmount = $citizenOnlineCollection->sum('t.paid_amount');
         $citizenOnlineCount = $citizenOnlineCollection->count();
-        $totaljskCount =  $jskCashCount +$jskOnlineCount;
-        $totalCitizenCount =  $citizenCashCount +$citizenOnlineCount;
+        $totaljskCount =  $jskCashCount + $jskOnlineCount;
+        $totalCitizenCount =  $citizenCashCount + $citizenOnlineCount;
 
         return [
             'current_page' => $transactions->currentPage(),
@@ -204,8 +204,8 @@ class WtTransaction extends Model
             'citizenCashCollectionCount' => $citizenCashCount,
             'citizenOnlineCollectionAmount' => $citizenOnlineAmount,
             'citizenOnlineCollectionCount' => $citizenOnlineCount,
-            'totalJskCount' =>$totaljskCount,
-            'totalCitizenCount' =>$totalCitizenCount
+            'totalJskCount' => $totaljskCount,
+            'totalCitizenCount' => $totalCitizenCount
         ];
     }
 }

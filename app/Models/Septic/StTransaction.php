@@ -114,7 +114,8 @@ class StTransaction extends Model
                 't.tran_no as transaction_no',
                 't.paid_amount',
                 't.payment_mode',
-                't.tran_date',
+                DB::raw("TO_CHAR(t.tran_date, 'DD-MM-YYYY') as tran_date"),
+                //'t.tran_date',
                 't.tran_type as module_name',
                 't.status',
                 'st_bookings.booking_no',
@@ -156,6 +157,32 @@ class StTransaction extends Model
         $onlineSummaryQuery->where('t.payment_mode', 'ONLINE');
         $onlineAmount = $onlineSummaryQuery->sum('t.paid_amount');
         $onlineCount = $onlineSummaryQuery->count();
+
+        // JSK cash collection
+        $jskCashCollection = clone $summaryQuery;
+        $jskCashCollection->where('t.payment_mode', 'CASH')->whereNotNull('t.emp_dtl_id');
+        $jskCashAmount = $jskCashCollection->sum('t.paid_amount');
+        $jskCashCount = $jskCashCollection->count();
+
+        // JSK online collection
+        $jskOnlineCollection = clone $summaryQuery;
+        $jskOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.emp_dtl_id');
+        $jskOnlineAmount = $jskOnlineCollection->sum('t.paid_amount');
+        $jskOnlineCount = $jskOnlineCollection->count();
+
+        // Citizen cash collection
+        $citizenCashCollection = clone $summaryQuery;
+        $citizenCashCollection->where('t.payment_mode', 'CASH')->whereNotNull('t.citizen_id');
+        $citizenCashAmount = $citizenCashCollection->sum('t.paid_amount');
+        $citizenCashCount = $citizenCashCollection->count();
+
+        // Citizen online collection
+        $citizenOnlineCollection = clone $summaryQuery;
+        $citizenOnlineCollection->where('t.payment_mode', 'ONLINE')->whereNotNull('t.citizen_id');
+        $citizenOnlineAmount = $citizenOnlineCollection->sum('t.paid_amount');
+        $citizenOnlineCount = $citizenOnlineCollection->count();
+        $totaljskCount =  $jskCashCount +$jskOnlineCount;
+        $totalCitizenCount =  $citizenCashCount +$citizenOnlineCount;
     
         return [
             'current_page' => $transactions->currentPage(),
@@ -167,7 +194,17 @@ class StTransaction extends Model
             'cashCollection' => $cashAmount,
             'cashTranCount' => $cashCount,
             'onlineCollection' => $onlineAmount,
-            'onlineTranCount' => $onlineCount
+            'onlineTranCount' => $onlineCount,
+            'jskCashCollectionAmount' => $jskCashAmount,
+            'jskCashCollectionCount' => $jskCashCount,
+            'jskOnlineCollectionAmount' => $jskOnlineAmount,
+            'jskOnlineCollectionCount' => $jskOnlineCount,
+            'citizenCashCollectionAmount' => $citizenCashAmount,
+            'citizenCashCollectionCount' => $citizenCashCount,
+            'citizenOnlineCollectionAmount' => $citizenOnlineAmount,
+            'citizenOnlineCollectionCount' => $citizenOnlineCount,
+            'totalJskCount' =>$totaljskCount,
+            'totalCitizenCount' =>$totalCitizenCount
         ];
     }
 }

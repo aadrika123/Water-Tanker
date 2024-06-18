@@ -57,10 +57,22 @@ class StCancelledBooking extends Model
         return $this->hasMany(StTransaction::class, "booking_id", "id")->whereIn("status", [1, 2])->orderBy("tran_date", "ASC")->orderBy("id", "ASC")->get();
     }
 
-    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
+    public function getCancelBookingListByAgency($fromDate, $toDate, $wardNo = null, $applicationMode, $perPage, $ulbId)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
-            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location',DB::raw("'cancleByAgency' as application_type"),'stcb.user_type as applied_by')
+            ->select(
+                'stcb.booking_no',
+                'stcb.applicant_name',
+                // 'stcb.booking_date',
+                // 'stcb.cleaning_date',
+                DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stcb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'stcb.cancel_date',
+                'stcb.ward_id',
+                'wtl.location',
+                DB::raw("'cancleByAgency' as application_type"),
+                'stcb.user_type as applied_by'
+            )
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
@@ -69,12 +81,15 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
+        if ($applicationMode) {
+            $query->where('stcb.user_type', $applicationMode);
+        }
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         $totalJSKBookings = $query->clone()->where('stcb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('stcb.user_type', 'Citizen')->count();
@@ -84,18 +99,30 @@ class StCancelledBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_agency_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_agency_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }
 
 
-    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null,$perPage,$ulbId)
+    public function getCancelBookingListByCitizen($fromDate, $toDate, $wardNo = null, $applicationMode, $perPage, $ulbId)
     {
         $query =  DB::table('st_cancelled_bookings as stcb')
-            ->select('stcb.booking_no', 'stcb.applicant_name', 'stcb.booking_date', 'stcb.cleaning_date', 'stcb.cancel_date', 'stcb.ward_id', 'wtl.location',DB::raw("'cancleByCitizen' as application_type"),'stcb.user_type as applied_by')
+            ->select(
+                'stcb.booking_no',
+                'stcb.applicant_name',
+                // 'stcb.booking_date',
+                // 'stcb.cleaning_date',
+                DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(stcb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
+                'stcb.cancel_date',
+                'stcb.ward_id',
+                'wtl.location',
+                DB::raw("'cancleByCitizen' as application_type"),
+                'stcb.user_type as applied_by'
+            )
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
@@ -104,12 +131,15 @@ class StCancelledBooking extends Model
         if ($wardNo) {
             $query->where('stcb.ward_id', $wardNo);
         }
+        if ($applicationMode) {
+            $query->where('stcb.user_type', $applicationMode);
+        }
         if ($perPage) {
             $booking = $query->paginate($perPage);
         } else {
             $booking = $query->get();
         }
-    
+
         $totalbooking = $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->total() : $booking->count();
         $totalJSKBookings = $query->clone()->where('stcb.user_type', 'JSK')->count();
         $totalCitizenBookings = $query->clone()->where('stcb.user_type', 'Citizen')->count();
@@ -119,9 +149,9 @@ class StCancelledBooking extends Model
             'data' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->items() : $booking,
             'total' => $totalbooking,
             'summary' => [
-                'total_citizen_cancle' => $totalbooking,
-                'total_jsk_bookings' => $totalJSKBookings,
-                'total_citizen_bookings' => $totalCitizenBookings
+                'cancel_by_citizen_total' => $totalbooking,
+                'applied_by_jsk' => $totalJSKBookings,
+                'applied_by_citizen' => $totalCitizenBookings
             ]
         ];
     }

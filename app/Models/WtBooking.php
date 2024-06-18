@@ -217,8 +217,10 @@ class WtBooking extends Model
             ->select(
                 'wb.booking_no',
                 'wb.applicant_name',
-                'wb.booking_date',
-                'wb.delivery_date',
+                // 'wb.booking_date',
+                // 'wb.delivery_date', 
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
                 'wc.capacity',
                 'wa.agency_name',
                 "wt_locations.location",
@@ -297,8 +299,10 @@ class WtBooking extends Model
                 'wb.ward_id',
                 'wb.booking_no',
                 'wb.applicant_name',
-                'wb.booking_date',
-                'wb.delivery_date',
+                // 'wb.booking_date',
+                // 'wb.delivery_date',
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
                 'wc.capacity',
                 'wa.agency_name',
                 'wr.vehicle_name',
@@ -358,7 +362,23 @@ class WtBooking extends Model
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.ward_id', 'wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", DB::raw("'delivered' as application_type"), 'wb.user_type as applied_by')
+            ->select(
+                'wb.ward_id',
+                'wb.booking_no',
+                'wb.applicant_name',
+                // 'wb.booking_date',
+                // 'wb.delivery_date',
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
+                'wc.capacity',
+                'wa.agency_name',
+                'whc.name as hydration_center_name',
+                "dr.driver_name",
+                "res.vehicle_no",
+                "wt_locations.location",
+                DB::raw("'delivered' as application_type"),
+                'wb.user_type as applied_by'
+            )
             ->where('wb.is_vehicle_sent', 2)
             ->whereBetween('wb.booking_date', [$fromDate, $toDate])
             ->where('wb.ulb_id', $ulbId)
@@ -397,7 +417,7 @@ class WtBooking extends Model
         ];
     }
 
-    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $perPage, $ulbId)
+    public function getCancelBookingListByDriver($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
         $query = DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
@@ -405,7 +425,25 @@ class WtBooking extends Model
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
-            ->select('wb.booking_no', 'wb.applicant_name', 'wb.booking_date', 'wb.delivery_date', 'wc.capacity', 'wa.agency_name', "dr.driver_name", "res.vehicle_no", "wt_locations.location", 'wb.address', 'wb.ward_id', 'wc.capacity', 'wb.user_type as applied_by', DB::raw("'cancleByDriver' as application_type"),'wb.delivery_comments as cancle_reason')
+            ->select(
+                'wb.booking_no',
+                'wb.applicant_name',
+                // 'wb.booking_date',
+                // 'wb.delivery_date',
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
+                'wc.capacity',
+                'wa.agency_name',
+                "dr.driver_name",
+                "res.vehicle_no",
+                "wt_locations.location",
+                'wb.address',
+                'wb.ward_id',
+                'wc.capacity',
+                'wb.user_type as applied_by',
+                DB::raw("'cancleByDriver' as application_type"),
+                'wb.delivery_comments as cancle_reason'
+            )
             ->where("delivery_track_status", 1)
             ->where("is_vehicle_sent", "<", 2)
             //->where("wb.ulb_id", 2)
@@ -414,6 +452,9 @@ class WtBooking extends Model
             ->orderByDesc('wb.id');
         if ($wardNo) {
             $query->where('wb.ward_id', $wardNo);
+        }
+        if ($applicationMode) {
+            $query->where('wb.user_type', $applicationMode);
         }
         if ($perPage) {
             $booking = $query->paginate($perPage);
@@ -447,9 +488,9 @@ class WtBooking extends Model
         $bookedApplication = $this->getBookedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, null, $ulbId);
         $assignedApplication = $this->assignedList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, null, $ulbId);
         $deliveredApplication = $this->getDeliveredList($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, null, $ulbId);
-        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
-        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
-        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, null, $ulbId);
+        $cancleByAgency = $cancle->getCancelBookingListByAgency($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+        $cancleByCitizen = $cancle->getCancelBookingListByCitizen($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
+        $cancleByDriver = $this->getCancelBookingListByDriver($request->fromDate, $request->toDate, $request->wardNo, $request->applicationMode, null, $ulbId);
 
         $totalbooking = ($bookedApplication["total"] ?? 0) + ($assignedApplication["total"] ?? 0)
             + ($deliveredApplication["total"] ?? 0) + ($cancleByAgency["total"] ?? 0) + ($cancleByCitizen["total"] ?? 0)
@@ -491,7 +532,21 @@ class WtBooking extends Model
 
     public function getPendingList($fromDate, $toDate, $wardNo = null, $applicationMode = null, $perPage, $ulbId)
     {
-        $dataQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", 'wt_bookings.user_type as applied_by', DB::raw("'pendingAtDriver' as application_type"))
+        $dataQuery = WtBooking::select(
+            "wt_bookings.booking_no",
+            "wt_bookings.ward_id",
+            "wt_locations.location",
+            'wc.capacity',
+            //"wt_bookings.booking_date",
+            DB::raw("TO_CHAR(wt_bookings.booking_date, 'DD-MM-YYYY') as booking_date"),
+            "wt_bookings.applicant_name",
+            "wt_resources.vehicle_name",
+            "wt_resources.vehicle_no",
+            "wt_resources.resource_type",
+            "wt_drivers.driver_name",
+            'wt_bookings.user_type as applied_by',
+            DB::raw("'pendingAtDriver' as application_type")
+        )
             ->join("wt_drivers", "wt_drivers.id", "wt_bookings.driver_id")
             ->join("wt_resources", "wt_resources.id", "wt_bookings.vehicle_id")
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
@@ -503,7 +558,21 @@ class WtBooking extends Model
             ->where('wt_bookings.ulb_id', $ulbId)
             ->whereBetween('assign_date', [$fromDate, $toDate]);
 
-        $reassignQuery = WtBooking::select("wt_bookings.booking_no", "wt_bookings.ward_id", "wt_locations.location", 'wc.capacity', "wt_bookings.booking_date", "wt_bookings.applicant_name", "wt_resources.vehicle_name", "wt_resources.vehicle_no", "wt_resources.resource_type", "wt_drivers.driver_name", 'wt_bookings.user_type as applied_by', DB::raw("'pendingAtDriver' as application_type"))
+        $reassignQuery = WtBooking::select(
+            "wt_bookings.booking_no",
+            "wt_bookings.ward_id",
+            "wt_locations.location",
+            'wc.capacity',
+           // "wt_bookings.booking_date",
+            DB::raw("TO_CHAR(wt_bookings.booking_date, 'DD-MM-YYYY') as booking_date"),
+            "wt_bookings.applicant_name",
+            "wt_resources.vehicle_name",
+            "wt_resources.vehicle_no",
+            "wt_resources.resource_type",
+            "wt_drivers.driver_name",
+            'wt_bookings.user_type as applied_by',
+            DB::raw("'pendingAtDriver' as application_type")
+        )
             ->join("wt_reassign_bookings", "wt_reassign_bookings.application_id", "wt_bookings.id")
             ->leftJoin('wt_locations', 'wt_locations.id', '=', 'wt_bookings.location_id')
             ->join('wt_capacities as wc', 'wt_bookings.capacity_id', '=', 'wc.id')
@@ -536,8 +605,8 @@ class WtBooking extends Model
         $totalCitizenBookings = $dataQuery->clone()->where('wt_bookings.user_type', 'Citizen')->count();
         $totalJSKBookings1 = $reassignQuery->clone()->where('wt_bookings.user_type', 'JSK')->count();
         $totalCitizenBookings1 = $reassignQuery->clone()->where('wt_bookings.user_type', 'Citizen')->count();
-        $totaljsk = $totalJSKBookings +$totalJSKBookings1;
-        $totalCitizen = $totalCitizenBookings +$totalCitizenBookings1;
+        $totaljsk = $totalJSKBookings + $totalJSKBookings1;
+        $totalCitizen = $totalCitizenBookings + $totalCitizenBookings1;
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
@@ -563,8 +632,10 @@ class WtBooking extends Model
                 'wb.id',
                 'wb.booking_no',
                 'wb.applicant_name',
-                'wb.booking_date',
-                'wb.delivery_date',
+                // 'wb.booking_date',
+                // 'wb.delivery_date',
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
                 'wc.capacity',
                 'wa.agency_name',
                 'wt_locations.location',
@@ -594,8 +665,10 @@ class WtBooking extends Model
                 'wb.id',
                 'wb.booking_no',
                 'wb.applicant_name',
-                'wb.booking_date',
-                'wb.delivery_date',
+                // 'wb.booking_date',
+                // 'wb.delivery_date',
+                DB::raw("TO_CHAR(wb.booking_date, 'DD-MM-YYYY') as booking_date"),
+                DB::raw("TO_CHAR(wb.delivery_date, 'DD-MM-YYYY') as delivery_date"),
                 'wc.capacity',
                 'wa.agency_name',
                 'wt_locations.location',
@@ -634,8 +707,8 @@ class WtBooking extends Model
         $totalCitizenBookings = $dataQuery->clone()->where('wb.user_type', 'Citizen')->count();
         $totalJSKBookings1 = $cancelledQuery->clone()->where('wb.user_type', 'JSK')->count();
         $totalCitizenBookings1 = $cancelledQuery->clone()->where('wb.user_type', 'Citizen')->count();
-        $totaljsk = $totalJSKBookings +$totalJSKBookings1;
-        $totalCitizen = $totalCitizenBookings +$totalCitizenBookings1;
+        $totaljsk = $totalJSKBookings + $totalJSKBookings1;
+        $totalCitizen = $totalCitizenBookings + $totalCitizenBookings1;
         return [
             'current_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->currentPage() : 1,
             'last_page' => $booking instanceof \Illuminate\Pagination\LengthAwarePaginator ? $booking->lastPage() : 1,
