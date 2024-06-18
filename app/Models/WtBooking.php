@@ -481,7 +481,7 @@ class WtBooking extends Model
     public function allBooking(Request $request)
     {
         $cancle = new WtCancellation();
-        $perPage = $request->per_page ?: 10;
+        $perPage = $request->perPage ?: 10;
         $page = $request->page ?: 1;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
@@ -726,7 +726,7 @@ class WtBooking extends Model
     public function allPending(Request $request)
     {
         try {
-            $perPage = $request->per_page ?: 10;
+            $perPage = $request->perPage ?: 10;
             $page = $request->page ?: 1;
             $user = Auth()->user();
             $ulbId = $user->ulb_id ?? null;

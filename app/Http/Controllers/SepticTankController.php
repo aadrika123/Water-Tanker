@@ -2189,7 +2189,7 @@ class SepticTankController extends Controller
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
+        $perPage = $request->perPage ?: 10;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'dailyCollection') {
@@ -2230,7 +2230,7 @@ class SepticTankController extends Controller
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
+        $perPage = $request->perPage ?: 10;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;
         if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
@@ -2294,7 +2294,7 @@ class SepticTankController extends Controller
         $response = [];
         $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
         $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->per_page ?: 10;
+        $perPage = $request->perPage ?: 10;
         $page = $request->page ?: 1;
         $user = Auth()->user();
         $ulbId = $user->ulb_id ?? null;

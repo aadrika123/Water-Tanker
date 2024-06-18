@@ -3388,7 +3388,7 @@ class WaterTankerController extends Controller
             $response = [];
             $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
             $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-            $perPage = $request->per_page ?: 10;
+            $perPage = $request->perPage ?: 10;
 
             if ($request->reportType == 'dailyCollection') {
                 $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
@@ -3430,7 +3430,7 @@ class WaterTankerController extends Controller
             $response = [];
             $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
             $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-            $perPage = $request->per_page ?: 10;
+            $perPage = $request->perPage ?: 10;
             if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
                 $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage, $ulbId);
                 $response['user_name'] =$user->name;
@@ -3495,7 +3495,7 @@ class WaterTankerController extends Controller
             $response = [];
             $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
             $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-            $perPage = $request->per_page ?: 10;
+            $perPage = $request->perPage ?: 10;
             $page = $request->page ?: 1;
             $user = Auth()->user();
             $ulbId = $user->ulb_id ?? null;
