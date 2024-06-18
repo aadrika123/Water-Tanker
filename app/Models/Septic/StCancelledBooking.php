@@ -63,6 +63,7 @@ class StCancelledBooking extends Model
             ->select(
                 'stcb.booking_no',
                 'stcb.applicant_name',
+                'stcb.delivery_comments',
                 // 'stcb.booking_date',
                 // 'stcb.cleaning_date',
                 DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),
@@ -113,6 +114,7 @@ class StCancelledBooking extends Model
             ->select(
                 'stcb.booking_no',
                 'stcb.applicant_name',
+                'stcb.delivery_comments',
                 // 'stcb.booking_date',
                 // 'stcb.cleaning_date',
                 DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),

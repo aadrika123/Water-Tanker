@@ -336,6 +336,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'stb.delivery_comments',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
