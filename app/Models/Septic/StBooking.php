@@ -161,6 +161,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
@@ -174,7 +175,10 @@ class StBooking extends Model
             ->whereBetween('stb.booking_date', [$fromDate, $toDate])
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
-        if ($wardNo && $wardNo !== 'All') {
+        // if ($wardNo && $wardNo = 'All') {
+        //     $query->where('stb.ward_id', $wardNo);
+        // }
+        if ($wardNo != 0) {
             $query->where('stb.ward_id', $wardNo);
         }
 
@@ -217,6 +221,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
@@ -279,6 +284,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
@@ -337,6 +343,7 @@ class StBooking extends Model
                 'stb.applicant_name',
                 'stb.address',
                 'stb.delivery_comments',
+                'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
