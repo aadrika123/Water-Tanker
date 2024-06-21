@@ -174,12 +174,8 @@ class StBooking extends Model
             ->whereBetween('stb.booking_date', [$fromDate, $toDate])
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
-        if ($wardNo) {
+        if ($wardNo && $wardNo !== 'All') {
             $query->where('stb.ward_id', $wardNo);
-        }
-
-        if ($wardNo == 'All') {
-            $query = $query;
         }
 
         if ($applicationMode) {
