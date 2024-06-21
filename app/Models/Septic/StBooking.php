@@ -178,6 +178,10 @@ class StBooking extends Model
             $query->where('stb.ward_id', $wardNo);
         }
 
+        if ($wardNo == 'All') {
+            $query = $query;
+        }
+
         if ($applicationMode) {
             $query->where('stb.user_type', $applicationMode);
         }
