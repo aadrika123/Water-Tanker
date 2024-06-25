@@ -41,7 +41,7 @@ class WtCancellation extends Model
      */
     public function todayCancelledBooking($agencyId)
     {
-        return self::select('*')->where('delivery_date', Carbon::now()->format('Y-m-d'))->where('agency_id', $agencyId);
+        return self::select('*')->where('cancel_date', Carbon::now()->format('Y-m-d'))->where('agency_id', $agencyId);
     }
 
     public function getReassignedBookingOrm()

@@ -608,6 +608,27 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
+            $mobileNo = $req->mobile;
+            $bookingNo = $bookingNo;
+            $deliveryDate = $req->deliveryDate;
+            $paymentAmount = $req->paymentAmount;
+
+            if (strlen($mobileNo) == 10) {
+                $Url = "https://jharkhandegovernance.com/citizen/waterTankerDashboard" ;
+                $whatsapp2 = (Whatsapp_Send(
+                    $mobileNo,
+                    "JHSUDATEMP1",
+                    [
+                        "content_type" => "text",
+                        [
+                            $bookingNo,
+                            $deliveryDate,
+                            $paymentAmount,
+                            $Url
+                        ]
+                    ]
+                ));
+            }
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
@@ -2253,7 +2274,7 @@ class WaterTankerController extends Controller
             $reqData = [
                 "id" => $mWtBooking->id,
                 'amount' => $mWtBooking->payment_amount,
-                'citizenId'=>$mWtBooking->citizen_id,
+                'citizenId' => $mWtBooking->citizen_id,
                 'workflowId' => "0",
                 'ulbId' => $mWtBooking->ulb_id,
                 'departmentId' => Config::get('constants.WATER_TANKER_MODULE_ID'),
@@ -3392,7 +3413,7 @@ class WaterTankerController extends Controller
 
             if ($request->reportType == 'dailyCollection') {
                 $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
             if ($response) {
                 return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
@@ -3433,35 +3454,35 @@ class WaterTankerController extends Controller
             $perPage = $request->perPage ?: 10;
             if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
                 $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
 
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'assignedApplication') {
                 $response = $booked->assignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'deliveredApplication') {
                 $response = $booked->getDeliveredList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->waterCapacity, $request->driverName, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
 
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByAgency') {
-                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
             }
 
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByCitizen') {
-                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
             }
             if ($request->reportType == 'applicationReport' && $request->applicationStatus ==  'cancleByDriver') {
-                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
             }
             if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
                 $response = $booked->allBooking($request);
                 //$response = response()->json($response);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
             if ($response) {
                 return responseMsgs(true, "WaterTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
@@ -3501,16 +3522,16 @@ class WaterTankerController extends Controller
             $ulbId = $user->ulb_id ?? null;
             if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
                 $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
 
             if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
                 $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
             }
             if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
                 $response = $booked->allPending($request);
-                $response['user_name'] =$user->name;
+                $response['user_name'] = $user->name;
                 //$response = response()->json($response);
             }
             if ($response) {
