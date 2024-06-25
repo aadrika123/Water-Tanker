@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -88,5 +89,13 @@ class WtReassignBooking extends Model
     public function getAssignedDriver()
     {
         return $this->hasOne(WtDriver::class, "id", "driver_id")->first();
+    }
+
+    public function todayreassign($agencyId)
+    {
+        $todayDate = Carbon::now()->format('Y-m-d');
+        return self::select('*')->where('re_assign_date', $todayDate)
+        ->join('wt_bookings','wt_bookings.id','=','wt_reassign_bookings.application_id')
+            ->where('wt_bookings.agency_id', $agencyId);
     }
 }
