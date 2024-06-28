@@ -443,7 +443,7 @@ class CashVerificationController extends Controller
             // Get deactivated transactions for water tankers
             $mWtTransaction = new WtTransaction();
             $transactionDeactivationDtlWtank = $mWtTransaction->getDeactivatedTran()
-                ->whereBetween('wt_transactions.tran_date', [$fromDate, $uptoDate]);
+                ->whereBetween('wtank_transaction_deactivate_dtls.deactive_date', [$fromDate, $uptoDate]);
 
             if ($paymentMode && $paymentMode != 'ALL') {
                 $transactionDeactivationDtlWtank->where('wt_transactions.payment_mode', $paymentMode);
@@ -455,7 +455,7 @@ class CashVerificationController extends Controller
             // Get deactivated transactions for septic tankers
             $mStTransaction = new StTransaction();
             $transactionDeactivationDtlStank = $mStTransaction->getDeactivatedTran()
-                ->whereBetween('st_transactions.tran_date', [$fromDate, $uptoDate]);
+                ->whereBetween('stank_transaction_deactivate_dtls.deactive_date', [$fromDate, $uptoDate]);
 
             if ($paymentMode && $paymentMode != 'All') {
                 $transactionDeactivationDtlStank->where('st_transactions.payment_mode', $paymentMode);
