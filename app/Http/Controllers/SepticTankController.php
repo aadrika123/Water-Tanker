@@ -922,7 +922,7 @@ class SepticTankController extends Controller
             });
             //$f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)->values();
             $f_list['listApplied'] = $list->where("is_vehicle_sent", "<>", 2)
-                ->where("delivery_track_status", "=", 0)
+                //->where("delivery_track_status", "=", 0)
                 ->values();
             //$f_list['listDelivered'] = $list->where("is_vehicle_sent", 2)->values();
             $f_list['listCleaned'] = $list->where("delivery_track_status", 2)->values();
