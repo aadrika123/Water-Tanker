@@ -613,22 +613,22 @@ class WaterTankerController extends Controller
             $deliveryDate = $req->deliveryDate;
             $paymentAmount = $req->paymentAmount;
 
-            if (strlen($mobileNo) == 10) {
-                $Url = "https://jharkhandegovernance.com/citizen/waterTankerDashboard" ;
-                $whatsapp2 = (Whatsapp_Send(
-                    $mobileNo,
-                    "JHSUDATEMP1",
-                    [
-                        "content_type" => "text",
-                        [
-                            $bookingNo,
-                            $deliveryDate,
-                            $paymentAmount,
-                            $Url
-                        ]
-                    ]
-                ));
-            }
+            // if (strlen($mobileNo) == 10) {
+            //     $Url = "https://jharkhandegovernance.com/citizen/waterTankerDashboard" ;
+            //     $whatsapp2 = (Whatsapp_Send(
+            //         $mobileNo,
+            //         "JHSUDATEMP1",
+            //         [
+            //             "content_type" => "text",
+            //             [
+            //                 $bookingNo,
+            //                 $deliveryDate,
+            //                 $paymentAmount,
+            //                 $Url
+            //             ]
+            //         ]
+            //     ));
+            //}
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
