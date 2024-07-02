@@ -56,7 +56,7 @@ class CashVerificationController extends Controller
             $data = $data->get();
 
             //$collection = collect($data->groupBy("user_id")->all());
-            $collection = collect($data->groupBy("id")->all());
+            $collection = collect($data->groupBy("id")->first());
 
             $Wdata = $collection->map(function ($val) use ($date, $waterTankerModuleId) {
                 //$total =  $val->sum('amount');
