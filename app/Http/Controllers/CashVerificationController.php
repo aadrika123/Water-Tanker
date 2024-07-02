@@ -34,7 +34,8 @@ class CashVerificationController extends Controller
 
         try {
             $ulbId =  Auth()->user()->ulb_id;
-            $userId =  $request->userId;
+            $userId =  $request->id;
+            //$userId =  $request->userId;
             $date = date('Y-m-d', strtotime($request->date));
             $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
             $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
@@ -54,7 +55,8 @@ class CashVerificationController extends Controller
             }
             $data = $data->get();
 
-            $collection = collect($data->groupBy("user_id")->all());
+            //$collection = collect($data->groupBy("user_id")->all());
+            $collection = collect($data->groupBy("id")->all());
 
             $Wdata = $collection->map(function ($val) use ($date, $waterTankerModuleId) {
                 //$total =  $val->sum('amount');
