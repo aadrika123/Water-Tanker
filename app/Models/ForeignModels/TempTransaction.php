@@ -20,7 +20,7 @@ class TempTransaction extends ParamModel
     {
         return TempTransaction::select('temp_transactions.*', 'users.name', 'ulb_ward_masters.id as ward_id')
             ->join('users', 'users.id', 'temp_transactions.user_id')
-            ->join("ulb_ward_masters", DB::raw("CAST (ulb_ward_masters.ward_name AS VARCHAR)"), "temp_transactions.ward_no")
+            ->leftjoin("ulb_ward_masters", DB::raw("CAST (ulb_ward_masters.ward_name AS VARCHAR)"), "temp_transactions.ward_no")
             ->where('tran_date', $date)
             ->where('temp_transactions.status', 1)
             ->where('temp_transactions.ulb_id', $ulbId)

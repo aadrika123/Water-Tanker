@@ -34,15 +34,14 @@ class CashVerificationController extends Controller
 
         try {
             $ulbId =  Auth()->user()->ulb_id;
-            $userId =  $request->id;
-            //$userId =  $request->userId;
+            $userId =  $request->userId;
             $date = date('Y-m-d', strtotime($request->date));
             $waterTankerModuleId = Config::get('constants.WATER_TANKER_MODULE_ID');
             $septicTankerModuleId = Config::get('constants.SEPTIC_TANKER_MODULE_ID');
             $mTempTransaction =  new TempTransaction();
             $zoneId = $request->zone;
             $wardId = $request->wardId;
-
+            DB::connection("pgsql_master")->enableQueryLog();
             $data = $mTempTransaction->transactionDtl($date, $ulbId);
             if ($userId) {
                 $data = $data->where('user_id', $userId);
@@ -53,10 +52,9 @@ class CashVerificationController extends Controller
             if ($wardId) {
                 $data = $data->where('ulb_ward_masters.id', $wardId);
             }
-            $data = $data->get();
+            $data = $data->whereIn("module_id", [$waterTankerModuleId,$septicTankerModuleId])->get();
 
-            //$collection = collect($data->groupBy("user_id")->all());
-            $collection = collect($data->groupBy("id")->first());
+            $collection = collect($data->groupBy("user_id")->all());
 
             $Wdata = $collection->map(function ($val) use ($date, $waterTankerModuleId) {
                 //$total =  $val->sum('amount');
@@ -70,7 +68,7 @@ class CashVerificationController extends Controller
                     // "verified_amount" => 0,
                 ];
             })->values(); // Use values() to get rid of the keys.
-
+            // dd(DB::connection("pgsql_master")->getQueryLog());
             $Sdata = $collection->map(function ($val) use ($date, $septicTankerModuleId) {
                 //$total =  $val->sum('amount');
                 $stank = $val->where("module_id", $septicTankerModuleId)->sum('amount');
