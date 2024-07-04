@@ -118,6 +118,39 @@ if (!function_exists("OTP")) {
 
 if(!function_exists("ApplySms")){
     function ApplySms($data){
+        try {
+            #Dear citizen, your {var1} {var2} {var3} has been generated successfully. For more info, please call {var4}. -UD&HD.GOJ.              
+            $sms = "Dear citizen, your ".$data["for"]." booking No.".$data["booking_no"]." has been generated successfully. For more info, please call ".$data["toll_free"].". -UD&HD.GOJ.";
+            $temp_id = "1307171162952198045";
+            return array("sms" => $sms, "temp_id" => $temp_id, 'status' => true);
+        } catch (Exception $e) {
+            return array(
+                "sms_formate" => "Dear citizen, your {var1} {var2} has been generated successfully. For more info, please call {var3}. -UD&HD.GOJ.",
+                "discriuption" => "1. 2 para required 
+                  2. 1st para array('for'=>'','booking_no'=>'','tool_free'=>'') sizeof 3 ",
+                "error" => $e->getMessage(),
+                'status' => false
+            );
+        }
+    }
+}
 
+if(!function_exists("paymentSms")){
+    function paymentSms($data){
+        try {
+            #Dear citizen, your {var1} payment of INR {var2} for {var3}-{var4} has been successfully processed. For more info call us {var5}. -UD&HD.GOJ.              
+            $sms = "Dear citizen, your ".$data["for"]." payment of INR ".$data["tran_amount"]." for ".$data["for"]."-".$data["booking_no"]." has been successfully processed. For more info call us ".$data["tool_fee"].". -UD&HD.GOJ.";
+            $temp_id = "1307171162964390436";
+            return array("sms" => $sms, "temp_id" => $temp_id, 'status' => true);
+        } catch (Exception $e) {
+            return array(
+                "sms_formate" => "Dear citizen, your {var1} payment of INR {var2} for {var3}-{var4} has been successfully processed. For more info call us {var5}. -UD&HD.GOJ.
+                ",
+                "discriuption" => "1. 2 para required 
+                  2. 1st para array('for'=>'','booking_no'=>'','tool_free'=>'') sizeof 3 ",
+                "error" => $e->getMessage(),
+                'status' => false
+            );
+        }
     }
 }
