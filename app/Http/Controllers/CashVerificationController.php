@@ -67,8 +67,7 @@ class CashVerificationController extends Controller
                     "date" => Carbon::parse($date)->format('d-m-Y'),
                     // "verified_amount" => 0,
                 ];
-            })->values(); // Use values() to get rid of the keys.
-            // dd(DB::connection("pgsql_master")->getQueryLog());
+            })->values(); 
             $Sdata = $collection->map(function ($val) use ($date, $septicTankerModuleId) {
                 //$total =  $val->sum('amount');
                 $stank = $val->where("module_id", $septicTankerModuleId)->sum('amount');
@@ -80,7 +79,7 @@ class CashVerificationController extends Controller
                     "date" => Carbon::parse($date)->format('d-m-Y'),
                     // "verified_amount" => 0,
                 ];
-            })->values(); // Use values() to get rid of the keys.
+            })->values(); 
 
             $data = [
                 "wtank" => $Wdata,

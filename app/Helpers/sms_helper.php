@@ -115,3 +115,9 @@ if (!function_exists("OTP")) {
         }
     }
 }
+
+if(!function_exists("ApplySms")){
+    function ApplySms($data){
+
+    }
+}

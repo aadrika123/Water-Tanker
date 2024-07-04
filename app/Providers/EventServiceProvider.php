@@ -28,6 +28,12 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\SepticTanker\EventSepticTanker' => [
             'App\Listeners\SepticTanker\SendWhatsAppMessage',
         ],
+        'App\Events\WaterTanker\EventWaterTanker' => [
+            'App\Listeners\WaterTanker\SendMessage',
+        ],
+        'App\Events\SepticTanker\EventSepticTanker' => [
+            'App\Listeners\SepticTanker\SendMessage',
+        ],
     ];
 
     /**
