@@ -78,23 +78,23 @@ class SepticTankController extends Controller
             $res = $mStBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
              #_Whatsaap Message
-        //      if (strlen($req->mobile) == 10) {
+             if (strlen($req->mobile) == 10) {
 
-        //         $whatsapp2 = (Whatsapp_Send(
-        //             $req->mobile,
-        //             "wt_booking_initiated",
-        //             [
-        //                 "content_type" => "text",
-        //                 [
-        //                     $req->applicantName ?? "",
-        //                     $req->paymentAmount,
-        //                     "water tanker",
-        //                     $req->bookingNo,
-        //                     "87787878787 "
-        //                 ]
-        //             ]
-        //         ));
-        // }
+                $whatsapp2 = (Whatsapp_Send(
+                    $req->mobile,
+                    "wt_booking_initiated",
+                    [
+                        "content_type" => "text",
+                        [
+                            $req->applicantName ?? "",
+                            $req->paymentAmount,
+                            "septic tanker",
+                            $req->bookingNo,
+                            "87787878787 "
+                        ]
+                    ]
+                ));
+        }
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110201", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
