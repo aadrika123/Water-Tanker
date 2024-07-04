@@ -49,7 +49,6 @@ use Illuminate\Validation\Rule;
 use Nette\Utils\Random;
 use PhpParser\Node\Stmt\Return_;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-
 class WaterTankerController extends Controller
 {
     protected $_base_url;
@@ -608,27 +607,25 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
-            $mobileNo = $req->mobile;
-            $bookingNo = $bookingNo;
-            $deliveryDate = $req->deliveryDate;
-            $paymentAmount = $req->paymentAmount;
+            #_Whatsaap Message
+            if (strlen($req->mobile) == 10) {
 
-            // if (strlen($mobileNo) == 10) {
-            //     $Url = "https://jharkhandegovernance.com/citizen/waterTankerDashboard" ;
-            //     $whatsapp2 = (Whatsapp_Send(
-            //         $mobileNo,
-            //         "JHSUDATEMP1",
-            //         [
-            //             "content_type" => "text",
-            //             [
-            //                 $bookingNo,
-            //                 $deliveryDate,
-            //                 $paymentAmount,
-            //                 $Url
-            //             ]
-            //         ]
-            //     ));
-            //}
+                $whatsapp2 = (Whatsapp_Send(
+                    $req->mobile,
+                    "wt_booking_initiated",
+                    [
+                        "content_type" => "text",
+                        [
+                            $req->applicantName ?? "",
+                            $req->paymentAmount,
+                            "water tanker",
+                            $req->bookingNo,
+                            "87787878787 "
+                        ]
+                    ]
+                ));
+            }
+
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
@@ -2137,7 +2134,7 @@ class WaterTankerController extends Controller
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
 
             $retData['todayTotalBooking'] = $todayBookings->count('id');
-            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent',1)->count('id')+$todayReassign->count();
+            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count('id') + $todayReassign->count();
             $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
             $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
             $retData['agencyName'] =  $agencyDetails->agency_name;
