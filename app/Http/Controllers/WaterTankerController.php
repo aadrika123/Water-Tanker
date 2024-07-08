@@ -49,6 +49,7 @@ use Illuminate\Validation\Rule;
 use Nette\Utils\Random;
 use PhpParser\Node\Stmt\Return_;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+
 class WaterTankerController extends Controller
 {
     protected $_base_url;
@@ -1445,6 +1446,32 @@ class WaterTankerController extends Controller
             $mWtBooking->driver_id = $req->driverId;
             $mWtBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mWtBooking->update();
+            $driver = WtDriver::find($req->driverId);
+            if (!$driver) {
+                throw new Exception("Driver Not Found !!!");
+            }
+
+            $driverName = $driver->driver_name;
+            $driverContact = $driver->driver_mobile;
+            #_Whatsaap Message
+            if (strlen($mWtBooking->mobile) == 10) {
+
+                $whatsapp2 = (Whatsapp_Send(
+                    $mWtBooking->mobile,
+                    "wt_driver_assignment",
+                    [
+                        "content_type" => "text",
+                        [
+                            $mWtBooking->applicant_name,$driverName,
+                            $driverContact,
+                            "water supply",
+                            $mWtBooking->booking_no,
+                            "1800123123 "
+                        ]
+                    ]
+                ));
+            }
+
             return responseMsgs(true, "Booking Assignment Successfully !!!", '', "110139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110139", "1.0", "", 'POST', $req->deviceId ?? "");
