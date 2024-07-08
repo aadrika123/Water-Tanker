@@ -1765,7 +1765,7 @@ class SepticTankController extends Controller
                             $booking->applicant_name ?? "",
                             $booking->booking_no,
                             "delivered/trip",
-                            "87787878787 "
+                            "1800123123 "
                         ]
                     ]
                 ));
