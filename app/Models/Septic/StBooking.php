@@ -118,7 +118,7 @@ class StBooking extends Model
     public function todayBookings($ulb_id)
     {
         $todayDate = Carbon::now()->format('Y-m-d');
-        return self::select('*')->where('cleaning_date', $todayDate)
+        return self::select('*')->where('booking_date', $todayDate)
             ->where('ulb_id', $ulb_id);
     }
 
