@@ -3208,6 +3208,7 @@ class WaterTankerController extends Controller
                             $booking->applicant_name ?? "",
                             $booking->booking_no,
                             "delivered/trip",
+                            "jharkhandegovernance.com",
                             "87787878787 "
                         ]
                     ]

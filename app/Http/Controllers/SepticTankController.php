@@ -77,8 +77,8 @@ class SepticTankController extends Controller
             DB::beginTransaction();
             $res = $mStBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
-             #_Whatsaap Message
-             if (strlen($req->mobile) == 10) {
+            #_Whatsaap Message
+            if (strlen($req->mobile) == 10) {
 
                 $whatsapp2 = (Whatsapp_Send(
                     $req->mobile,
@@ -94,7 +94,7 @@ class SepticTankController extends Controller
                         ]
                     ]
                 ));
-        }
+            }
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110201", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
@@ -301,7 +301,7 @@ class SepticTankController extends Controller
                     [
                         "content_type" => "text",
                         [
-                            $mStBooking->applicant_name,$driverName,
+                            $mStBooking->applicant_name, $driverName,
                             $driverContact,
                             "septic tank",
                             $mStBooking->booking_no,
@@ -858,7 +858,7 @@ class SepticTankController extends Controller
             $reqData = [
                 "id" => $mStBooking->id,
                 'amount' => $mStBooking->payment_amount,
-                'citizenId'=>$mStBooking->citizen_id,
+                'citizenId' => $mStBooking->citizen_id,
                 'workflowId' => "0",
                 'ulbId' => $mStBooking->ulb_id,
                 'departmentId' => Config::get('constants.SEPTIC_TANKER_MODULE_ID'),
@@ -1753,8 +1753,8 @@ class SepticTankController extends Controller
             $booking->update();
 
             DB::commit();
-             #_Whatsaap Message
-             if (strlen($booking->mobile) == 10) {
+            //  #_Whatsaap Message
+            if (strlen($booking->mobile) == 10) {
 
                 $whatsapp2 = (Whatsapp_Send(
                     $booking->mobile,
@@ -1765,6 +1765,7 @@ class SepticTankController extends Controller
                             $booking->applicant_name ?? "",
                             $booking->booking_no,
                             "delivered/trip",
+                            "jharkhandegovernance.com",
                             "1800123123 "
                         ]
                     ]
@@ -2245,21 +2246,21 @@ class SepticTankController extends Controller
             ], 200);
         }
         try {
-        $tran = new StTransaction();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->perPage ?: 10;
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        if ($request->reportType == 'dailyCollection') {
-            $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($response) {
-            //return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
-            return responseMsgs(true, "SepticTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
-        }
+            $tran = new StTransaction();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->perPage ?: 10;
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            if ($request->reportType == 'dailyCollection') {
+                $response = $tran->dailyCollection($fromDate, $toDate, $request->wardNo, $request->paymentMode, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($response) {
+                //return response()->json(['status' => true, 'data' => $response, 'msg' => ''], 200);
+                return responseMsgs(true, "SepticTanker Collection List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
@@ -2284,47 +2285,47 @@ class SepticTankController extends Controller
                 'errors'  => $validator->errors()
             ], 200);
         }
-        try{
-        $booked = new StBooking();
-        $cancle = new StCancelledBooking();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->perPage ?: 10;
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
-            $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
-            $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
-            $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
-            $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
+        try {
+            $booked = new StBooking();
+            $cancle = new StCancelledBooking();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->perPage ?: 10;
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'bookedApplication') {
+                $response = $booked->getBookedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'assignedApplication') {
+                $response = $booked->getAssignedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cleanedApplication') {
+                $response = $booked->getCleanedList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $request->driverName, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByAgency') {
+                $response = $cancle->getCancelBookingListByAgency($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
 
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
-            $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
-            $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo,$request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
-            $response = $booked->allBooking($request);
-            $response['user_name'] =$user->name;
-        }
-        if ($response) {
-            return responseMsgs(true, "SepticTanker Application List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
-        }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByCitizen') {
+                $response = $cancle->getCancelBookingListByCitizen($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'cancleByDriver') {
+                $response = $booked->getCancelBookingListByDriver($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'applicationReport' && $request->applicationStatus == 'All') {
+                $response = $booked->allBooking($request);
+                $response['user_name'] = $user->name;
+            }
+            if ($response) {
+                return responseMsgs(true, "SepticTanker Application List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
@@ -2349,32 +2350,32 @@ class SepticTankController extends Controller
                 'errors'  => $validator->errors()
             ], 200);
         }
-        try{
-        $booked = new StBooking();
-        $response = [];
-        $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
-        $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
-        $perPage = $request->perPage ?: 10;
-        $page = $request->page ?: 1;
-        $user = Auth()->user();
-        $ulbId = $user->ulb_id ?? null;
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
-            $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
+        try {
+            $booked = new StBooking();
+            $response = [];
+            $fromDate = $request->fromDate ?: Carbon::now()->format('Y-m-d');
+            $toDate = $request->toDate ?: Carbon::now()->format('Y-m-d');
+            $perPage = $request->perPage ?: 10;
+            $page = $request->page ?: 1;
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtDriver') {
+                $response = $booked->getPendingList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
 
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
-            $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
-            $response['user_name'] =$user->name;
-        }
-        if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
-            $response = $booked->allPending($request);
-            $response['user_name'] =$user->name;
-            //$response = response()->json($response);
-        }
-        if ($response) {
-            return responseMsgs(true, "SepticTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
-        }
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'pendingAtAgency') {
+                $response = $booked->getPendingAgencyList($fromDate, $toDate, $request->wardNo, $request->applicationMode, $perPage, $ulbId);
+                $response['user_name'] = $user->name;
+            }
+            if ($request->reportType == 'pendingReport' && $request->applicationStatus == 'All') {
+                $response = $booked->allPending($request);
+                $response['user_name'] = $user->name;
+                //$response = response()->json($response);
+            }
+            if ($response) {
+                return responseMsgs(true, "SepticTanker Pending List Fetch Succefully !!!", $response, "055017", "1.0", responseTime(), "POST", $request->deviceId);
+            }
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
