@@ -285,6 +285,31 @@ class SepticTankController extends Controller
             $mStBooking->assign_date = Carbon::now()->format('Y-m-d');
             $mStBooking->assign_status = '1';
             $mStBooking->save();
+            $driver = StDriver::find($req->driverId);
+            if (!$driver) {
+                throw new Exception("Driver Not Found !!!");
+            }
+
+            $driverName = $driver->driver_name;
+            $driverContact = $driver->driver_mobile;
+            #_Whatsaap Message
+            if (strlen($mStBooking->mobile) == 10) {
+
+                $whatsapp2 = (Whatsapp_Send(
+                    $mStBooking->mobile,
+                    "wt_driver_assignment",
+                    [
+                        "content_type" => "text",
+                        [
+                            $mStBooking->applicant_name,$driverName,
+                            $driverContact,
+                            "septic tank",
+                            $mStBooking->booking_no,
+                            "1800123123 "
+                        ]
+                    ]
+                ));
+            }
             return responseMsgs(true, "Assignment Booking Successfully !!!", "", "110205", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110205", "1.0", "", 'POST', $req->deviceId ?? "");
