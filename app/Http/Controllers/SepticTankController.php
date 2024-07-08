@@ -1743,6 +1743,7 @@ class SepticTankController extends Controller
             $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
 
             if ($updateData->delivery_track_status == 2) {
+                $booking->is_vehicle_sent = $updateData->delivery_track_status;
                 $booking->assign_status = $updateData->delivery_track_status;
                 $booking->delivered_by_driver_id = $driver->id;
                 $booking->driver_delivery_date_time = Carbon::now();
