@@ -2658,7 +2658,7 @@ class WaterTankerController extends Controller
                             [
                                 $applicantName ?? "Citizen",
                                 $amount,
-                                "Application No.",
+                                "Booking No.",
                                 $bookingNo,
                                 $url
                             ]
