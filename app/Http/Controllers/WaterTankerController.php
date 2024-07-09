@@ -2609,6 +2609,8 @@ class WaterTankerController extends Controller
                     $amount = $wtTransaction->paid_amount;
                     $module = "water tanker";
                     $bookingNo = $mWtBooking->booking_no;
+                    $tranId  = $wtTransaction->id;
+                    $url = "https://aadrikainfomedia.com/citizen/water-tanker-receipt/" . $tranId;
                     // $response = $this->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
@@ -2639,6 +2641,8 @@ class WaterTankerController extends Controller
                     $amount = $stTransaction->paid_amount;
                     $module = "septic tank";
                     $bookingNo = $mStBooking->booking_no;
+                    $tranId  = $stTransaction->id;
+                    $url = "https://aadrikainfomedia.com/citizen/septic-tank-receipt/" . $tranId;
                     // $response = (new SepticTankController())->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
@@ -2646,18 +2650,17 @@ class WaterTankerController extends Controller
                 // $data = $response->original["data"];
                 #_Whatsaap Message
                 if (strlen($mobile) == 10) {
-
                     $whatsapp2 = (Whatsapp_Send(
                         $mobile,
-                        "wt_booking_initiated",
+                        "all_module_payment_receipt",
                         [
                             "content_type" => "text",
                             [
                                 $applicantName ?? "Citizen",
                                 $amount,
-                                $module,
+                                "Application No.",
                                 $bookingNo,
-                                "87787878787 "
+                                $url
                             ]
                         ]
                     ));
