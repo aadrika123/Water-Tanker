@@ -2604,6 +2604,11 @@ class WaterTankerController extends Controller
                     $wtTransaction->payment_mode = "ONLINE";
                     $wtTransaction->tran_date = Carbon::now();
                     $wtTransaction->save();
+                    $mobile = $mWtBooking->mobile;
+                    $applicantName = $mWtBooking->applicant_name;
+                    $amount = $wtTransaction->paid_amount;
+                    $module = "water tanker";
+                    $bookingNo = $mWtBooking->booking_no;
                     // $response = $this->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
@@ -2629,11 +2634,34 @@ class WaterTankerController extends Controller
                     $stTransaction->payment_mode = "ONLINE";
                     $stTransaction->tran_date = Carbon::now();
                     $stTransaction->save();
+                    $mobile = $mStBooking->mobile;
+                    $applicantName = $mStBooking->applicant_name;
+                    $amount = $stTransaction->paid_amount;
+                    $module = "septic tank";
+                    $bookingNo = $mStBooking->booking_no;
                     // $response = (new SepticTankController())->offlinePayment($req);
                     $msg = "Payment Accepted Successfully !!!";
                 }
                 DB::commit();
                 // $data = $response->original["data"];
+                #_Whatsaap Message
+                if (strlen($mobile) == 10) {
+
+                    $whatsapp2 = (Whatsapp_Send(
+                        $mobile,
+                        "wt_booking_initiated",
+                        [
+                            "content_type" => "text",
+                            [
+                                $applicantName ?? "Citizen",
+                                $amount,
+                                $module,
+                                $bookingNo,
+                                "87787878787 "
+                            ]
+                        ]
+                    ));
+                }
                 return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
