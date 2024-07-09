@@ -2764,7 +2764,7 @@ class WaterTankerController extends Controller
                         [
                             $booking->applicant_name ?? "",
                             $mTransaction->paid_amount,
-                            "Booking No ",
+                            "Booking No",
                             $booking->booking_no,
                             $url
                         ]
