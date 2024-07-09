@@ -2058,20 +2058,22 @@ class SepticTankController extends Controller
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
+            $tranId  = $mTransaction->id;
+            $url = "https://aadrikainfomedia.com/citizen/water-tanker-receipt/" . $tranId;
             #_Whatsaap Message
             if (strlen($booking->mobile) == 10) {
 
                 $whatsapp2 = (Whatsapp_Send(
                     $booking->mobile,
-                    "wt_booking_initiated",
+                    "all_module_payment_receipt",
                     [
                         "content_type" => "text",
                         [
                             $booking->applicant_name ?? "",
                             $mTransaction->paid_amount,
-                            "septic tank",
+                            "Booking No",
                             $booking->booking_no,
-                            "87787878787 "
+                            $url
                         ]
                     ]
                 ));
