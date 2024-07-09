@@ -608,24 +608,24 @@ class WaterTankerController extends Controller
             DB::beginTransaction();
             $res = $mWtBooking->storeBooking($req);                                                                     // Store Booking Informations
             DB::commit();
-            #_Whatsaap Message
-            if (strlen($req->mobile) == 10) {
+            // #_Whatsaap Message
+            // if (strlen($req->mobile) == 10) {
 
-                $whatsapp2 = (Whatsapp_Send(
-                    $req->mobile,
-                    "wt_booking_initiated",
-                    [
-                        "content_type" => "text",
-                        [
-                            $req->applicantName ?? "",
-                            $req->paymentAmount,
-                            "water tanker",
-                            $req->bookingNo,
-                            "87787878787 "
-                        ]
-                    ]
-                ));
-            }
+            //     $whatsapp2 = (Whatsapp_Send(
+            //         $req->mobile,
+            //         "wt_booking_initiated",
+            //         [
+            //             "content_type" => "text",
+            //             [
+            //                 $req->applicantName ?? "",
+            //                 $req->paymentAmount,
+            //                 "water tanker",
+            //                 $req->bookingNo,
+            //                 "87787878787 "
+            //             ]
+            //         ]
+            //     ));
+            // }
 
             return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
@@ -1462,7 +1462,7 @@ class WaterTankerController extends Controller
                     [
                         "content_type" => "text",
                         [
-                            $mWtBooking->applicant_name,$driverName,
+                            $mWtBooking->applicant_name, $driverName,
                             $driverContact,
                             "water supply",
                             $mWtBooking->booking_no,
@@ -2720,6 +2720,24 @@ class WaterTankerController extends Controller
             DB::commit();
             DB::connection("pgsql_master")->commit();
             $msg = "Payment Accepted Successfully !!!";
+            #_Whatsaap Message
+            if (strlen($booking->mobile) == 10) {
+
+                $whatsapp2 = (Whatsapp_Send(
+                    $booking->mobile,
+                    "wt_booking_initiated",
+                    [
+                        "content_type" => "text",
+                        [
+                            $booking->applicant_name ?? "",
+                            $mTransaction->paid_amount,
+                            "water tanker",
+                            $booking->booking_no,
+                            "87787878787 "
+                        ]
+                    ]
+                ));
+            }
             return responseMsgs(true, $msg, ["tranId" => $mTransaction->id, "TranNo" => $mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
         } catch (Exception $e) {
             DB::rollBack();
@@ -3196,8 +3214,8 @@ class WaterTankerController extends Controller
             $booking->update();
 
             DB::commit();
-             #_Whatsaap Message
-             if (strlen($booking->mobile) == 10) {
+            #_Whatsaap Message
+            if (strlen($booking->mobile) == 10) {
 
                 $whatsapp2 = (Whatsapp_Send(
                     $booking->mobile,
