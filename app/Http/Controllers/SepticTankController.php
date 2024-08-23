@@ -2061,23 +2061,23 @@ class SepticTankController extends Controller
             $tranId  = $mTransaction->id;
             $url = "https://aadrikainfomedia.com/citizen/water-tanker-receipt/" . $tranId;
             #_Whatsaap Message
-            if (strlen($booking->mobile) == 10) {
+            // if (strlen($booking->mobile) == 10) {
 
-                $whatsapp2 = (Whatsapp_Send(
-                    $booking->mobile,
-                    "all_module_payment_receipt",
-                    [
-                        "content_type" => "text",
-                        [
-                            $booking->applicant_name ?? "",
-                            $mTransaction->paid_amount,
-                            "Booking No",
-                            $booking->booking_no,
-                            $url
-                        ]
-                    ]
-                ));
-            }
+            //     $whatsapp2 = (Whatsapp_Send(
+            //         $booking->mobile,
+            //         "all_module_payment_receipt",
+            //         [
+            //             "content_type" => "text",
+            //             [
+            //                 $booking->applicant_name ?? "",
+            //                 $mTransaction->paid_amount,
+            //                 "Booking No",
+            //                 $booking->booking_no,
+            //                 $url
+            //             ]
+            //         ]
+            //     ));
+            // }
             return responseMsgs(true, $msg, ["tranId" => $mTransaction->id, "TranNo" => $mTransaction->tran_no], '110169', 01, "", 'POST', $req->deviceId);
         } catch (Exception $e) {
             DB::rollBack();
