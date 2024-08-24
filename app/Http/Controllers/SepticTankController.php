@@ -814,8 +814,10 @@ class SepticTankController extends Controller
     public function listCleanedBooking(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
-            'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            // 'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+            // 'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            'fromDate' => 'nullable|date_format:Y-m-d|before_or_equal:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != null ? 'required|date_format:Y-m-d|after_or_equal:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|before_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
