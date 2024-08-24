@@ -833,7 +833,7 @@ class SepticTankController extends Controller
                 ->get();
             $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
             if ($req->fromDate != NULL)
-                $list = $list->whereBetween('driver_delivery_update_date_time', [$req->fromDate, $req->toDate])->values();
+                $list = $list->whereBetween('stb.driver_delivery_update_date_time', [$req->fromDate, $req->toDate])->values();
             $ulb = $this->_ulbs;
             $DocUpload = new DocUpload();
             $f_list = $list->map(function ($val) use ($ulb, $DocUpload) {
