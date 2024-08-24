@@ -27,7 +27,7 @@ class StCancelledBooking extends Model
 
     public function todayCancelledBooking($ulb_id)
     {
-        return self::select('*')->where('cleaning_date', Carbon::now()->format('Y-m-d'))->where('ulb_id', $ulb_id);
+        return self::select('*')->where('cancel_date', Carbon::now()->format('Y-m-d'))->where('ulb_id', $ulb_id);
     }
 
     public function getReassignedBookingOrm()
