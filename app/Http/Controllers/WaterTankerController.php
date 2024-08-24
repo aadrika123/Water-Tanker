@@ -2649,23 +2649,23 @@ class WaterTankerController extends Controller
                 DB::commit();
                 // $data = $response->original["data"];
                 #_Whatsaap Message
-                if (strlen($mobile) == 10) {
-                    $whatsapp2 = (Whatsapp_Send(
-                        $mobile,
-                        "all_module_payment_receipt",
-                        [
-                            "content_type" => "text",
-                            [
-                                $applicantName ?? "Citizen",
-                                $amount,
-                                "Booking No.",
-                                $bookingNo,
-                                $url
-                            ]
-                        ]
-                    ));
-                }
-                return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
+                // if (strlen($mobile) == 10) {
+                //     $whatsapp2 = (Whatsapp_Send(
+                //         $mobile,
+                //         "all_module_payment_receipt",
+                //         [
+                //             "content_type" => "text",
+                //             [
+                //                 $applicantName ?? "Citizen",
+                //                 $amount,
+                //                 "Booking No.",
+                //                 $bookingNo,
+                //                 $url
+                //             ]
+                //         ]
+                //     ));
+                // }
+                 return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
             DB::rollBack();
@@ -3248,23 +3248,23 @@ class WaterTankerController extends Controller
 
             DB::commit();
             #_Whatsaap Message
-            if (strlen($booking->mobile) == 10) {
+            // if (strlen($booking->mobile) == 10) {
 
-                $whatsapp2 = (Whatsapp_Send(
-                    $booking->mobile,
-                    "wt_successful_delivery",
-                    [
-                        "content_type" => "text",
-                        [
-                            $booking->applicant_name ?? "",
-                            $booking->booking_no,
-                            "delivered/trip",
-                            "jharkhandegovernance.com",
-                            "87787878787 "
-                        ]
-                    ]
-                ));
-            }
+            //     $whatsapp2 = (Whatsapp_Send(
+            //         $booking->mobile,
+            //         "wt_successful_delivery",
+            //         [
+            //             "content_type" => "text",
+            //             [
+            //                 $booking->applicant_name ?? "",
+            //                 $booking->booking_no,
+            //                 "delivered/trip",
+            //                 "jharkhandegovernance.com",
+            //                 "87787878787 "
+            //             ]
+            //         ]
+            //     ));
+            // }
             return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
