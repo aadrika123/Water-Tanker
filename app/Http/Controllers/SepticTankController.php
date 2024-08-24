@@ -106,7 +106,7 @@ class SepticTankController extends Controller
     public function stAgencyDashboard(Request $req)
     {
         try {
-            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "JSK","Water-Agency"]))
                 throw new Exception("Unauthorized Access !!!");
             // Variable initialization           
             $ulbId = Auth()->user()->ulb_id;
@@ -148,7 +148,7 @@ class SepticTankController extends Controller
 
         try {
             // Variable initialization
-            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser", "JSK","Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
@@ -195,7 +195,7 @@ class SepticTankController extends Controller
         }
         try {
             // Variable initialization
-            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser","JSK", "Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
@@ -376,7 +376,7 @@ class SepticTankController extends Controller
     public function listCancelBooking(Request $req)
     {
         try {
-            if ($req->auth['user_type'] != 'Citizen' && in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+            if ($req->auth['user_type'] != 'Citizen' && in_array($req->auth['user_type'], ["UlbUser", "JSK","Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mStCancelledBooking = new StCancelledBooking();
@@ -824,7 +824,7 @@ class SepticTankController extends Controller
         }
         try {
             // Variable initialization
-            if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+            if (!in_array($req->auth['user_type'], ["UlbUser","JSK", "Water-Agency"]))
                 throw new Exception("Unothorished  Access !!!");
             $mStBooking = new StBooking();
             $list = $mStBooking->getBookingList()
