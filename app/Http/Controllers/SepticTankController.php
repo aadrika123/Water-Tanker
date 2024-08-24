@@ -1876,9 +1876,9 @@ class SepticTankController extends Controller
             $mWtReassignBooking = new StReassignBooking();
             $list = $mWtReassignBooking->listReassignBookingOrm();
             $list = $list->where("wb.ulb_id", $ulbId)
-                ->whereBetween("wb.assign_date", [$fromDate, $uptoDate])
+                ->whereBetween("wb.re_assign_date", [$fromDate, $uptoDate])
                 ->where("wb.delivery_track_status", "<>", 2)
-                ->orderBy("wb.assign_date", "DESC");
+                ->orderBy("wb.re_assign_date", "DESC");
 
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
