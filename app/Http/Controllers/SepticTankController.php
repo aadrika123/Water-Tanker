@@ -1866,17 +1866,17 @@ class SepticTankController extends Controller
     {
         try {
             $ulbId = $req->auth["ulb_id"];
-            $fromDate = $uptoDate = Carbon::now()->format("Y-m-d");
+            $fromDate = $toDate = Carbon::now()->format("Y-m-d");
             if ($req->fromDate) {
                 $fromDate = $req->fromDate;
             }
-            if ($req->uptoDate) {
-                $uptoDate = $req->uptoDate;
+            if ($req->toDate) {
+                $toDate = $req->toDate;
             }
             $mWtReassignBooking = new StReassignBooking();
             $list = $mWtReassignBooking->listReassignBookingOrm();
             $list = $list->where("wb.ulb_id", $ulbId)
-                ->whereBetween("wrb.re_assign_date", [$fromDate, $uptoDate])
+                ->whereBetween("wrb.re_assign_date", [$fromDate, $toDate])
                 ->where("wb.delivery_track_status", "<>", 2)
                 ->orderBy("wrb.re_assign_date", "DESC");
 
