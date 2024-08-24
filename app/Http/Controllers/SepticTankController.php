@@ -184,6 +184,15 @@ class SepticTankController extends Controller
      */
     public function listAssignedBooking(Request $req)
     {
+        $validator = Validator::make($req->all(), [
+            // 'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+            // 'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            'fromDate' => 'nullable|date_format:Y-m-d|before_or_equal:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != null ? 'required|date_format:Y-m-d|after_or_equal:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|before_or_equal:' . date('Y-m-d'),
+        ]);
+        if ($validator->fails()) {
+            return validationErrorV2($validator);
+        }
         try {
             // Variable initialization
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
@@ -197,6 +206,8 @@ class SepticTankController extends Controller
                 ->orderByDesc('id')
                 ->get();
             $list = $list->where('ulb_id', $req->auth['ulb_id'])->values();
+            if ($req->fromDate != NULL)
+                $list = $list->whereBetween('assign_date', [$req->fromDate, $req->toDate])->values();
             $ulb = $this->_ulbs;
             $f_list = $list->map(function ($val) use ($ulb) {
                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
