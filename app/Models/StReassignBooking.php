@@ -68,6 +68,7 @@ class StReassignBooking extends Model
                 'wr.vehicle_name',
                 'wr.vehicle_no',
                 'wc.capacity',
+                'wrb.re_assign_date', 
                 "wrb.delivery_track_status",
                 "wrb.delivery_comments",
                 "wb.booking_no",

@@ -1886,7 +1886,7 @@ class SepticTankController extends Controller
             $list = $mWtReassignBooking->listReassignBookingOrm();
             $list = $list->where("wb.ulb_id", $ulbId)
                 ->whereBetween("wrb.re_assign_date", [$fromDate, $toDate])
-                ->where("wb.delivery_track_status", "<>", 2)
+                ->where("wrb.delivery_track_status", "<>", 2)
                 ->orderBy("wrb.re_assign_date", "DESC");
 
             $perPage = $req->perPage ? $req->perPage : 10;
@@ -1898,7 +1898,7 @@ class SepticTankController extends Controller
                 "data" => collect($list->items())->map(function ($val) {
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
-                    $val->re_assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
+                    $val->re_assign_date = Carbon::parse($val->re_assign_date)->format('d-m-Y');
                     $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
