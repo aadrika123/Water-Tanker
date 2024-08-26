@@ -107,6 +107,11 @@ class StBooking extends Model
         $details = DB::table('st_bookings as sb')->select('*')
             ->where('sb.id', $payId)
             ->first();
+        if(!$details){
+            $details = DB::table('st_cancelled_bookings as sb')->select('*')
+            ->where('sb.id', $payId)
+            ->first();
+        }
 
         $details->payment_details = json_decode($details->payment_details);
         $details->towards = "Septic Tanker Booking";
