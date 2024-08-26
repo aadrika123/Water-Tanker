@@ -555,12 +555,12 @@ class StBooking extends Model
             ->orderByDesc('stb.id');
 
         if ($wardNo) {
-            $dataQuery->where('wb.ward_id', $wardNo);
-            $cancelledQuery->where('wb.ward_id', $wardNo);
+            $dataQuery->where('stb.ward_id', $wardNo);
+            $cancelledQuery->where('stb.ward_id', $wardNo);
         }
         if ($applicationMode) {
-            $dataQuery->where('wb.user_type', $applicationMode);
-            $cancelledQuery->where('wb.user_type', $applicationMode);
+            $dataQuery->where('stb.user_type', $applicationMode);
+            $cancelledQuery->where('stb.user_type', $applicationMode);
         }
         $data = $dataQuery->union($cancelledQuery);
 
