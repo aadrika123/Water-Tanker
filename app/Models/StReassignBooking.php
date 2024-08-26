@@ -51,8 +51,8 @@ class StReassignBooking extends Model
                 )wrb"
             ), 'wb.id', '=', 'wrb.application_id')
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'wb.location_id')
-            ->join('st_resources as wr', 'wr.id', '=', 'wrb.vehicle_id')
-            ->join('st_drivers as wd', 'wd.id', '=', 'wrb.driver_id')
+            ->join('st_resources as wr', 'wr.id', '=', 'wb.vehicle_id')
+            ->join('st_drivers as wd', 'wd.id', '=', 'wb.driver_id')
             ->leftJoin('st_capacities as wc', 'wc.id', '=', 'wb.capacity_id')
             ->select(
                 'wb.assign_date',
