@@ -1454,23 +1454,23 @@ class WaterTankerController extends Controller
             $driverName = $driver->driver_name;
             $driverContact = $driver->driver_mobile;
             #_Whatsaap Message
-            if (strlen($mWtBooking->mobile) == 10) {
+            // if (strlen($mWtBooking->mobile) == 10) {
 
-                $whatsapp2 = (Whatsapp_Send(
-                    $mWtBooking->mobile,
-                    "wt_driver_assignment",
-                    [
-                        "content_type" => "text",
-                        [
-                            $mWtBooking->applicant_name, $driverName,
-                            $driverContact,
-                            "water supply",
-                            $mWtBooking->booking_no,
-                            "1800123123 "
-                        ]
-                    ]
-                ));
-            }
+            //     $whatsapp2 = (Whatsapp_Send(
+            //         $mWtBooking->mobile,
+            //         "wt_driver_assignment",
+            //         [
+            //             "content_type" => "text",
+            //             [
+            //                 $mWtBooking->applicant_name, $driverName,
+            //                 $driverContact,
+            //                 "water supply",
+            //                 $mWtBooking->booking_no,
+            //                 "1800123123 "
+            //             ]
+            //         ]
+            //     ));
+            // }
 
             return responseMsgs(true, "Booking Assignment Successfully !!!", '', "110139", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
