@@ -137,14 +137,19 @@ class WtBooking extends Model
     public function getRecieptDetails($payId)
     {
         $details = DB::table('wt_bookings as wb')
-            ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
-            ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
-            ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
-            ->select('wb.*', 'wc.capacity', 'whc.name as hydration_center_name')
+            // ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
+            // ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
+            // ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
+            ->select('wb.*')
             ->where('wb.id', $payId)
             // ->where('wb.payment_id', $payId)
             ->first();
-
+        if (!$details) {
+            $details = DB::table('wt_cancellations as sb')
+                ->select('*')
+                ->where('sb.id', $payId)
+                ->first();
+        }
         $details->payment_details = json_decode($details->payment_details);
         $details->towards = "Water Tanker Booking";
         $details->payment_date = Carbon::createFromFormat('Y-m-d', $details->payment_date)->format('d-m-Y');
@@ -563,7 +568,7 @@ class WtBooking extends Model
             "wt_bookings.ward_id",
             "wt_locations.location",
             'wc.capacity',
-           // "wt_bookings.booking_date",
+            // "wt_bookings.booking_date",
             DB::raw("TO_CHAR(wt_bookings.booking_date, 'DD-MM-YYYY') as booking_date"),
             "wt_bookings.applicant_name",
             "wt_resources.vehicle_name",
