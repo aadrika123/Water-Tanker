@@ -55,8 +55,8 @@ class WtReassignBooking extends Model
                     )wrb"
             ), 'wb.id', '=', 'wrb.application_id')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
-            ->join('wt_resources as wr', 'wr.id', '=', 'wrb.vehicle_id')
-            ->join('wt_drivers as wd', 'wd.id', '=', 'wrb.driver_id')
+            ->join('wt_resources as wr', 'wr.id', '=', 'wb.vehicle_id')
+            ->join('wt_drivers as wd', 'wd.id', '=', 'wb.driver_id')
             ->join('wt_capacities as wc', 'wc.id', '=', 'wb.capacity_id')
             ->leftjoin('wt_hydration_centers as hc', 'hc.id', '=', 'wb.hydration_center_id')
             ->select(
@@ -75,6 +75,7 @@ class WtReassignBooking extends Model
                 'wr.vehicle_no',
                 'wc.capacity',
                 'hc.name as hydration_center_name',
+                'wrb.re_assign_date', 
                 "wrb.delivery_track_status",
                 "wrb.delivery_comments",
                 "wt_locations.location",
