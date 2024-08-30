@@ -2665,7 +2665,7 @@ class WaterTankerController extends Controller
                 //         ]
                 //     ));
                 // }
-                 return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
+                return responseMsgs(true, $msg, "", '110168', 01, responseTime(), 'POST', $req->deviceId);
             }
         } catch (Exception $e) {
             DB::rollBack();
@@ -3285,7 +3285,15 @@ class WaterTankerController extends Controller
             if ($req->uptoDate) {
                 $uptoDate = $req->uptoDate;
             }
-            $list = WtBooking::select("*");
+            //$list = WtBooking::select("*");
+           
+            $bookings = WtBooking::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
+
+            
+            $cancellations = WtCancellation::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
+
+            $list = $bookings->union($cancellations);
+
             if ($key) {
                 $list = $list->where(function ($where) use ($key) {
                     $where->orWhere("booking_no", "ILIKE", "%$key%")
@@ -3310,8 +3318,8 @@ class WaterTankerController extends Controller
                 "data" => collect($list->items())->map(function ($val) {
                     $val->payment_details = json_decode($val->payment_details);
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-                    $val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
-                    $val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
+                    //$val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
+                    //$val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];
