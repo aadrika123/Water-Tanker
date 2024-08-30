@@ -65,12 +65,14 @@ class WtBooking extends Model
     {
         return DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
+            ->leftjoin('wt_reassign_bookings','wt_reassign_bookings.application_id','=','wt_bookings.id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
             ->leftjoin('wt_resources as res', 'wb.vehicle_id', '=', 'res.id')
             ->leftjoin('wt_hydration_centers as whc', 'wb.hydration_center_id', '=', 'whc.id')
             ->select('wb.*', 'wc.capacity', 'wa.agency_name', 'whc.name as hydration_center_name', "dr.driver_name", 'wb.driver_delivery_update_date_time as cancelledDate', "res.vehicle_no", "wt_locations.location")
+            ->whereNull('wt_reassign_bookings.application_id') 
             ->orderBy('wb.ulb_id');
     }
 
