@@ -3167,20 +3167,21 @@ class WaterTankerController extends Controller
                 "lastPage" => $list->lastPage(),
                 "total" => $list->total(),
                 "data" => collect($list->items())->map(function ($val) use ($mWtReassignBooking, $DocUpload) {
-                    $reassign = $mWtReassignBooking->select("wt_reassign_bookings.*", "dr.driver_name", "res.vehicle_no")
-                        ->leftjoin('wt_drivers as dr', 'wt_reassign_bookings.driver_id', '=', 'dr.id')
-                        ->leftjoin('wt_resources as res', 'wt_reassign_bookings.vehicle_id', '=', 'res.id')
-                        ->where("wt_reassign_bookings.application_id", $val->id)
-                        ->orderBy("wt_reassign_bookings.id", "DESC")
-                        ->first();
+                    // $reassign = $mWtReassignBooking->select("wt_reassign_bookings.*", "dr.driver_name", "res.vehicle_no")
+                    //     ->leftjoin('wt_drivers as dr', 'wt_reassign_bookings.driver_id', '=', 'dr.id')
+                    //     ->leftjoin('wt_resources as res', 'wt_reassign_bookings.vehicle_id', '=', 'res.id')
+                    //     ->where("wt_reassign_bookings.application_id", $val->id)
+                    //     ->orderBy("wt_reassign_bookings.id", "DESC")
+                    //     ->first();
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
-                    $val->assign_date = $reassign ? $reassign->re_assign_date : $val->assign_date;
+                    //$val->assign_date = $reassign ? $reassign->re_assign_date : $val->assign_date;
                     $val->assign_date  = Carbon::parse($val->assign_date)->format('d-m-Y');
                     $val->cancelledDate  = Carbon::parse($val->cancelledDate)->format('d-m-Y');
                     $uploadDoc = ($DocUpload->getSingleDocUrl($val));
                     $val->doc_path = $uploadDoc["doc_path"] ?? "";
-                    $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )" : $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    // $val->driver_vehicle = $reassign ? $reassign->vehicle_no . " ( " . $reassign->driver_name . " )" : $val->vehicle_no . " ( " . $val->driver_name . " )";
+                    $val->driver_vehicle = $val->vehicle_no . " ( " . $val->driver_name . " )";
                     return $val;
                 }),
             ];
