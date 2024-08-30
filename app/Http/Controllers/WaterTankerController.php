@@ -3152,8 +3152,8 @@ class WaterTankerController extends Controller
                 //         $join->on("reassign.application_id","wb.id");
                 //     }
                 //     )
-                ->where("delivery_track_status", 1)
-                ->where("is_vehicle_sent", "<", 2)
+                ->where("wb.delivery_track_status", 1)
+                ->where("wb.is_vehicle_sent", "<", 2)
                 ->where("wb.ulb_id", $ulbId);
             // ->whereNull("reassign.application_id");
             if ($formDate && $uptoDate) {

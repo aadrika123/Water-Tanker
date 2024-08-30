@@ -65,7 +65,7 @@ class WtBooking extends Model
     {
         return DB::table('wt_bookings as wb')
             ->leftjoin('wt_locations', 'wt_locations.id', '=', 'wb.location_id')
-            ->leftjoin('wt_reassign_bookings','wt_reassign_bookings.application_id','=','wt_bookings.id')
+            ->leftjoin('wt_reassign_bookings','wt_reassign_bookings.application_id','=','wb.id')
             ->join('wt_capacities as wc', 'wb.capacity_id', '=', 'wc.id')
             ->leftjoin('wt_agencies as wa', 'wb.agency_id', '=', 'wa.id')
             ->leftjoin('wt_drivers as dr', 'wb.driver_id', '=', 'dr.id')
