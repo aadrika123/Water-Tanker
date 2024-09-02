@@ -2382,7 +2382,7 @@ class WaterTankerController extends Controller
                 throw new Exception('Unauthorized Access !!!');
             // Variable initialization
             $mWtBooking = new WtBooking();
-            $list = $mWtBooking->getBookingList()
+            $list = $mWtBooking->getBookingListCitizen()
                 ->where('citizen_id', $req->auth['id'])
                 ->orderByDesc('id')
                 ->get();
