@@ -3145,7 +3145,7 @@ class WaterTankerController extends Controller
             $ulbId = $user["ulb_id"];
             $mWtBooking = new WtBooking();
             $mWtReassignBooking = new WtReassignBooking();
-            $data = $mWtBooking->getBookingList()
+            $data = $mWtBooking->getBookingListForCancle()
                 // ->leftJoin(
                 //     DB::raw("(SELECT DISTINCT application_id FROM wt_reassign_bookings WHERE delivery_track_status !=0 )reassign"),
                 //     function($join){
