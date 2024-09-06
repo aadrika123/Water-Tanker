@@ -3273,6 +3273,63 @@ class WaterTankerController extends Controller
         }
     }
 
+    // public function searchApp(Request $req)
+    // {
+    //     try {
+    //         $user = Auth()->user();
+    //         $ulbId = $user->ulb_id ?? null;
+    //         $key = $req->key;
+    //         $fromDate = $uptoDate = null;
+    //         if ($req->fromDate) {
+    //             $fromDate = $req->fromDate;
+    //         }
+    //         if ($req->uptoDate) {
+    //             $uptoDate = $req->uptoDate;
+    //         }
+    //         //$list = WtBooking::select("*");
+
+    //         $bookings = WtBooking::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
+
+
+    //         $cancellations = WtCancellation::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
+
+    //         $list = $bookings->union($cancellations);
+
+    //         if ($key) {
+    //             $list = $list->where(function ($where) use ($key) {
+    //                 $where->orWhere("booking_no", "ILIKE", "%$key%")
+    //                     ->orWhere("applicant_name", "ILIKE", "%$key%")
+    //                     ->orWhere("mobile", "ILIKE", "%$key%");
+    //                 // ->orWhere("holding_no","ILIKE","%$key%");                        
+    //             });
+    //         }
+    //         if ($ulbId) {
+    //             $list = $list->where("ulb_id", $ulbId);
+    //         }
+    //         if ($fromDate && $uptoDate) {
+    //             $list = $list->whereBetween("booking_date", [$fromDate, $uptoDate]);
+    //         }
+    //         $list = $list->orderBy("id", "DESC");
+    //         $perPage = $req->perPage ? $req->perPage : 10;
+    //         $list = $list->paginate($perPage);
+    //         $f_list = [
+    //             "currentPage" => $list->currentPage(),
+    //             "lastPage" => $list->lastPage(),
+    //             "total" => $list->total(),
+    //             "data" => collect($list->items())->map(function ($val) {
+    //                 $val->payment_details = json_decode($val->payment_details);
+    //                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+    //                 //$val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
+    //                 //$val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
+    //                 return $val;
+    //             }),
+    //         ];
+    //         return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
+    //     }
+    // }
+
     public function searchApp(Request $req)
     {
         try {
@@ -3280,38 +3337,50 @@ class WaterTankerController extends Controller
             $ulbId = $user->ulb_id ?? null;
             $key = $req->key;
             $fromDate = $uptoDate = null;
+
             if ($req->fromDate) {
                 $fromDate = $req->fromDate;
             }
             if ($req->uptoDate) {
                 $uptoDate = $req->uptoDate;
             }
-            //$list = WtBooking::select("*");
-           
-            $bookings = WtBooking::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
 
-            
-            $cancellations = WtCancellation::select('applicant_name','booking_date','booking_no','delivery_date','delivery_time','payment_status','id');
-
-            $list = $bookings->union($cancellations);
+            // Apply filters individually to each query before union
+            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'id');
+            $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'id');
 
             if ($key) {
-                $list = $list->where(function ($where) use ($key) {
+                $bookings = $bookings->where(function ($where) use ($key) {
                     $where->orWhere("booking_no", "ILIKE", "%$key%")
                         ->orWhere("applicant_name", "ILIKE", "%$key%")
                         ->orWhere("mobile", "ILIKE", "%$key%");
-                    // ->orWhere("holding_no","ILIKE","%$key%");                        
+                });
+
+                $cancellations = $cancellations->where(function ($where) use ($key) {
+                    $where->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
                 });
             }
+
             if ($ulbId) {
-                $list = $list->where("ulb_id", $ulbId);
+                $bookings = $bookings->where("ulb_id", $ulbId);
+                $cancellations = $cancellations->where("ulb_id", $ulbId);
             }
+
             if ($fromDate && $uptoDate) {
-                $list = $list->whereBetween("booking_date", [$fromDate, $uptoDate]);
+                $bookings = $bookings->whereBetween("booking_date", [$fromDate, $uptoDate]);
+                $cancellations = $cancellations->whereBetween("booking_date", [$fromDate, $uptoDate]);
             }
-            $list = $list->orderBy("id", "DESC");
+
+            // Combine the queries using union
+            $list = $bookings->union($cancellations)->orderBy("id", "DESC");
+
+            // Paginate the combined result
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
+
+            // Format the response
             $f_list = [
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
@@ -3319,16 +3388,16 @@ class WaterTankerController extends Controller
                 "data" => collect($list->items())->map(function ($val) {
                     $val->payment_details = json_decode($val->payment_details);
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-                    //$val->cleaning_date = Carbon::parse($val->cleaning_date)->format('d-m-Y');
-                    //$val->assign_date = Carbon::parse($val->assign_date)->format('d-m-Y');
                     return $val;
                 }),
             ];
+
             return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
         }
     }
+
 
     public function getAppStatus($appId)
     {
