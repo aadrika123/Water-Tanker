@@ -230,7 +230,7 @@ class WaterTankerReportController extends Controller
                 ->where("wt_cancellations.ulb_id", $ulbId);
             //->get();
             if ($fromDate && $uptoDate) {
-                $cancleBookingList->whereBetween("wt_cancellations.booking_date", [$fromDate, $uptoDate]);
+                $cancleBookingList->whereBetween("wt_cancellations.cancel_date", [$fromDate, $uptoDate]);
             }
             $perPage = $request->perPge ? $request->perPge : 10;
             $paginator = $cancleBookingList->paginate($perPage);
