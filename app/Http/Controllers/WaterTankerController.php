@@ -2201,7 +2201,7 @@ class WaterTankerController extends Controller
             else
                 $toDate = $req->toDate;
             $mWtBooking = new WtBooking();
-            $list = $mWtBooking->getBookingList()
+            $list = $mWtBooking->getBookingListDelivered()
                 ->where(['wb.ulb_id' => $req->auth['ulb_id'], 'is_vehicle_sent' => '2'])
                 // ->where()
                 ->whereBetween('wb.booking_date', [$fromDate, $toDate])
