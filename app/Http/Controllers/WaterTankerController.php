@@ -1945,7 +1945,7 @@ class WaterTankerController extends Controller
             $list = $list->where("wb.ulb_id", $ulbId)
                 ->whereBetween("wrb.re_assign_date", [$fromDate, $uptoDate])
                 ->where("wrb.delivery_track_status", "<>", 2)
-                ->where("wb.is_vehicle_sent",1)
+                ->where("wb.is_vehicle_sent", 1)
                 ->orderBy("wrb.re_assign_date", "DESC");
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
@@ -2162,7 +2162,8 @@ class WaterTankerController extends Controller
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
 
             $retData['todayTotalBooking'] = $todayBookings->count('id');
-            $retData['todayOutForDelivery'] = $todayBookings->where('is_vehicle_sent', 1)->count('id') + $todayReassign->count();
+            $retData['todayOutForDelivery'] = $todayBookings->whereBetween('is_vehicle_sent', [0, 1])
+                ->whereNotNull('driver_id')->count('id') + $todayReassign->count();
             $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
             $retData['todayTotalCancelBooking'] = $todayCancelBookings->count();
             $retData['agencyName'] =  $agencyDetails->agency_name;
