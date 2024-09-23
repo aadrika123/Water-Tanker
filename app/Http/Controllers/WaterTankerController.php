@@ -2161,7 +2161,7 @@ class WaterTankerController extends Controller
             $mWtCancellation = new WtCancellation();
             $todayCancelBookings = $mWtCancellation->todayCancelledBooking($agencyDetails->id);
 
-            $retData['todayTotalBooking'] = $todayBookings->count('id');
+            $retData['todayTotalBooking'] = $todayBookings->count('id') + $todayCancelBookings->count('id');
             $retData['todayOutForDelivery'] = $todayBookings->whereBetween('is_vehicle_sent', [0, 1])
                 ->whereNotNull('driver_id')->count('id') + $todayReassign->count();
             $retData['todayDelivered'] = $todayBookings->where('is_vehicle_sent', 2)->count('id');
