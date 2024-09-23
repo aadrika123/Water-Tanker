@@ -97,6 +97,7 @@ class WtReassignBooking extends Model
         $todayDate = Carbon::now()->format('Y-m-d');
         return self::select('*')->where('re_assign_date', $todayDate)
         ->join('wt_bookings','wt_bookings.id','=','wt_reassign_bookings.application_id')
-            ->where('wt_bookings.agency_id', $agencyId);
+            ->where('wt_bookings.agency_id', $agencyId)
+            ->where('wt_bookings.is_vehicle_sent',1);
     }
 }
