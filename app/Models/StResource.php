@@ -47,6 +47,7 @@ class StResource extends Model
             ->join('wt_capacities as wc', 'wr.capacity_id', '=', 'wc.id')
             ->select('wr.*', 'wc.capacity')
             ->where('wr.ulb_id', $ulbId)
+            ->where('wr.status', 1)
             ->orderBy('wr.id', 'desc')
             ->get();
     }
