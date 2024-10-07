@@ -69,11 +69,13 @@ class StCancelledBooking extends Model
                 DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stcb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'stcb.cancel_date',
-                'stcb.ward_id',
+                //'stcb.ward_id',
                 'wtl.location',
+                'ulb_ward_masters.ward_name AS ward_id',
                 DB::raw("'cancleByAgency' as application_type"),
                 'stcb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
@@ -120,11 +122,13 @@ class StCancelledBooking extends Model
                 DB::raw("TO_CHAR(stcb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stcb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'stcb.cancel_date',
-                'stcb.ward_id',
+                //'stcb.ward_id',
+                'ulb_ward_masters.ward_name AS ward_id',
                 'wtl.location',
                 DB::raw("'cancleByCitizen' as application_type"),
                 'stcb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)

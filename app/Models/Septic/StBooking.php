@@ -166,14 +166,16 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
-                'stb.ward_id',
+                //'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
+                'ulb_ward_masters.ward_name AS ward_id',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'wtl.location',
                 'stb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -223,9 +225,10 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
-                'stb.ward_id',
+                //'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
+                'ulb_ward_masters.ward_name AS ward_id',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'wtl.location',
@@ -234,6 +237,8 @@ class StBooking extends Model
                 DB::raw("'assigned' as application_type"),
                 'stb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
+
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_status', '1')
             ->where('delivery_track_status', '0')
@@ -286,9 +291,10 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
-                'stb.ward_id',
+               // 'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
+                'ulb_ward_masters.ward_name AS ward_id',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'wtl.location',
@@ -297,6 +303,7 @@ class StBooking extends Model
                 DB::raw("'cleaned' as application_type"),
                 'stb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('stb.assign_status', '2')
             //->where('stb.ulb_id', '2')
             ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
@@ -345,15 +352,17 @@ class StBooking extends Model
                 'stb.applicant_name',
                 'stb.address',
                 'stb.delivery_comments',
-                'stb.ward_id',
+                //'stb.ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
+                'ulb_ward_masters.ward_name AS ward_id',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
                 DB::raw("TO_CHAR(stb.cleaning_date, 'DD-MM-YYYY') as cleaning_date"),
                 'wtl.location',
                 DB::raw("'cancleByDriver' as application_type"),
                 'stb.user_type as applied_by'
             )
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
@@ -458,6 +467,7 @@ class StBooking extends Model
             DB::raw("'pendingAtDriver' as application_type"),
             'st_bookings.user_type as applied_by'
         )
+        
             ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
             ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
