@@ -455,7 +455,6 @@ class SepticTankController extends Controller
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
-            return validationErrorV2($validator);
         }
         try {
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
