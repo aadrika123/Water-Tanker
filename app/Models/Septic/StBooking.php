@@ -362,7 +362,7 @@ class StBooking extends Model
                 DB::raw("'cancleByDriver' as application_type"),
                 'stb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where("delivery_track_status", 1)
             ->where("assign_status", "<", 2)
             ->whereBetween(DB::raw("CAST(stb.driver_delivery_update_date_time as date)"), [$fromDate, $toDate])
