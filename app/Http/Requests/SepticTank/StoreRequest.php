@@ -43,7 +43,7 @@ class StoreRequest extends FormRequest
             'wardId' => $this->ulbArea == 1 ? "required|integer":'nullable',
             'holdingNo' => $this->ulbArea == 1 ? (
                                                 [
-                                                   "required" ,
+                                                   "nullable" ,
                                                    "string",
                                                    "max:20",
                                                    function ($attribute, $value, $fail) {
