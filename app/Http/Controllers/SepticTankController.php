@@ -583,7 +583,7 @@ class SepticTankController extends Controller
             'driverEmail' => "required|email|unique:" . $mUser->getConnectionName() . "." . $mUser->getTable() . ",email" . ($WtDriver && $WtDriver->u_id ? ("," . $WtDriver->u_id) : "")
         ]);
         if ($validator->fails()) {
-            return validationErrorV2($validator);
+            return validationError($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {

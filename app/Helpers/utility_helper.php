@@ -42,6 +42,21 @@ if (!function_exists("validationErrorV2")) {
     }
 }
 
+if (!function_exists("validationError")) {
+    function validationError($validator)
+    {
+        return responseMsg(false, 'Validation Error', $validator->errors()->all());
+    }
+}
+
+if (!function_exists("responseMsg")) {
+    function responseMsg($status, $message, $data)
+    {
+        $response = ['status' => $status, "message" => $message, "data" => $data];
+        return response()->json($response, 200);
+    }
+}
+
 if (!function_exists("print_var")) {
     function print_var($data = '')
     {
@@ -141,15 +156,34 @@ if (!function_exists('getIndianCurrency')) {
         $str = array();
         $str2 = array();
         $words = array(
-            0 => '', 1 => 'one', 2 => 'two',
-            3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six',
-            7 => 'seven', 8 => 'eight', 9 => 'nine',
-            10 => 'ten', 11 => 'eleven', 12 => 'twelve',
-            13 => 'thirteen', 14 => 'fourteen', 15 => 'fifteen',
-            16 => 'sixteen', 17 => 'seventeen', 18 => 'eighteen',
-            19 => 'nineteen', 20 => 'twenty', 30 => 'thirty',
-            40 => 'forty', 50 => 'fifty', 60 => 'sixty',
-            70 => 'seventy', 80 => 'eighty', 90 => 'ninety'
+            0 => '',
+            1 => 'one',
+            2 => 'two',
+            3 => 'three',
+            4 => 'four',
+            5 => 'five',
+            6 => 'six',
+            7 => 'seven',
+            8 => 'eight',
+            9 => 'nine',
+            10 => 'ten',
+            11 => 'eleven',
+            12 => 'twelve',
+            13 => 'thirteen',
+            14 => 'fourteen',
+            15 => 'fifteen',
+            16 => 'sixteen',
+            17 => 'seventeen',
+            18 => 'eighteen',
+            19 => 'nineteen',
+            20 => 'twenty',
+            30 => 'thirty',
+            40 => 'forty',
+            50 => 'fifty',
+            60 => 'sixty',
+            70 => 'seventy',
+            80 => 'eighty',
+            90 => 'ninety'
         );
         $digits = array('', 'hundred', 'thousand', 'lakh', 'crore');
 
@@ -243,7 +277,7 @@ if (!function_exists('getClientIpAddress')) {
         function responseTime()
         {
             $responseTime = (microtime(true) - LARAVEL_START) * 1000;
-            return round($responseTime, 2)." ms";
+            return round($responseTime, 2) . " ms";
         }
     }
 
@@ -254,10 +288,10 @@ if (!function_exists('getClientIpAddress')) {
     //         $numberId = Config::get("constants.WHATSAPP_NUMBER_ID");
     //         $url = Config::get("constants.WHATSAPP_URL");
     //         $result = Http::withHeaders([
-    
+
     //             "Authorization" => "Bearer $bearerToken",
     //             "contentType" => "application/json"
-    
+
     //         ])->post($url . $numberId . "/messages", [
     //             "messaging_product" => "whatsapp",
     //             "recipient_type" => "individual",
@@ -300,7 +334,7 @@ if (!function_exists('getClientIpAddress')) {
     //                                 :
     //                                 ""
     //                             )
-    
+
     //                         )
     //                         : ""),
     //                 ]
@@ -312,11 +346,11 @@ if (!function_exists('getClientIpAddress')) {
     //         } else {
     //             $response = ['response' => true, 'status' => 'success', 'msg' => $responseBody];
     //         }
-    
+
     //         return $response;
     //     }
     // }
-    
+
     // if (!function_exists('Whatsapp_Send')) {
     //     function Whatsapp_Send($mobileno, $templateid, array $message = [])
     //     {
