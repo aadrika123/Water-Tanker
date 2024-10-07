@@ -119,12 +119,13 @@ class StTransaction extends Model
                 't.tran_type as module_name',
                 't.status',
                 'st_bookings.booking_no',
-                'st_bookings.ward_id',
+                'ulb_ward_masters.ward_name AS ward_id',
                 'st_bookings.applicant_name',
                 'st_bookings.user_type',
                 'users.name as collected_by'
             )
             ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
             ->leftjoin('users', 'users.id', '=', 'st_bookings.user_id')
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
