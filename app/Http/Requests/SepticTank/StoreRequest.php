@@ -46,20 +46,20 @@ class StoreRequest extends FormRequest
                                                    "nullable" ,
                                                    "string",
                                                    "max:20",
-                                                   function ($attribute, $value, $fail) {
-                                                        // Custom validation logic to check if the value exists
-                                                        // You can use the OR condition here
-                                                        $existsInTable1 = PropProperty::where('status', 1)
-                                                            ->where("ulb_id",$this->ulbId)
-                                                            ->where(function($where) use($value){
-                                                                $where->orWhere("new_holding_no",$value)
-                                                                ->orWhere("holding_no",$value);
-                                                            })
-                                                            ->exists();                                        
-                                                        if (!$existsInTable1) {
-                                                            $fail('The '.$attribute.' is invalid.');
-                                                        }
-                                                    },
+                                                //    function ($attribute, $value, $fail) {
+                                                //         // Custom validation logic to check if the value exists
+                                                //         // You can use the OR condition here
+                                                //         $existsInTable1 = PropProperty::where('status', 1)
+                                                //             ->where("ulb_id",$this->ulbId)
+                                                //             ->where(function($where) use($value){
+                                                //                 $where->orWhere("new_holding_no",$value)
+                                                //                 ->orWhere("holding_no",$value);
+                                                //             })
+                                                //             ->exists();                                        
+                                                        // if (!$existsInTable1) {
+                                                        //     $fail('The '.$attribute.' is invalid.');
+                                                        // }
+                                                   // },
                                                 ]
                                                 // "required|string|max:20"
                                                 )
