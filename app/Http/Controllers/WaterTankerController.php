@@ -3348,8 +3348,8 @@ class WaterTankerController extends Controller
             }
 
             // Apply filters individually to each query before union
-            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'id');
-            $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'id');
+            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback','id');
+            $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback','id');
 
             if ($key) {
                 $bookings = $bookings->where(function ($where) use ($key) {
