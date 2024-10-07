@@ -70,6 +70,7 @@ class StDriver extends Model
         return DB::table('st_drivers as sd')
         ->select('sd.id','sd.ulb_id','sd.driver_name','sd.driver_mobile')
         ->orderBy('id', 'desc')
+        ->where('sd.status',1)
         ->get();
     }
 
