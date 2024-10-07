@@ -1437,7 +1437,7 @@ class SepticTankController extends Controller
             $appData->ulb_name = (collect($ulb)->where("id", $appData->ulb_id))->value("ulb_name");
             $appData->ulb_address = (collect($ulb)->where("id", $appData->ulb_id))->value("address");
             $appData->inWords = getIndianCurrency($mTransaction->paid_amount) . "Only /-";
-            $appData->ulbLogo = $this->_ulbLogoUrl . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
+            $appData->ulbLogo = $this->_base_url . (collect($ulb)->where("id", $appData->ulb_id))->value("logo");
             $appData->tollFreeNo = (collect($ulb)->where("id", $appData->ulb_id))->value("toll_free_no");
             $appData->website = (collect($ulb)->where("id", $appData->ulb_id))->value("parent_website");
             $appData->paymentAgainst = "Septic Tanker";
