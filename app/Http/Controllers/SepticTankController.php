@@ -611,6 +611,7 @@ class SepticTankController extends Controller
                     "mobile" => $req->driverMobile,
                     "address"   => $req->driverAddress,
                     "ulb" => $req->ulbId,
+                    "status"=>$req->status,
                     "userType" =>  "Septic-Driver",
                 ];
                 $userId = $waterTankerController->store($reqs);                                                // Create User in User Table for own Dashboard and Login                

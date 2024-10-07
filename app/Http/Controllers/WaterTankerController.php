@@ -3481,7 +3481,7 @@ class WaterTankerController extends Controller
         $user->name = $request['name'];
         $user->mobile = $request['mobile'];
         $user->email = $request['email'];
-        // $user->ulb_id = $request->ulb;
+        $user->status = $request['status'];
         if ($request['ulb']) {
             $user->ulb_id = $request['ulb'];
         }
