@@ -125,7 +125,7 @@ class StTransaction extends Model
                 'users.name as collected_by'
             )
             ->join('st_bookings', 'st_bookings.id', '=', 't.booking_id')
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
             ->leftjoin('users', 'users.id', '=', 'st_bookings.user_id')
             ->where('t.tran_date', '>=', $fromDate)
             ->where('t.tran_date', '<=', $toDate)
