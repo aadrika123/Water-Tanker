@@ -621,7 +621,7 @@ class SepticTankController extends Controller
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
-                $user->suspended = !(bool)$WtDriver->status;
+                $user->suspended = (bool)$WtDriver->status;
             }
             $mStDriver->save();
             $user ? $user->update() : "";
