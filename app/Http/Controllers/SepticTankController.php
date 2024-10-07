@@ -2159,7 +2159,7 @@ class SepticTankController extends Controller
             }
             // Apply filters individually to each query before union
             $bookings = StBooking::select('applicant_name', 'booking_date', 'booking_no', 'cleaning_date', 'payment_status','assign_date' ,'id');
-            $cancellations = StCancelledBooking::select('applicant_name', 'booking_date', 'booking_no', 'cleaning_date', 'assign_date','payment_status', 'id');
+            $cancellations = StCancelledBooking::select('applicant_name', 'booking_date', 'booking_no', 'cleaning_date', 'payment_status','assign_date', 'id');
 
             if ($key) {
                 $bookings = $bookings->where(function ($where) use ($key) {
