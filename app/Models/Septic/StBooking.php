@@ -470,7 +470,7 @@ class StBooking extends Model
         )
         
             ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
 
             ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
@@ -481,7 +481,7 @@ class StBooking extends Model
             ->whereBetween('assign_date', [$fromDate, $toDate]);
 
         if ($wardNo) {
-            $dataQuery->where('st_bookings.ward_id', $wardNo);
+            $dataQuery->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($applicationMode) {
             $dataQuery->where('st_bookings.user_type', $applicationMode);
@@ -572,8 +572,8 @@ class StBooking extends Model
             ->orderByDesc('stb.id');
 
         if ($wardNo) {
-            $dataQuery->where('stb.ward_id', $wardNo);
-            $cancelledQuery->where('stb.ward_id', $wardNo);
+            $dataQuery->where('ulb_ward_masters.ward_name', $wardNo);
+            $cancelledQuery->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($applicationMode) {
             $dataQuery->where('stb.user_type', $applicationMode);
