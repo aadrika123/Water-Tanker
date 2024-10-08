@@ -175,7 +175,7 @@ class StBooking extends Model
                 'wtl.location',
                 'stb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -183,7 +183,7 @@ class StBooking extends Model
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
         if ($wardNo) {
-            $query->where('stb.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
 
         if ($applicationMode) {
@@ -237,7 +237,7 @@ class StBooking extends Model
                 DB::raw("'assigned' as application_type"),
                 'stb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
 
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_status', '1')
@@ -247,7 +247,7 @@ class StBooking extends Model
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
         if ($wardNo) {
-            $query->where('stb.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
 
         if ($driverName) {
@@ -303,14 +303,14 @@ class StBooking extends Model
                 DB::raw("'cleaned' as application_type"),
                 'stb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('stb.assign_status', '2')
             //->where('stb.ulb_id', '2')
             ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
         if ($wardNo) {
-            $query->where('stb.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($driverName) {
             $query->where('sd.driver_name', $driverName);

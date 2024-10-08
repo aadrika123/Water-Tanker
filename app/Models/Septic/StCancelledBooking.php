@@ -75,14 +75,14 @@ class StCancelledBooking extends Model
                 DB::raw("'cancleByAgency' as application_type"),
                 'stcb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
             ->where('stcb.cancelled_by', 'UlbUser');
 
         if ($wardNo) {
-            $query->where('stcb.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($applicationMode) {
             $query->where('stcb.user_type', $applicationMode);
@@ -128,14 +128,14 @@ class StCancelledBooking extends Model
                 DB::raw("'cancleByCitizen' as application_type"),
                 'stcb.user_type as applied_by'
             )
-            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stcb.ward_id")
             ->join('wt_locations as wtl', 'wtl.id', '=', 'stcb.location_id')
             ->whereBetween('stcb.cancel_date', [$fromDate, $toDate])
             ->where('stcb.ulb_id', $ulbId)
             ->where('stcb.cancelled_by', 'Citizen');
 
         if ($wardNo) {
-            $query->where('stcb.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($applicationMode) {
             $query->where('stcb.user_type', $applicationMode);
