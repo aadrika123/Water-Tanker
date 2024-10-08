@@ -306,7 +306,7 @@ class StBooking extends Model
             ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('stb.assign_status', '2')
             //->where('stb.ulb_id', '2')
-            ->whereBetween('stb.cleaning_date', [$fromDate, $toDate])
+            ->whereBetween('stb.booking', [$fromDate, $toDate])
             ->where('stb.ulb_id', $ulbId)
             ->orderByDesc('stb.id');
         if ($wardNo) {
