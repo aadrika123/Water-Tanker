@@ -133,7 +133,7 @@ class StTransaction extends Model
             ->where("t.status", 1);
 
         if ($wardNo) {
-            $query->where('st_bookings.ward_id', $wardNo);
+            $query->where('ulb_ward_masters.ward_name', $wardNo);
         }
         if ($paymentMode) {
             $query->where('t.payment_mode', $paymentMode);
