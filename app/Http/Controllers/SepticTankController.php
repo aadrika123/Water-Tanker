@@ -438,6 +438,69 @@ class SepticTankController extends Controller
      * | Function - 09
      * | API - 09
      */
+    // public function addDriver(Request $req)
+    // {
+    //     $user = new User();
+    //     $validator = Validator::make($req->all(), [
+    //         'driverName' => 'required|string|max:200',
+    //         'driverAadharNo' => 'required|string|max:16',
+    //         'driverMobile' => 'required|digits:10',
+    //         'driverAddress' => 'required|string',
+    //         'driverFather' => 'required|string|max:200',
+    //         'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
+    //         'driverLicenseNo' => 'required|string|max:50',
+    //         'driverEmail' => "required|string|email|unique:" . $user->getConnectionName() . "." . $user->getTable() . ",email",
+
+
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return validationErrorV2($validator);
+    //     }
+    //     try {
+    //         if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+    //             throw new Exception('Unauthorized Access !!!');
+
+    //         //req->merge(['ulbId' => $req->auth['ulb_id']]);
+    //         // Variable initialization
+
+    //         $req->merge(['ulbId' => $req->auth['ulb_id']]);
+    //         $reqs = [
+    //             "name" =>  $req->driverName,
+    //             "email" => $req->driverEmail,
+    //             "password" => $req->password ? $req->password : ("Basic" . '@' . "12345"),
+    //             "mobile" => $req->driverMobile,
+    //             "address"   => $req->driverAddress,
+    //             "ulb" => $req->ulbId,
+    //             "userType" =>  "Septic-Driver",
+    //         ];
+
+    //         $roleModle = new WfRole();
+    //         $dRoleRequest = new Request([
+    //             "wfRoleId" => $roleModle->getSepticTankDriverRoleId(),
+    //             "createdBy" => $req->auth['id'],
+    //         ]);
+
+    //         $mStDriver = new StDriver();
+    //         $waterTankerController = new WaterTankerController();
+    //         DB::beginTransaction();
+    //         DB::connection("pgsql_master")->beginTransaction();
+    //         $userId = $waterTankerController->store($reqs);                                                // Create User in User Table for own Dashboard and Login
+    //         $req->merge(['UId' => $userId]);
+    //         $dRoleRequest->merge([
+    //             "userId" => $userId,
+    //         ]);
+    //         $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
+    //         $res = $mStDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
+    //         DB::commit();
+    //         DB::connection("pgsql_master")->commit();
+    //         return responseMsgs(true, "Driver Added Successfully !!!",  '', "110209", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         DB::connection("pgsql_master")->rollBack();
+    //         return responseMsgs(false, $e->getMessage(), "", "110209", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
+
     public function addDriver(Request $req)
     {
         $user = new User();
@@ -460,7 +523,7 @@ class SepticTankController extends Controller
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception('Unauthorized Access !!!');
 
-            $req->merge(['ulbId' => $req->auth['ulb_id']]);
+            //$req->merge(['ulbId' => $req->auth['ulb_id']]);
             // Variable initialization
 
             $req->merge(['ulbId' => $req->auth['ulb_id']]);
@@ -564,6 +627,74 @@ class SepticTankController extends Controller
      * | Function - 12
      * | API - 12
      */
+    // public function editDriver(Request $req)
+    // {
+    //     $mUser = new User();
+    //     $mWtDriver = new StDriver();
+    //     $WtDriver = $mWtDriver->find($req->driverId);
+    //     $validator = Validator::make($req->all(), [
+    //         'driverId' => "required|integer|exists:" . $mWtDriver->getConnectionName() . "." . $mWtDriver->getTable() . ",id",
+    //         'driverName' => 'required|string|max:200',
+    //         'driverAadharNo' => 'required|string|max:16',
+    //         'driverMobile' => 'required|digits:10',
+    //         'driverAddress' => 'required|string',
+    //         'driverFather' => 'required|string|max:200',
+    //         'driverDob' => 'required|date',
+    //         'driverLicenseNo' => 'required|string|max:50',
+    //         "status"    => "nullable|integer|in:1,0",
+    //         'driverEmail' => "required|email|unique:" . $mUser->getConnectionName() . "." . $mUser->getTable() . ",email" . ($WtDriver && $WtDriver->u_id ? ("," . $WtDriver->u_id) : "")
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return validationError($validator);
+    //     }
+    //     $req->merge(['ulbId' => $req->auth['ulb_id']]);
+    //     try {
+    //         $mStDriver = StDriver::find($req->driverId);
+    //         if (!$mStDriver)
+    //             throw new Exception("No Data Found !!!");
+    //         $user = User::find($mStDriver->u_id);
+    //         $mStDriver->ulb_id = $req->ulbId;
+    //         $mStDriver->driver_name = $req->driverName;
+    //         $mStDriver->driver_aadhar_no = $req->driverAadharNo;
+    //         $mStDriver->driver_mobile = $req->driverMobile;
+    //         $mStDriver->driver_address = $req->driverAddress;
+    //         $mStDriver->driver_father = $req->driverFather;
+    //         $mStDriver->driver_dob = $req->driverDob;
+    //         $mStDriver->driver_license_no = $req->driverLicenseNo;
+    //         if (isset($req->status)) {
+    //             $mStDriver->status = $req->status;
+    //         }
+    //         if (!$user) {
+
+    //             $waterTankerController = new WaterTankerController();
+    //             $reqs = [
+    //                 "name" =>  $req->driverName,
+    //                 "email" => $req->driverEmail,
+    //                 "password" => $req->password ? $req->password : ("Basic" . '@' . "12345"),
+    //                 "mobile" => $req->driverMobile,
+    //                 "address"   => $req->driverAddress,
+    //                 "ulb" => $req->ulbId,
+    //                 "status"=>$req->status,
+    //                 "userType" =>  "Septic-Driver",
+    //             ];
+    //             $userId = $waterTankerController->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
+    //             $mStDriver->u_id = $userId;
+    //         }
+    //         if ($user) {
+    //             isset($req->driverEmail) ? $user->email = $req->driverEmail : "";
+    //             $user->name = $req->driverName;
+    //             $user->mobile = $req->driverMobile;
+    //             $user->address = $req->driverAddress;
+    //             $user->suspended = (bool)$WtDriver->status;
+    //         }
+    //         $mStDriver->save();
+    //         $user ? $user->update() : "";
+    //         return responseMsgs(true, "Driver Details Updated Successfully !!!", '', "110212", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "110212", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
+
     public function editDriver(Request $req)
     {
         $mUser = new User();
@@ -582,7 +713,7 @@ class SepticTankController extends Controller
             'driverEmail' => "required|email|unique:" . $mUser->getConnectionName() . "." . $mUser->getTable() . ",email" . ($WtDriver && $WtDriver->u_id ? ("," . $WtDriver->u_id) : "")
         ]);
         if ($validator->fails()) {
-            return validationError($validator);
+            return validationErrorV2($validator);
         }
         $req->merge(['ulbId' => $req->auth['ulb_id']]);
         try {
@@ -611,7 +742,6 @@ class SepticTankController extends Controller
                     "mobile" => $req->driverMobile,
                     "address"   => $req->driverAddress,
                     "ulb" => $req->ulbId,
-                    "status"=>$req->status,
                     "userType" =>  "Septic-Driver",
                 ];
                 $userId = $waterTankerController->store($reqs);                                                // Create User in User Table for own Dashboard and Login                
@@ -622,7 +752,7 @@ class SepticTankController extends Controller
                 $user->name = $req->driverName;
                 $user->mobile = $req->driverMobile;
                 $user->address = $req->driverAddress;
-                $user->suspended = (bool)$WtDriver->status;
+                $user->suspended = !(bool)$WtDriver->status; 
             }
             $mStDriver->save();
             $user ? $user->update() : "";

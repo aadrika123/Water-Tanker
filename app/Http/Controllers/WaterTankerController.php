@@ -356,6 +356,68 @@ class WaterTankerController extends Controller
      * | Function - 09
      * | API - 09
      */
+    // public function addDriver(Request $req)
+    // {
+    //     $user = new User();
+    //     $validator = Validator::make($req->all(), [
+    //         'driverName' => 'required|string|max:200',
+    //         'driverAadharNo' => 'required|string|max:16',
+    //         'driverMobile' => 'required|digits:10',
+    //         'driverAddress' => 'required|string',
+    //         'driverFather' => 'required|string|max:200',
+    //         'driverDob' => 'required|date_format:Y-m-d|before:' . Carbon::now()->subYears(18)->format('Y-m-d'),
+    //         'driverLicenseNo' => 'required|string|max:50',
+    //         'driverEmail' => "required|string|email|unique:" . $user->getConnectionName() . "." . $user->getTable() . ",email",
+
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return ['status' => false, 'message' => "validation Error", "errors" => $validator->errors()];
+    //     }
+    //     try {
+    //         if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+    //             throw new Exception('Unauthorized Access !!!');
+
+    //         if ($req->auth['user_type'] == 'Water-Agency')
+    //             $req->merge(['agencyId' => DB::table('wt_agencies')->select('*')->where('ulb_id', $req->auth['ulb_id'])->first()->id]);
+
+    //         $req->merge(['ulbId' => $req->auth['ulb_id']]);
+    //         $reqs = [
+    //             "name" =>  $req->driverName,
+    //             "email" => $req->driverEmail,
+    //             "password" => $req->password ? $req->password : ("Basic" . '@' . "12345"),
+    //             "mobile" => $req->driverMobile,
+    //             "address"   => $req->driverAddress,
+    //             "ulb" => $req->ulbId,
+    //             "userType" =>  "Driver",
+    //         ];
+
+    //         $roleModle = new WfRole();
+    //         $dRoleRequest = new Request([
+    //             "wfRoleId" => $roleModle->getDriverRoleId(),
+    //             "createdBy" => $req->auth['id'],
+    //         ]);
+    //         // Variable initialization
+    //         $mWtDriver = new WtDriver();
+    //         DB::beginTransaction();
+    //         DB::connection("pgsql_master")->beginTransaction();
+    //         $userId = $this->store($reqs);                                                // Create User in User Table for own Dashboard and Login
+    //         $req->merge(['UId' => $userId]);
+    //         $dRoleRequest->merge([
+    //             "userId" => $userId,
+    //         ]);
+    //         $insertRole = (new WfRoleusermap())->addRoleUser($dRoleRequest);
+    //         $res = $mWtDriver->storeDriverInfo($req);                                       // Store Driver Information in Model 
+    //         DB::commit();
+    //         DB::connection("pgsql_master")->commit();
+    //         return responseMsgs(true, "Driver Added Successfully !!!",  '', "110109", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         DB::connection("pgsql_master")->rollBack();
+    //         return responseMsgs(false, $e->getMessage(), "", "110109", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
+
+
     public function addDriver(Request $req)
     {
         $user = new User();
@@ -3476,12 +3538,27 @@ class WaterTankerController extends Controller
      * | Saving User Credentials 
      * | Function - 72 
      */
+    // public function saving($user, $request)
+    // {
+    //     $user->name = $request['name'];
+    //     $user->mobile = $request['mobile'];
+    //     $user->email = $request['email'];
+    //     if ($request['ulb']) {
+    //         $user->ulb_id = $request['ulb'];
+    //     }
+    //     if ($request['userType']) {
+    //         $user->user_type = $request['userType'];
+    //     }
+
+    //     $token = Str::random(80);                       //Generating Random Token for Initial
+    //     $user->remember_token = $token;
+    // }
     public function saving($user, $request)
     {
         $user->name = $request['name'];
         $user->mobile = $request['mobile'];
         $user->email = $request['email'];
-        $user->status = $request['status'];
+        // $user->ulb_id = $request->ulb;
         if ($request['ulb']) {
             $user->ulb_id = $request['ulb'];
         }
