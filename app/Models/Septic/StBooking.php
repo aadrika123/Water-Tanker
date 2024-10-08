@@ -463,12 +463,15 @@ class StBooking extends Model
             "st_resources.vehicle_no",
             "st_resources.resource_type",
             "wtl.location",
+            'ulb_ward_masters.ward_name AS ward_id',
             "st_drivers.driver_name",
             DB::raw("'pendingAtDriver' as application_type"),
             'st_bookings.user_type as applied_by'
         )
         
             ->join("st_drivers", "st_drivers.id", "st_bookings.driver_id")
+            ->JOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"st_bookings.ward_id")
+
             ->join("st_resources", "st_resources.id", "st_bookings.vehicle_id")
             ->leftjoin('wt_locations as wtl', 'wtl.id', '=', 'st_bookings.location_id')
             ->where('assign_date', '!=', NULL)
@@ -518,6 +521,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'ulb_ward_masters.ward_name AS ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
@@ -530,6 +534,7 @@ class StBooking extends Model
                 DB::raw("'pendingAtAgency' as application_type"),
                 'stb.user_type as applied_by'
             )
+            ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->where('cleaning_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('assign_date', NULL)
             ->where('payment_status', 1)
@@ -538,6 +543,7 @@ class StBooking extends Model
             ->orderByDesc('stb.id');
 
         $cancelledQuery = DB::table('st_bookings as stb')
+        ->leftJOIN("ulb_ward_masters", "ulb_ward_masters.id",  '=',"stb.ward_id")
             ->leftjoin('st_drivers as sd', 'sd.id', '=', 'stb.driver_id')
             ->leftjoin('st_resources as sr', 'sr.id', '=', 'stb.vehicle_id')
             ->leftJoin(Db::raw("(select distinct application_id from st_reassign_bookings)str"), "str.application_id", "stb.id")
@@ -546,6 +552,7 @@ class StBooking extends Model
                 'stb.booking_no',
                 'stb.applicant_name',
                 'stb.address',
+                'ulb_ward_masters.ward_name AS ward_id',
                 // 'stb.booking_date',
                 // 'stb.cleaning_date',
                 DB::raw("TO_CHAR(stb.booking_date, 'DD-MM-YYYY') as booking_date"),
