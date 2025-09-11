@@ -75,16 +75,28 @@ class WtLocationHydrationMap extends Model
     /**
      * | Get List Location
      */
+    // public function listLocation($ulbId)
+    // {
+    //     $list = DB::table('wt_location_hydration_maps as wlhm')
+    //         ->join('wt_locations as wl', 'wl.id', '=', 'wlhm.location_id')
+    //         ->where('wlhm.ulb_id', $ulbId)
+    //         ->select('wlhm.location_id as id', 'wl.location')
+    //         ->distinct()
+    //         ->get();
+    //     return $list;
+    // }
+
     public function listLocation($ulbId)
     {
-        $list = DB::table('wt_location_hydration_maps as wlhm')
-            ->join('wt_locations as wl', 'wl.id', '=', 'wlhm.location_id')
-            ->where('wlhm.ulb_id', $ulbId)
-            ->select('wlhm.location_id as id', 'wl.location')
+        $list = DB::table('wt_locations as wl')
+            ->where('wl.ulb_id', $ulbId)
+            ->select('wl.id', 'wl.location')
             ->distinct()
             ->get();
+
         return $list;
     }
+
 
     /**
      * | Check given location and hydration is mapped or not
