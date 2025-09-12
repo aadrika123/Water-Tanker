@@ -139,108 +139,123 @@ class CashVerificationController extends Controller
 
     public function verifyCash(Request $request)
     {
-
         try {
-            $user = Auth()->user();
+            $user   = Auth()->user();
             $userId = $user->id;
-            $ulbId = $user->ulb_id;
-            $wtank =  $request->wtank;
-            $stank    =  $request->stank;
+            $ulbId  = $user->ulb_id;
+            $wtank  = $request->wtank;
+            $stank  = $request->stank;
+
             $mRevDailycollection = new RevDailycollection();
             $cashParamId = Config::get('constants.PARAM_IDS.CASH_VERIFICATION_PARAM_ID');
 
             DB::beginTransaction();
             DB::connection('pgsql_master')->beginTransaction();
-            $idGeneration = new PrefixIdGenerator($cashParamId, $ulbId);
-            $tranNo = $idGeneration->generate();
 
             if ($wtank) {
-                $tempTranDtl = TempTransaction::find($wtank[0]['id']);
-                $tranDate = $tempTranDtl['tran_date'];
-                $tcId = $tempTranDtl['user_id'];
-                $mReqs = new Request([
-                    "tran_no" => $tranNo,
-                    "user_id" => $userId,
-                    "demand_date" => $tranDate,
-                    "deposit_date" => Carbon::now(),
-                    "ulb_id" => $ulbId,
-                    "tc_id" => $tcId,
-                ]);
-                $collectionId =  $mRevDailycollection->store($mReqs);
-
                 foreach ($wtank as $item) {
                     $tempDtl = TempTransaction::find($item['id']);
-                    $tranId =  $tempDtl->transaction_id;
-
-                    WtTransaction::where('id', $tranId)
-                        ->update(
-                            [
-                                'is_verified' => 1,
-                                'verify_date' => Carbon::now(),
-                                'verify_by' => $userId,
-                                'verify_user_type' => $user->user_type,
-                            ]
-                        );
-                    $this->dailyCollectionDtl($tempDtl, $collectionId);
-                    if (!$tempDtl)
+                    if (!$tempDtl) {
                         throw new Exception("No Transaction Found for this id");
+                    }
 
+                    $tranDate = $tempDtl['tran_date'];
+                    $tcId     = $tempDtl['user_id'];
+
+                    // Generate unique tran_no per application
+                    $idGeneration = new PrefixIdGenerator($cashParamId, $ulbId);
+                    $tranNo       = $idGeneration->generate();
+
+                    $mReqs = new Request([
+                        "tran_no"     => $tranNo,
+                        "user_id"     => $userId,
+                        "demand_date" => $tranDate,
+                        "deposit_date"=> Carbon::now(),
+                        "ulb_id"      => $ulbId,
+                        "tc_id"       => $tcId,
+                    ]);
+
+                    $collectionId = $mRevDailycollection->store($mReqs);
+
+                    // Update transaction
+                    WtTransaction::where('id', $tempDtl->transaction_id)
+                        ->update([
+                            'is_verified'      => 1,
+                            'verify_date'      => Carbon::now(),
+                            'verify_by'        => $userId,
+                            'verify_user_type' => $user->user_type,
+                        ]);
+
+                    $this->dailyCollectionDtl($tempDtl, $collectionId);
+
+                    // Move to log table
                     $logTrans = $tempDtl->replicate();
                     $logTrans->setTable('log_temp_transactions');
                     $logTrans->id = $tempDtl->id;
                     $logTrans->save();
+
                     $tempDtl->delete();
                 }
             }
 
             if ($stank) {
-                $tempTranDtl = TempTransaction::find($stank[0]['id']);
-                $tranDate = $tempTranDtl['tran_date'];
-                $tcId = $tempTranDtl['user_id'];
-                $mReqs = new Request([
-                    "tran_no" => $tranNo,
-                    "user_id" => $userId,
-                    "demand_date" => $tranDate,
-                    "deposit_date" => Carbon::now(),
-                    "ulb_id" => $ulbId,
-                    "tc_id" => $tcId,
-                ]);
-                $collectionId =  $mRevDailycollection->store($mReqs);
-
                 foreach ($stank as $item) {
-
                     $tempDtl = TempTransaction::find($item['id']);
-                    $tranId =  $tempDtl->transaction_id;
-
-                    StTransaction::where('id', $tranId)
-                        ->update(
-                            [
-                                'is_verified' => 1,
-                                'verify_date' => Carbon::now(),
-                                'verify_by' => $userId,
-                                'verify_user_type' => $user->user_type,
-                            ]
-                        );
-                    $this->dailyCollectionDtl($tempDtl, $collectionId);
-                    if (!$tempDtl)
+                    if (!$tempDtl) {
                         throw new Exception("No Transaction Found for this id");
+                    }
 
+                    $tranDate = $tempDtl['tran_date'];
+                    $tcId     = $tempDtl['user_id'];
+
+                    // Generate unique tran_no per application
+                    $idGeneration = new PrefixIdGenerator($cashParamId, $ulbId);
+                    $tranNo       = $idGeneration->generate();
+
+                    $mReqs = new Request([
+                        "tran_no"     => $tranNo,
+                        "user_id"     => $userId,
+                        "demand_date" => $tranDate,
+                        "deposit_date"=> Carbon::now(),
+                        "ulb_id"      => $ulbId,
+                        "tc_id"       => $tcId,
+                    ]);
+
+                    $collectionId = $mRevDailycollection->store($mReqs);
+
+                    // Update transaction
+                    StTransaction::where('id', $tempDtl->transaction_id)
+                        ->update([
+                            'is_verified'      => 1,
+                            'verify_date'      => Carbon::now(),
+                            'verify_by'        => $userId,
+                            'verify_user_type' => $user->user_type,
+                        ]);
+
+                    $this->dailyCollectionDtl($tempDtl, $collectionId);
+
+                    // Move to log table
                     $logTrans = $tempDtl->replicate();
                     $logTrans->setTable('log_temp_transactions');
                     $logTrans->id = $tempDtl->id;
                     $logTrans->save();
+
                     $tempDtl->delete();
                 }
             }
+
             DB::commit();
             DB::connection('pgsql_master')->commit();
+
             return responseMsgs(true, "Cash Verified", '', "010201", "1.0", "", "POST", $request->deviceId ?? "");
+
         } catch (Exception $e) {
             DB::rollBack();
             DB::connection('pgsql_master')->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "010201", "1.0", "", "POST", $request->deviceId ?? "");
         }
-    }
+    } 
+
 
     public function dailyCollectionDtl($tranDtl, $collectionId)
     {
