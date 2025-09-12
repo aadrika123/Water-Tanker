@@ -254,7 +254,7 @@ class CashVerificationController extends Controller
             DB::connection('pgsql_master')->rollBack();
             return responseMsgs(false, $e->getMessage(), "", "010201", "1.0", "", "POST", $request->deviceId ?? "");
         }
-    }
+    } 
 
 
     public function dailyCollectionDtl($tranDtl, $collectionId)
