@@ -490,8 +490,9 @@ class WaterTankerController extends Controller
             throw new Exception("Unothorized Access !!!");
         try {
             // Variable initialization
+            $ulbId = $req->auth['ulb_id'];
             $mWtDriver = new WtDriver();
-            $list = $mWtDriver->getDriverList();
+            $list = $mWtDriver->getDriverList($ulbId);
             if ($req->auth['user_type'] == 'UlbUser')
                 $list = $list->where('ulb_id', $req->auth['ulb_id']);
             if ($req->auth['user_type'] == 'Water-Agency')
@@ -3410,8 +3411,8 @@ class WaterTankerController extends Controller
             }
 
             // Apply filters individually to each query before union
-            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback','id');
-            $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback','id');
+            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
+            $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
 
             if ($key) {
                 $bookings = $bookings->where(function ($where) use ($key) {

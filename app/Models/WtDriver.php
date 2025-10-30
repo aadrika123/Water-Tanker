@@ -12,7 +12,7 @@ class WtDriver extends Model
     use HasFactory;
 
     protected $guarded = [];
-    
+
     /**
      * | Make Metarequest of driver Information for store data 
      */
@@ -20,7 +20,7 @@ class WtDriver extends Model
     {
         return [
             'ulb_id' => $req->ulbId,
-            "u_id"=>$req->UId,
+            "u_id" => $req->UId,
             'agency_id' => $req->agencyId,
             'driver_name' => $req->driverName,
             'driver_aadhar_no' => $req->driverAadharNo,
@@ -45,12 +45,14 @@ class WtDriver extends Model
     /**
      * | Get Driver List
      */
-    public function getDriverList()
+    public function getDriverList($ulbId)
     {
         return DB::table('wt_drivers as wd')
             ->leftjoin('wt_agencies as wa', 'wd.agency_id', '=', 'wa.id')
             ->select('wd.*', 'wa.agency_name')
-            ->orderBy('id','desc')
+            ->where("wd.status", 1)
+            ->where("wd.ulb_id", $ulbId)
+            ->orderBy('id', 'desc')
             ->get();
     }
 
@@ -59,8 +61,8 @@ class WtDriver extends Model
      */
     public function getDriverListForMasterData($ulbId)
     {
-        return WtDriver::select("*")->where('ulb_id',$ulbId)
-            ->where("status",1)
+        return WtDriver::select("*")->where('ulb_id', $ulbId)
+            ->where("status", 1)
             ->get();
     }
 
