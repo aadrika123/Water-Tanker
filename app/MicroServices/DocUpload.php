@@ -260,4 +260,25 @@ class DocUpload
         }
         return $key;
     }
+
+    /**
+     * | Get full document path from DMS by reference number
+     * | For water tanker free booking document upload
+     */
+    public function getDocPathByReferenceNo($referenceNo)
+    {
+        $dmsUrl = Config::get('constants.DMS_URL');
+        $apiUrl = "$dmsUrl/backend/document/view-by-reference";
+        
+        $response = Http::withHeaders([
+            "token" => "8Ufn6Jio6Obv9V7VXeP7gbzHSyRJcKluQOGorAD58qA1IQKYE0",
+        ])->post($apiUrl, ['referenceNo' => $referenceNo]);
+
+        if ($response->successful()) {
+            $responseData = $response->json();
+            return $responseData['data']['fullPath'] ?? null;
+        }
+        
+        return null;
+    }
 }

@@ -3826,7 +3826,8 @@ class WaterTankerController extends Controller
             }
 
             // Update booking for Free Apply
-            $booking->payment_status = 2;
+            $booking->payment_status = 2;     // Set payment status to 2 (free)
+            $booking->payment_amount = 00.00; // Set payment amount to 0 for free booking
             $booking->is_tanker_free = true;
             $booking->save();
 
@@ -3841,15 +3842,16 @@ class WaterTankerController extends Controller
      * Upload document for water tanker booking
      * This API:
      * - Validates booking exists by booking_no
+     * - Uploads document to DMS
      * - Updates is_document_uploaded status to true
-     * - Returns error "Application Not Found!" if booking doesn't exist
+     * - Returns DMS response
      */
     public function uploadBookingDocument(Request $request)
     {
         try {
             $request->validate([
                 'bookingId' => 'required',
-                'documents' => 'required'
+                'document' => 'required|file|max:2048'
             ]);
 
             $user = auth()->user();
@@ -3864,16 +3866,30 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "Application Not Found!", null, "110116", "1.0", "", 'POST', $request->deviceId ?? "");
             }
 
-            // Update booking
-            $booking->documents = $request->documents;
+            // Upload document to DMS
+            $document = new DocUpload();
+            $documentData = $document->severalDoc($request);
+            
+            if (!$documentData || $documentData->original['status'] == false) {
+                return responseMsgs(false, "Document upload failed!", null, "110116", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            $referenceNo = $documentData->original['data']['document']['data']['ReferenceNo'] ?? null;
+            
+            // Get full DMS URL using reference number
+            $fullPath = $document->getDocPathByReferenceNo($referenceNo);
+
+            // Store DMS full URL and update flag
+            $booking->documents = $fullPath;
             $booking->is_document_uploaded = true;
             $booking->save();
 
-            return responseMsgs(true, "Document uploaded successfully!", $booking, "110153", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+            return responseMsgs(true, "Document uploaded successfully!", ['documents' => $fullPath, 'referenceNo' => $referenceNo], "110153", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
 
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $request->deviceId ?? "");
         }
     }
+
 
 }
