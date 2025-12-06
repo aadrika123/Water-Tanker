@@ -3795,4 +3795,85 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
+
+
+    /**
+     * Apply free booking for water tanker
+     * ---------------------------------------
+     * This API:
+     * - Validates booking exists by booking_no
+     * - Sets payment_status to 2 (free)
+     * - Updates is_tanker_free to true
+     * - Returns "Booking not found!" if booking doesn't exist
+     */
+    public function freeBookingWaterTanker(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            $request->validate([
+                'bookingId' => 'required'
+            ]);
+
+            // Find booking by booking_no (NOT id)
+            $booking = WtBooking::where('booking_no', $request->bookingId)
+                ->where('ulb_id', $ulbId)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Booking not found!", null, "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            // Update booking for Free Apply
+            $booking->payment_status = 2;
+            $booking->is_tanker_free = true;
+            $booking->save();
+
+            return responseMsgs(true, "Free application applied successfully!", $booking, "110152", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
+    /**
+     * Upload document for water tanker booking
+     * This API:
+     * - Validates booking exists by booking_no
+     * - Updates is_document_uploaded status to true
+     * - Returns error "Application Not Found!" if booking doesn't exist
+     */
+    public function uploadBookingDocument(Request $request)
+    {
+        try {
+            $request->validate([
+                'bookingId' => 'required',
+                'documents' => 'required'
+            ]);
+
+            $user = auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            // Find booking by booking_no
+            $booking = WtBooking::where('booking_no', $request->bookingId)
+                ->where('ulb_id', $ulbId)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Application Not Found!", null, "110116", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            // Update booking
+            $booking->documents = $request->documents;
+            $booking->is_document_uploaded = true;
+            $booking->save();
+
+            return responseMsgs(true, "Document uploaded successfully!", $booking, "110153", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
 }
