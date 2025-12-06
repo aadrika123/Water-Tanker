@@ -732,8 +732,15 @@ class WaterTankerController extends Controller
                 ->where('wb.agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
                 ->where('wb.is_vehicle_sent', '<=', '1')
                 ->where('wb.assign_date', NULL)
-                ->where('wb.payment_status', '=', '1')
+                ->where('wb.payment_status', '!=', '0')                                 // modified previously was '=' 1
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+                // added this filter to showing booking which are either tanker free with document uploaded or tanker not free
+                ->where(function($query) {                                              
+                    $query->where(function($q) {
+                        $q->where('wb.is_tanker_free', true)
+                          ->where('wb.is_document_uploaded', true);
+                    })->orWhere('wb.is_tanker_free', false);
+                })
                 ->orderByDesc('id');
             if ($req->fromDate != NULL) {
                 $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate]);
