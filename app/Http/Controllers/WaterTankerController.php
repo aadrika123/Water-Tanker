@@ -3898,5 +3898,67 @@ class WaterTankerController extends Controller
         }
     }
 
+    /**
+     * Verify document by agency
+     * This API:
+     * - Validates application exists
+     * - Checks if document is uploaded
+     * - Checks if payment_status is 2 (free)
+     * - Checks if is_tanker_free is true
+     * - Updates is_doc_verified_by_agency (0=BTC, 1=Verified)
+     * - Stores admin comment
+     */
+    public function isDocVerifiedByAgency(Request $request)
+    {
+        try {
+            $request->validate([
+                'applicationId' => 'required|integer',
+                'verifyStatus' => 'required|in:BTC,Verified',
+                'comment' => 'required|string'
+            ]);
+
+            $user = auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            $booking = WtBooking::where('id', $request->applicationId)
+                ->where('ulb_id', $ulbId)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Application Not Found!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            if (!$booking->is_document_uploaded) {
+                return responseMsgs(false, "Document not uploaded!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            if ($booking->payment_status != 2) {
+                return responseMsgs(false, "Payment status must be 2 (free)!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            if (!$booking->is_tanker_free) {
+                return responseMsgs(false, "This is not a free tanker booking!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+            }
+
+            if ($request->verifyStatus == 'Verified') {
+                $booking->is_document_verified = 1;
+            } else {
+                $booking->is_document_uploaded = false;
+                $booking->is_document_verified = 0;
+            }
+            
+            $booking->verify_comment = $request->comment;
+            $booking->verified_by = $user->id;
+            $booking->verified_at = Carbon::now();
+            $booking->save();
+
+            $message = $request->verifyStatus == 'Verified' ? "Document verified successfully!" : "Document sent back to citizen!";
+            return responseMsgs(true, $message, $booking, "110154", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
 
 }
