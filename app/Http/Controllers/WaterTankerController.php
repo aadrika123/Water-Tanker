@@ -3418,7 +3418,7 @@ class WaterTankerController extends Controller
             }
 
             // Apply filters individually to each query before union
-            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id', 'is_document_uploaded');
+            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
             $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
 
             if ($key) {
@@ -4004,7 +4004,7 @@ class WaterTankerController extends Controller
                 $uptoDate = $req->uptoDate;
             }
 
-            $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type')
+            $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type', 'is_document_uploaded')
                 ->where('payment_status', 2)
                 ->where('is_document_uploaded', true);
 
