@@ -3919,7 +3919,15 @@ class WaterTankerController extends Controller
             // Store DMS full URL and update flag
             $booking->documents = $fullPath;
             $booking->is_document_uploaded = true;
-            $booking->current_role = 79;                // Update current role to Verifier
+            
+            // Check if user id is 4245
+            if ($user->id == 4245) {
+                $booking->doc_uploaded_by_verifier = true;
+                $booking->current_role = 35;
+            } else {
+                $booking->current_role = 79;                // Update current role to Verifier
+            }
+            
             $booking->save();
 
             return responseMsgs(true, "Document uploaded successfully!", ['documents' => $fullPath, 'referenceNo' => $referenceNo], "110153", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
@@ -3972,6 +3980,7 @@ class WaterTankerController extends Controller
 
             if ($request->verifyStatus == 'Verified') {
                 $booking->is_document_verified = 1;
+                $booking->current_role = 35;
             } else {
                 $booking->is_document_uploaded = false;
                 $booking->is_document_verified = 0;
