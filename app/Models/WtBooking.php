@@ -57,6 +57,48 @@ class WtBooking extends Model
         return $returnData;
     }
 
+    public function metaReqs1($req)
+    {
+        return [
+            'ulb_id' => $req->ulbId,
+            'citizen_id' => $req->citizenId,
+            'agency_id' => $req->agencyId,
+            'booking_date' => Carbon::now()->format('Y-m-d'),
+            'delivery_date' => $req->deliveryDate,
+            'delivery_time' => $req->deliveryTime,
+            'mobile' => $req->mobile,
+            'email' => $req->email,
+            'address' => $req->address,
+            'ward_id' => $req->wardId,
+            'capacity_id' => $req->capacityId,
+            'quantity' => 1,
+            'hydration_center_id' => $req->hydrationCenter,
+            'applicant_name' => $req->applicantName,
+            'booking_no' => $req->bookingNo,
+            'payment_amount' => $req->paymentAmount,
+            'location_id' => $req->locationId,
+            'booking_latitude' => $req->latitude ?? null,
+            'booking_longitude' => $req->longitude ?? null,
+            'user_id' => $req->userId,
+            'user_type' => $req->userType,
+            'current_role' => 79,               // 79 is the role id of Verifier
+            'initiator_role' => 79,                 // 79 is the role id of Verifier
+            'finisher_role' => 35,              // 35 is the role id of Agency
+        ];
+    }
+
+    /**
+     * | Store Booking Request in Model
+     */
+    public function freeBooking($req)
+    {
+        $metaRequest = $this->metaReqs1($req);
+        $res = WtBooking::create($metaRequest);
+        $returnData['applicationId'] = $res->id;
+        $returnData['bookingNo'] = $req->bookingNo;
+        return $returnData;
+    }
+
 
     /**
      * | Get Booking List from Model

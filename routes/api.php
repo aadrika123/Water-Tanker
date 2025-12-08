@@ -132,9 +132,10 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/daily-collection-report', 'ReportDataWaterTanker');
             Route::post('water-tanker/application-report', 'applicationReportDataWaterTanker');
             Route::post('water-tanker/pending-report', 'pendingReportDataWaterTanker');
-            Route::post('water-tanker/freeBooking', 'freeBookingWaterTanker');               // Free Tanker Booking Functionality
-            Route::post('water-tanker/freeBookingDocument', 'uploadBookingDocument');        // Free Tanker Booking Document Upload Functionality
-            Route::post('water-tanker/isDocVerifiedByAgency', 'isDocVerifiedByAgency');      // Free Tanker Booking Document Verification by Agency
+            Route::post('water-tanker/freeBooking', 'freeBookingWaterTanker');                  // Free Tanker Booking Functionality
+            Route::post('water-tanker/freeBookingDocument', 'uploadBookingDocument');           // Free Tanker Booking Document Upload Functionality
+            Route::post('water-tanker/verifyRejectDocByVerifier', 'verifyRejectDocByVerifier'); // Free Tanker Booking Document Verification by Verifier
+            Route::post('water-tanker/freeSearchBooking', 'freeSearchBooking');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {

@@ -3418,7 +3418,7 @@ class WaterTankerController extends Controller
             }
 
             // Apply filters individually to each query before union
-            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
+            $bookings = WtBooking::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id', 'is_document_uploaded');
             $cancellations = WtCancellation::select('applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'id');
 
             if ($key) {
@@ -3845,6 +3845,36 @@ class WaterTankerController extends Controller
         }
     }
 
+    public function addFreeBooking(StoreBookingRequest $req)
+    {
+        try {
+            $user = Auth()->user();
+            $mWtBooking = new WtBooking();
+            $mCalculations = new Calculations();
+
+            $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
+            $bookingNo = ['bookingNo' => $generatedId];
+            $req->merge($bookingNo);
+
+            // $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);
+            // $paymentAmount = ['paymentAmount' => round($payAmt)];
+            // $req->merge($paymentAmount);
+
+            $agencyId = $mCalculations->getAgency($req->ulbId);
+            $agency = ['agencyId' => $agencyId];
+            $req->merge($agency);
+
+            DB::beginTransaction();
+            $res = $mWtBooking->freeBooking($req);                                                                     // Store Booking Informations
+            DB::commit();
+
+            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), [$e->getFile(), $e->getLine(), $e->getCode()], "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
     /**
      * Upload document for water tanker booking
      * This API:
@@ -3899,22 +3929,21 @@ class WaterTankerController extends Controller
     }
 
     /**
-     * Verify document by agency
+     * Verify document by Verifier
      * This API:
      * - Validates application exists
      * - Checks if document is uploaded
      * - Checks if payment_status is 2 (free)
      * - Checks if is_tanker_free is true
-     * - Updates is_doc_verified_by_agency (0=BTC, 1=Verified)
      * - Stores admin comment
      */
-    public function isDocVerifiedByAgency(Request $request)
+    public function verifyRejectDocByVerifier(Request $request)
     {
         try {
             $request->validate([
                 'applicationId' => 'required|integer',
-                'verifyStatus' => 'required|in:BTC,Verified',
-                'comment' => 'required|string'
+                'verifyStatus'  => 'required|in:BTC,Verified',
+                'comment'       => 'required|string'
             ]);
 
             $user = auth()->user();
@@ -3957,6 +3986,63 @@ class WaterTankerController extends Controller
 
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+        }
+    }
+
+    public function freeSearchBooking(Request $req)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $key = $req->key;
+            $fromDate = $uptoDate = null;
+
+            if ($req->fromDate) {
+                $fromDate = $req->fromDate;
+            }
+            if ($req->uptoDate) {
+                $uptoDate = $req->uptoDate;
+            }
+
+            $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type')
+                ->where('payment_status', 2)
+                ->where('is_document_uploaded', true);
+
+            if ($key) {
+                $list = $list->where(function ($where) use ($key) {
+                    $where->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
+                });
+            }
+
+            if ($ulbId) {
+                $list = $list->where("ulb_id", $ulbId);
+            }
+
+            if ($fromDate && $uptoDate) {
+                $list = $list->whereBetween("delivery_date", [$fromDate, $uptoDate]);
+            }
+
+            $list = $list->orderBy("id", "DESC");
+
+            $perPage = $req->perPage ? $req->perPage : 10;
+            $list = $list->paginate($perPage);
+
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+
+            return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
         }
     }
 
