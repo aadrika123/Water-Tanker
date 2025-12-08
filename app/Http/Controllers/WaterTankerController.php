@@ -3919,6 +3919,7 @@ class WaterTankerController extends Controller
             // Store DMS full URL and update flag
             $booking->documents = $fullPath;
             $booking->is_document_uploaded = true;
+            $booking->current_role = 79;                // Update current role to Verifier
             $booking->save();
 
             return responseMsgs(true, "Document uploaded successfully!", ['documents' => $fullPath, 'referenceNo' => $referenceNo], "110153", "1.0", responseTime(), 'POST', $request->deviceId ?? "");

@@ -81,9 +81,9 @@ class WtBooking extends Model
             'booking_longitude' => $req->longitude ?? null,
             'user_id' => $req->userId,
             'user_type' => $req->userType,
-            'current_role' => 79,               // 79 is the role id of Verifier
-            'initiator_role' => 79,                 // 79 is the role id of Verifier
-            'finisher_role' => 35,              // 35 is the role id of Agency
+            'current_role' => 0,
+            'initiator_role' => 79,
+            'finisher_role' => 35
         ];
     }
 
