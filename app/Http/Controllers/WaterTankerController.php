@@ -4016,7 +4016,8 @@ class WaterTankerController extends Controller
 
             $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type', 'is_document_uploaded')
                 ->where('payment_status', 2)
-                ->where('is_document_uploaded', true);
+                ->where('is_document_uploaded', true)
+                ->where('user_id', '!=', 4245);
 
             if ($key) {
                 $list = $list->where(function ($where) use ($key) {
@@ -4032,6 +4033,56 @@ class WaterTankerController extends Controller
 
             if ($fromDate && $uptoDate) {
                 $list = $list->whereBetween("delivery_date", [$fromDate, $uptoDate]);
+            }
+
+            $list = $list->orderBy("id", "DESC");
+
+            $perPage = $req->perPage ? $req->perPage : 10;
+            $list = $list->paginate($perPage);
+
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+
+            return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
+        }
+    }
+
+    public function freeSearchBookingVerifier(Request $req)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $key = $req->key;
+
+            $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type', 'is_document_uploaded', 'doc_uploaded_by_verifier')
+                ->where('payment_status', 2)
+                ->where('is_document_uploaded', true)
+                ->where('doc_uploaded_by_verifier', true);
+
+            if ($key) {
+                $list = $list->where(function ($where) use ($key) {
+                    $where->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
+                });
+            }
+
+            if ($ulbId) {
+                $list = $list->where("ulb_id", $ulbId);
+            }
+
+            if ($req->fromDate && $req->uptoDate) {
+                $list = $list->whereBetween("booking_date", [$req->fromDate, $req->uptoDate]);
             }
 
             $list = $list->orderBy("id", "DESC");
