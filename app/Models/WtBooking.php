@@ -84,7 +84,7 @@ class WtBooking extends Model
             'current_role' => 0,
             'initiator_role' => 79,
             'finisher_role' => 35,
-            'reasion' => $req->reason,
+            'reason' => $req->reason,
         ];
     }
 
