@@ -3888,7 +3888,7 @@ class WaterTankerController extends Controller
         try {
             $request->validate([
                 'bookingId' => 'required',
-                'document' => 'required|file|max:2048'
+                'document' => 'nullable|file|max:2048'
             ]);
 
             $user = auth()->user();
@@ -3978,20 +3978,40 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "This is not a free tanker booking!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
             }
 
+            // -------------------------
+            // VERIFIED FLOW
+            // -------------------------
             if ($request->verifyStatus == 'Verified') {
+
                 $booking->is_document_verified = 1;
                 $booking->current_role = 35;
+
+                // Verified means document passed, so parked_status must be false
+                $booking->parked_status = false;
+
             } else {
+
+                // -------------------------
+                // BTC REJECTED FLOW
+                // -------------------------
+
                 $booking->is_document_uploaded = false;
                 $booking->is_document_verified = 0;
+
+                // SET PARKED STATUS = TRUE
+                $booking->parked_status = true;
+
             }
-            
+
             $booking->verify_comment = $request->comment;
             $booking->verified_by = $user->id;
             $booking->verified_at = Carbon::now();
             $booking->save();
 
-            $message = $request->verifyStatus == 'Verified' ? "Document verified successfully!" : "Document sent back to citizen!";
+            $message = $request->verifyStatus == 'Verified'
+                ? "Document verified successfully!"
+                : "Document sent back to citizen!";
+
             return responseMsgs(true, $message, $booking, "110154", "1.0", responseTime(), 'POST', $request->deviceId ?? "");
 
         } catch (Exception $e) {
@@ -4005,6 +4025,7 @@ class WaterTankerController extends Controller
             $user = Auth()->user();
             $ulbId = $user->ulb_id ?? null;
             $key = $req->key;
+            $userType = $req->userType;
             $fromDate = $uptoDate = null;
 
             if ($req->fromDate) {
@@ -4014,11 +4035,28 @@ class WaterTankerController extends Controller
                 $uptoDate = $req->uptoDate;
             }
 
-            $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type', 'is_document_uploaded')
+            $list = WtBooking::select(
+                    'id',
+                    'applicant_name',
+                    'booking_date',
+                    'booking_no',
+                    'delivery_date',
+                    'delivery_time',
+                    'payment_status',
+                    'feedback',
+                    'user_type',
+                    'is_document_uploaded'
+                )
                 ->where('payment_status', 2)
                 ->where('is_document_uploaded', true)
                 ->where('user_id', '!=', 4245);
 
+            // user_type filter
+            if ($userType) {
+                $list = $list->where('user_type', $userType);  // Expects "Citizen" or "JSK"
+            }
+
+            // Search Filter
             if ($key) {
                 $list = $list->where(function ($where) use ($key) {
                     $where->orWhere("booking_no", "ILIKE", "%$key%")
@@ -4027,19 +4065,24 @@ class WaterTankerController extends Controller
                 });
             }
 
+            // ULB Filter
             if ($ulbId) {
                 $list = $list->where("ulb_id", $ulbId);
             }
 
+            // Date Filter
             if ($fromDate && $uptoDate) {
                 $list = $list->whereBetween("delivery_date", [$fromDate, $uptoDate]);
             }
 
+            // Sorting
             $list = $list->orderBy("id", "DESC");
 
+            // Pagination
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
 
+            // Formatting
             $f_list = [
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
@@ -4051,11 +4094,13 @@ class WaterTankerController extends Controller
                 }),
             ];
 
-            return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking list", $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
         }
     }
+
 
     public function freeSearchBookingVerifier(Request $req)
     {
@@ -4102,6 +4147,96 @@ class WaterTankerController extends Controller
             ];
 
             return responseMsgs(true, "Booking list",  $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
+        }
+    }
+
+    public function btcInbox(Request $req)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            $key = $req->key;
+            $bookingType = $req->bookingType; 
+
+            $fromDate = $uptoDate = null;
+
+            if ($req->fromDate) {
+                $fromDate = $req->fromDate;
+            }
+            if ($req->uptoDate) {
+                $uptoDate = $req->uptoDate;
+            }
+
+            // Only parked applications
+            $list = WtBooking::select(
+                    'id',
+                    'applicant_name',
+                    'booking_date',
+                    'booking_no',
+                    'delivery_date',
+                    'delivery_time',
+                    'payment_status',
+                    'feedback',
+                    'user_type',
+                    'is_document_uploaded',
+                    'parked_status'
+                )
+                ->where('parked_status', 1);
+
+            //  NEW — Booking Type Filter
+            if ($bookingType) {
+                if ($bookingType === "paid") {
+                    $list = $list->where("payment_status", 1);
+                } elseif ($bookingType === "free") {
+                    $list = $list->where("payment_status", 2);
+                } elseif ($bookingType === "unpaid") {
+                    $list = $list->where("payment_status", 0);
+                }
+            }
+
+            //  Search filter
+            if ($key) {
+                $list = $list->where(function ($where) use ($key) {
+                    $where->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
+                });
+            }
+
+            //  ULB filter
+            if ($ulbId) {
+                $list = $list->where("ulb_id", $ulbId);
+            }
+
+            //  Date filter
+            if ($fromDate && $uptoDate) {
+                $list = $list->whereBetween("booking_date", [$fromDate, $uptoDate]);
+            }
+
+            // Sorting
+            $list = $list->orderBy("id", "DESC");
+
+            // Pagination
+            $perPage = $req->perPage ? $req->perPage : 10;
+            $list = $list->paginate($perPage);
+
+            // Formatting
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage" => $list->lastPage(),
+                "total" => $list->total(),
+                "data" => collect($list->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+
+            return responseMsgs(true, "BTC Inbox List", $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
         }
