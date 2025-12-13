@@ -38,7 +38,7 @@ class StoreBookingRequest extends FormRequest
             'deliveryDate' => 'required|date_format:Y-m-d|after:'. date('Y-m-d'),
             'deliveryTime' => 'required|date_format:H:i',
             'mobile' => 'required|digits:10',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'locationId' => 'required|integer',
             'capacityId' => 'required|integer',
             // 'quantity' => 'required|integer',
