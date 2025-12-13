@@ -3958,6 +3958,84 @@ class WaterTankerController extends Controller
         }
     }
 
+    public function editFreeBooking(Request $req)
+    {
+        $req->validate([
+            'applicationId' => 'required|integer',
+            'deliveryDate'  => 'nullable|date',
+            'deliveryTime'  => 'nullable',
+            'address'       => 'nullable|string',
+            'mobile'        => 'nullable|digits:10',
+            'email'         => 'nullable|email',
+            'locationId'    => 'nullable|integer',
+            'capacityId'    => 'nullable|integer',
+            'wardId'        => 'nullable|integer',
+            'reason'        => 'nullable|string',
+            'applicantName' => 'nullable|string'
+        ]);
+
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id;
+
+            // Fetch booking
+            $booking = WtBooking::where('id', $req->applicationId)
+                ->where('ulb_id', $ulbId)
+                ->where('payment_status', 2) // Only free bookings
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Free booking not found!", null, "110118", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            DB::beginTransaction();
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. INSERT OLD DATA INTO LOG TABLE
+            |--------------------------------------------------------------------------
+            */
+            $logData = $booking->toArray(); // all original fields
+            $logData['booking_id']  = $booking->id;
+            $logData['action_type'] = 'EDIT';
+            $logData['logged_by']   = $user->id;
+            $logData['logged_at']   = now();
+
+            unset($logData['id']);  // remove original primary key
+
+            DB::table('log_wt_bookings')->insert($logData);
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. UPDATE BOOKING WITH NEW DATA
+            |--------------------------------------------------------------------------
+            */
+            $updateData = array_filter([
+                'delivery_date'   => $req->deliveryDate,
+                'delivery_time'   => $req->deliveryTime,
+                'address'         => $req->address,
+                'mobile'          => $req->mobile,
+                'email'           => $req->email,
+                'applicant_name'  => $req->applicantName,
+                'location_id'     => $req->locationId,
+                'capacity_id'     => $req->capacityId,
+                'ward_id'         => $req->wardId,
+                'reason'          => $req->reason,
+            ], fn($v) => !is_null($v)); // allow 0 values
+
+            $booking->update($updateData);
+
+            DB::commit();
+
+            return responseMsgs(true, "Booking Updated Successfully!", $booking, "110118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110118", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+
     /**
      * Upload document for water tanker booking
      * This API:
@@ -4049,9 +4127,9 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "Application Not Found!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
             }
 
-            if (!$booking->is_document_uploaded) {
-                return responseMsgs(false, "Document not uploaded!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
-            }
+            // if (!$booking->is_document_uploaded) {
+            //     return responseMsgs(false, "Document not uploaded!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
+            // }
 
             if ($booking->payment_status != 2) {
                 return responseMsgs(false, "Payment status must be 2 (free)!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
@@ -4066,7 +4144,7 @@ class WaterTankerController extends Controller
             // -------------------------
             if ($request->verifyStatus == 'Verified') {
 
-                $booking->is_document_verified = 1;
+                // $booking->is_document_verified = 1;
                 $booking->current_role = 35;
 
                 // Verified means document passed, so parked_status must be false
@@ -4078,8 +4156,8 @@ class WaterTankerController extends Controller
                 // BTC REJECTED FLOW
                 // -------------------------
 
-                $booking->is_document_uploaded = false;
-                $booking->is_document_verified = 0;
+                // $booking->is_document_uploaded = false;
+                // $booking->is_document_verified = 0;
 
                 // SET PARKED STATUS = TRUE
                 $booking->parked_status = true;
@@ -4370,6 +4448,41 @@ class WaterTankerController extends Controller
 
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    public function forwardRejectedApplication(Request $req)
+    {
+        try {
+            $req->validate([
+                'applicationId' => 'required|integer'
+            ]);
+
+            $user = auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            // Fetch the booking
+            $booking = WtBooking::where('id', $req->applicationId)
+                ->where('ulb_id', $ulbId)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Application not found!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            // Check if parked
+            if (!$booking->parked_status) {
+                return responseMsgs(false, "Application is not in parked state!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            // Update parked status → FALSE
+            $booking->parked_status = false;
+            $booking->save();
+
+            return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
 

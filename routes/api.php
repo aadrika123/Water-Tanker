@@ -137,9 +137,11 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/verifyRejectDocByVerifier', 'verifyRejectDocByVerifier'); // Free Tanker Booking Document Verification by Verifier
             Route::post('water-tanker/freeSearchBooking', 'freeSearchBooking');
             Route::post('water-tanker/addFreeBooking', 'addFreeBooking');
+            Route::post('water-tanker/editFreeBooking', 'editFreeBooking');
             Route::post('water-tanker/freeSearchBookingVerifier', 'freeSearchBookingVerifier');
             Route::post('water-tanker/btcInbox', 'btcInbox');
             Route::post('water-tanker/outboxList', 'outboxList');
+            Route::post('water-tanker/forwardRejectedApplication', 'forwardRejectedApplication');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
