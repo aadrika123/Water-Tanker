@@ -139,6 +139,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/addFreeBooking', 'addFreeBooking');
             Route::post('water-tanker/freeSearchBookingVerifier', 'freeSearchBookingVerifier');
             Route::post('water-tanker/btcInbox', 'btcInbox');
+            Route::post('water-tanker/outboxList', 'outboxList');
         });
 
         Route::controller(WaterTankerReportController::class)->group(function () {
