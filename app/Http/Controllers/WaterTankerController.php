@@ -3402,7 +3402,7 @@ class WaterTankerController extends Controller
     //     }
     // }
 
-    /* Alok Commented this to implement the new searchApp function in that added payment filter */
+
     public function searchApp(Request $req)
     {
         try {
@@ -3471,87 +3471,104 @@ class WaterTankerController extends Controller
         }
     }
 
-    // Removed cancellation from search as per new requirement implemented to add payment status filter
-    // public function searchApp(Request $req)
-    // {
-    //     try {
-    //         $user = Auth()->user();
-    //         $ulbId = $user->ulb_id ?? null;
+    // Revised searchApp function with payment status filter : currently using this api for search
+    public function searchAppNew(Request $req)
+    {
+        try {
+            $user = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+            $key = $req->key;
+            $fromDate = $uptoDate = null;
 
-    //         $key = $req->key;
-    //         $fromDate = $req->fromDate ?? null;
-    //         $uptoDate = $req->uptoDate ?? null;
+            if ($req->fromDate) {
+                $fromDate = $req->fromDate;
+            }
+            if ($req->uptoDate) {
+                $uptoDate = $req->uptoDate;
+            }
 
-    //         // Base query (ONLY BOOKINGS)
-    //         $query = WtBooking::select(
-    //             'applicant_name',
-    //             'booking_date',
-    //             'booking_no',
-    //             'delivery_date',
-    //             'delivery_time',
-    //             'payment_status',
-    //             'feedback',
-    //             'id',
-    //             'payment_details'
-    //         );
+            // NEW payment filter
+            $paymentStatus = $req->paymentStatus; // paid/unpaid/free
+            $statusMap = ['paid' => 1, 'unpaid' => 0, 'free' => 2];
 
-    //         // Search filter
-    //         if ($key) {
-    //             $query->where(function ($q) use ($key) {
-    //                 $q->orWhere("booking_no", "ILIKE", "%$key%")
-    //                 ->orWhere("applicant_name", "ILIKE", "%$key%")
-    //                 ->orWhere("mobile", "ILIKE", "%$key%");
-    //             });
-    //         }
+            // Base queries
+            $bookings = WtBooking::select(
+                'applicant_name', 'booking_date', 'booking_no',
+                'delivery_date', 'delivery_time', 'payment_status',
+                'feedback', 'payment_details', 'id'
+            );
 
-    //         // ULB filter
-    //         if ($ulbId) {
-    //             $query->where("ulb_id", $ulbId);
-    //         }
+            $cancellations = WtCancellation::select(
+                'applicant_name', 'booking_date', 'booking_no',
+                'delivery_date', 'delivery_time', 'payment_status',
+                'feedback', 'payment_details', 'id'
+            );
 
-    //         // Date filter
-    //         if ($fromDate && $uptoDate) {
-    //             $query->whereBetween("booking_date", [$fromDate, $uptoDate]);
-    //         }
+            // Search filter
+            if ($key) {
+                $bookings->where(function ($q) use ($key) {
+                    $q->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
+                });
 
-    //         // Payment Status Filter
-    //         if ($req->paymentStatus) {
+                $cancellations->where(function ($q) use ($key) {
+                    $q->orWhere("booking_no", "ILIKE", "%$key%")
+                        ->orWhere("applicant_name", "ILIKE", "%$key%")
+                        ->orWhere("mobile", "ILIKE", "%$key%");
+                });
+            }
 
-    //             $status = match ($req->paymentStatus) {
-    //                 "paid"   => 1,
-    //                 "free"   => 2,
-    //                 "unpaid" => 0,
-    //                 default  => null
-    //             };
+            // ULB filter
+            if ($ulbId) {
+                $bookings->where("ulb_id", $ulbId);
+                $cancellations->where("ulb_id", $ulbId);
+            }
 
-    //             if (!is_null($status)) {
-    //                 $query->where("payment_status", $status);
-    //             }
-    //         }
+            // Date filter
+            if ($fromDate && $uptoDate) {
+                $bookings->whereBetween("booking_date", [$fromDate, $uptoDate]);
+                $cancellations->whereBetween("booking_date", [$fromDate, $uptoDate]);
+            }
 
-    //         // Sorting + Pagination
-    //         $perPage = $req->perPage ?: 10;
+            // Apply payment filter to BOTH tables
+            if ($paymentStatus && isset($statusMap[$paymentStatus])) {
+                $status = $statusMap[$paymentStatus];
+                $bookings->where("payment_status", $status);
+                $cancellations->where("payment_status", $status);
+            }
 
-    //         $list = $query->orderBy("id", "DESC")->paginate($perPage);
+            // Build union query
+            $list = $bookings->union($cancellations);
 
-    //         // Final result formatting
-    //         $f_list = [
-    //             "currentPage" => $list->currentPage(),
-    //             "lastPage" => $list->lastPage(),
-    //             "total" => $list->total(),
-    //             "data" => collect($list->items())->map(function ($val) {
-    //                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
-    //                 $val->payment_details = json_decode($val->payment_details ?? 'null');
-    //                 return $val;
-    //             }),
-    //         ];
+            // Order + paginate
+            $perPage = $req->perPage ?? 10;
 
-    //         return responseMsgs(true, "Booking list", $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            // Laravel requires wrapping union query for pagination
+            $final = DB::query()
+                ->fromSub($list, 't')
+                ->orderBy("id", "DESC")
+                ->paginate($perPage);
 
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
-    //     }
-    // }
+            // Format output
+            $f_list = [
+                "currentPage" => $final->currentPage(),
+                "lastPage" => $final->lastPage(),
+                "total" => $final->total(),
+                "data" => collect($final->items())->map(function ($val) {
+                    $val->payment_details = json_decode($val->payment_details);
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    return $val;
+                }),
+            ];
+
+            return responseMsgs(true, "Booking list", $f_list, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "POST", $req->deviceId ?? "");
+        }
+    }
+
 
 
     public function getAppStatus($appId)
@@ -4127,10 +4144,6 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "Application Not Found!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
             }
 
-            // if (!$booking->is_document_uploaded) {
-            //     return responseMsgs(false, "Document not uploaded!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
-            // }
-
             if ($booking->payment_status != 2) {
                 return responseMsgs(false, "Payment status must be 2 (free)!", null, "110154", "1.0", "", 'POST', $request->deviceId ?? "");
             }
@@ -4144,10 +4157,10 @@ class WaterTankerController extends Controller
             // -------------------------
             if ($request->verifyStatus == 'Verified') {
 
-                // $booking->is_document_verified = 1;
-                $booking->current_role = 35;
+                // ⭐ NEW CHANGE: Mark document as verified
+                $booking->is_document_verified = true;
 
-                // Verified means document passed, so parked_status must be false
+                $booking->current_role = 35;
                 $booking->parked_status = false;
 
             } else {
@@ -4156,12 +4169,11 @@ class WaterTankerController extends Controller
                 // BTC REJECTED FLOW
                 // -------------------------
 
-                // $booking->is_document_uploaded = false;
-                // $booking->is_document_verified = 0;
+                // When rejected, document is NOT verified
+                $booking->is_document_verified = false;
 
                 // SET PARKED STATUS = TRUE
                 $booking->parked_status = true;
-
             }
 
             $booking->verify_comment = $request->comment;
