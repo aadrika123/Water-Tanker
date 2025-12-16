@@ -180,21 +180,29 @@ class WaterTankerController extends Controller
     public function addCapacity(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'capacity' => 'required|integer|unique:wt_capacities',
+            'capacity' => [
+                'required',
+                'integer',
+                Rule::unique('wt_capacities')->where(function ($q) use ($req) {
+                    return $q->where('ulb_id', $req->auth['ulb_id']);
+                }),
+            ],
         ]);
+
         if ($validator->fails()) {
             return validationErrorV2($validator);
         }
+
         try {
-            // Variable initialization
             $mWtCapacity = new WtCapacity();
             DB::beginTransaction();
-            $res = $mWtCapacity->storeCapacity($req);                                       // Store Capacity Request
+            $res = $mWtCapacity->storeCapacity($req);
             DB::commit();
+
             return responseMsgs(true, "Capacity Added Successfully !!!", '', "110103", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
         } catch (Exception $e) {
             DB::rollBack();
-            // return $e->getMessage();
             return responseMsgs(false, $e->getMessage(), "", "110103", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
@@ -702,55 +710,133 @@ class WaterTankerController extends Controller
      * | Function - 16
      * | API - 16
      */
+    // public function listAgencyBooking(Request $req)
+    // {
+    //     // WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
+    //     // $validator = Validator::make($req->all(), [
+    //     //     'date' => 'nullable|date|date_format:Y-m-d',
+    //     // ]);
+    //     // if ($validator->fails()) {
+    //     //     return validationErrorV2($validator);
+    //     // }
+    //     $validator = Validator::make($req->all(), [
+    //         'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
+    //         'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return validationErrorV2($validator);
+    //     }
+
+    //     try {
+    //         // Variable initialization
+    //         if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
+    //             throw new Exception("Unauthorized  Access !!!");
+    //         $test = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first();
+    //         if (!$test) {
+    //             $this->addAgencyNotInLocal($req);
+    //         }
+    //         $mWtBooking = new WtBooking();
+    //         $list = $mWtBooking->getBookingList()
+    //             ->where('wb.agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
+    //             ->where('wb.is_vehicle_sent', '<=', '1')
+    //             ->where('wb.assign_date', NULL)
+    //             ->where('wb.payment_status', '!=', '0')                                 // modified previously was '=' 1
+    //             ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
+    //             // added this filter to showing booking which are either tanker free with document uploaded or tanker not free
+    //             ->where(function($query) {                                              
+    //                 $query->where(function($q) {
+    //                     $q->where('wb.is_tanker_free', true)
+    //                       ->where('wb.is_document_uploaded', true);
+    //                 })->orWhere('wb.is_tanker_free', false);
+    //             })
+    //             ->orderByDesc('id');
+    //         if ($req->fromDate != NULL) {
+    //             $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate]);
+    //         }
+    //         // if ($req->date != NULL)
+    //         //     $list = $list->where('delivery_date', $req->date)->values();
+
+    //         $ulb = $this->_ulbs;
+    //         $perPage = $req->perPage ? $req->perPage : 10;
+    //         $list = $list->paginate($perPage);
+    //         $f_list = [
+    //             "currentPage" => $list->currentPage(),
+    //             "lastPage" => $list->lastPage(),
+    //             "total" => $list->total(),
+    //             "data" => collect($list->items())->map(function ($val) use ($ulb) {
+    //                 $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
+    //                 $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+    //                 $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+    //                 $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+    //                 return $val;
+    //             }),
+    //         ];
+    //         return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
+
+    /* 
+     * | Modified Function - listAgencyBooking
+     * | Added Feature - Filter by bookingType (paid/free)
+    */
     public function listAgencyBooking(Request $req)
     {
-        // WtAgency::select('id')->where('u_id', $req->auth['id'])->first()->id;
-        // $validator = Validator::make($req->all(), [
-        //     'date' => 'nullable|date|date_format:Y-m-d',
-        // ]);
-        // if ($validator->fails()) {
-        //     return validationErrorV2($validator);
-        // }
         $validator = Validator::make($req->all(), [
             'fromDate' => 'nullable|date_format:Y-m-d|before:' . date('Y-m-d'),
-            'toDate' => $req->fromDate != NULL ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
+            'toDate' => $req->fromDate != NULL 
+                ? 'required|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d') 
+                : 'nullable|date_format:Y-m-d|after:' . $req->fromDate . '|before_or_equal:' . date('Y-m-d'),
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);
         }
 
         try {
-            // Variable initialization
             if (!in_array($req->auth['user_type'], ["UlbUser", "Water-Agency"]))
                 throw new Exception("Unauthorized  Access !!!");
+
             $test = WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first();
             if (!$test) {
                 $this->addAgencyNotInLocal($req);
             }
+
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingList()
                 ->where('wb.agency_id', WtAgency::select('id')->where('ulb_id', $req->auth['ulb_id'])->first()->id)
                 ->where('wb.is_vehicle_sent', '<=', '1')
                 ->where('wb.assign_date', NULL)
-                ->where('wb.payment_status', '!=', '0')                                 // modified previously was '=' 1
+                ->where('wb.payment_status', '!=', '0')   // existing condition
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
-                // added this filter to showing booking which are either tanker free with document uploaded or tanker not free
-                ->where(function($query) {                                              
+                ->where(function($query) {
                     $query->where(function($q) {
                         $q->where('wb.is_tanker_free', true)
-                          ->where('wb.is_document_uploaded', true);
+                        ->where('wb.is_document_uploaded', true);
                     })->orWhere('wb.is_tanker_free', false);
                 })
                 ->orderByDesc('id');
+
+            // ⭐ NEW FILTER: bookingType → paid (1) / free (2)
+            if ($req->bookingType) {
+                $typeMap = [
+                    "paid" => 1,
+                    "free" => 2,
+                ];
+
+                if (isset($typeMap[$req->bookingType])) {
+                    $list = $list->where("wb.payment_status", $typeMap[$req->bookingType]);
+                }
+            }
+
             if ($req->fromDate != NULL) {
                 $list = $list->whereBetween('booking_date', [$req->fromDate, $req->toDate]);
             }
-            // if ($req->date != NULL)
-            //     $list = $list->where('delivery_date', $req->date)->values();
 
             $ulb = $this->_ulbs;
             $perPage = $req->perPage ? $req->perPage : 10;
             $list = $list->paginate($perPage);
+
             $f_list = [
                 "currentPage" => $list->currentPage(),
                 "lastPage" => $list->lastPage(),
@@ -759,15 +845,20 @@ class WaterTankerController extends Controller
                     $val->ulb_name = (collect($ulb)->where("id", $val->ulb_id))->value("ulb_name");
                     $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
                     $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
-                    $val->delivery_status = $val->is_vehicle_sent == '0' ? "Waiting For Delivery" : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
+                    $val->delivery_status = $val->is_vehicle_sent == '0' 
+                        ? "Waiting For Delivery" 
+                        : ($val->is_vehicle_sent == '1' ? "Out For Delivery" : "Delivered");
                     return $val;
                 }),
             ];
+
             return responseMsgs(true, "Water Tanker Booking List !!!", $f_list, "110116", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110116", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
 
     /**
      * | Mapping Driver to vehicle (Assign Driver to Vehicle)
@@ -3952,28 +4043,26 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $mCalculations = new Calculations();
 
-            $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);          // Generate Booking No
-            $bookingNo = ['bookingNo' => $generatedId];
-            $req->merge($bookingNo);
-
-            // $payAmt = $mCalculations->getAmount($req->ulbId, $req->capacityId);
-            // $paymentAmount = ['paymentAmount' => round($payAmt)];
-            // $req->merge($paymentAmount);
+            $generatedId = $mCalculations->generateId($this->_paramId, $req->ulbId);
+            $req->merge(['bookingNo' => $generatedId]);
 
             $agencyId = $mCalculations->getAgency($req->ulbId);
-            $agency = ['agencyId' => $agencyId];
-            $req->merge($agency);
+            $req->merge(['agencyId' => $agencyId]);
+
+            // SET CURRENT ROLE
+            $req->merge(['current_role' => 79]);
 
             DB::beginTransaction();
-            $res = $mWtBooking->freeBooking($req);                                                                     // Store Booking Informations
+            $res = $mWtBooking->freeBooking($req);
             DB::commit();
 
-            return responseMsgs(true, "Booking Added Successfully !!!",  $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+            return responseMsgs(true, "Booking Added Successfully !!!", $res, "110115", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
         } catch (Exception $e) {
             DB::rollBack();
             return responseMsgs(false, $e->getMessage(), [$e->getFile(), $e->getLine(), $e->getCode()], "110115", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
 
     public function editFreeBooking(Request $req)
     {
@@ -4192,6 +4281,7 @@ class WaterTankerController extends Controller
         }
     }
 
+    // get only free apply booking list
     public function freeSearchBooking(Request $req)
     {
         try {
@@ -4276,7 +4366,8 @@ class WaterTankerController extends Controller
             $list = WtBooking::select('id','applicant_name', 'booking_date', 'booking_no', 'delivery_date', 'delivery_time', 'payment_status', 'feedback', 'user_type', 'is_document_uploaded', 'doc_uploaded_by_verifier')
                 ->where('payment_status', 2)
                 ->where('is_document_uploaded', true)
-                ->where('doc_uploaded_by_verifier', true);
+                ->where('doc_uploaded_by_verifier', true)
+                ->where('user_id', '=', 4245);
 
             if ($key) {
                 $list = $list->where(function ($where) use ($key) {
@@ -4463,6 +4554,7 @@ class WaterTankerController extends Controller
         }
     }
 
+    // Forward Rejected Application
     public function forwardRejectedApplication(Request $req)
     {
         try {
@@ -4497,6 +4589,39 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
         }
     }
+
+    // Get approved application list where vehicle and driver assigned
+    public function getApprovedApplicationList(Request $req)
+    {
+        try {
+            $user  = auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            if (!$ulbId) {
+                return responseMsgs(false, "ULB not found!", [], "110170", "1.0", "", "GET", $req->deviceId ?? "");
+            }
+
+            $applications = WtBooking::select('id','booking_no','applicant_name','mobile','address','vehicle_id','driver_id','status','delivery_date','delivery_time'
+                )
+                ->where('ulb_id', $ulbId)
+                ->where('status', 1)                 //  Approved
+                ->whereNotNull('vehicle_id')         //  vehicle assigned
+                ->whereNotNull('driver_id')          //  driver assigned
+                ->orderBy('id', 'DESC')
+                ->get();
+
+            if ($applications->isEmpty()) {
+                return responseMsgs(true, "No approved applications found!", [], "110170", "1.0", responseTime(), "GET", $req->deviceId ?? "");
+            }
+
+            return responseMsgs(true, "Approved application list fetched successfully!", $applications, "110170", "1.0", responseTime(), "GET", $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), [], "110170", "1.0", "", "GET", $req->deviceId ?? "");
+
+        }
+    }
+
 
 
 }
