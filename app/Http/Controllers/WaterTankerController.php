@@ -4601,7 +4601,7 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "ULB not found!", [], "110170", "1.0", "", "GET", $req->deviceId ?? "");
             }
 
-            $applications = WtBooking::select('id','booking_no','applicant_name','mobile','address','booking_date','vehicle_id','driver_id','status','delivery_date','delivery_time'
+            $applications = WtBooking::select('id','booking_no','applicant_name','mobile','address','booking_date','vehicle_id','driver_id','status','delivery_date','delivery_time', 'payment_status'
                 )
                 ->where('ulb_id', $ulbId)
                 ->where('status', 1)                 //  Approved
