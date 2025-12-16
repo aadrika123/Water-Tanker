@@ -849,4 +849,28 @@ class WtBooking extends Model
             return responseMsgs(false, $e->getMessage(), [], "055017", "1.0", responseTime(), "POST", $request->deviceId);
         }
     }
+
+    public function getApprovedApp($ulbId)
+    {
+        return self::select(
+            'wt_bookings.id',
+            'booking_no',
+            'applicant_name',
+            'mobile','address',
+            'booking_date',
+            'wt_resources.vehicle_name',
+            'wt_drivers.driver_name',
+            'wt_bookings.status',
+            'delivery_date',
+            'delivery_time', 
+            'payment_status'
+            )
+            ->join('wt_resources', 'wt_resources.id', '=', 'wt_bookings.vehicle_id')
+            ->join('wt_drivers', 'wt_drivers.id', '=', 'wt_bookings.driver_id')
+            ->where('wt_bookings.ulb_id', $ulbId)
+            ->where('wt_bookings.status', 1)                    // Approved
+            ->whereNotNull('vehicle_id')                        // Vehicle assigned
+            ->whereNotNull('driver_id');                        // Driver assigned
+
+    }
 }

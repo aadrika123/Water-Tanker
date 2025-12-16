@@ -4590,38 +4590,48 @@ class WaterTankerController extends Controller
         }
     }
 
-    // Get approved application list where vehicle and driver assigned
+    // Approved Application List with Vehicle & Driver assigned
     public function getApprovedApplicationList(Request $req)
     {
         try {
             $user  = auth()->user();
             $ulbId = $user->ulb_id ?? null;
+            $mWtBooking = new WtBooking();
 
             if (!$ulbId) {
                 return responseMsgs(false, "ULB not found!", [], "110170", "1.0", "", "GET", $req->deviceId ?? "");
             }
 
-            $applications = WtBooking::select('id','booking_no','applicant_name','mobile','address','booking_date','vehicle_id','driver_id','status','delivery_date','delivery_time', 'payment_status'
-                )
-                ->where('ulb_id', $ulbId)
-                ->where('status', 1)                 //  Approved
-                ->whereNotNull('vehicle_id')         //  vehicle assigned
-                ->whereNotNull('driver_id')          //  driver assigned
-                ->orderBy('id', 'DESC')
-                ->get();
+            // Base query
+            $list = $mWtBooking->getApprovedApp($ulbId);
 
-            if ($applications->isEmpty()) {
-                return responseMsgs(true, "No approved applications found!", [], "110170", "1.0", responseTime(), "GET", $req->deviceId ?? "");
-            }
+            // Sort latest first
+            $list = $list->orderBy('id', 'DESC');
 
-            return responseMsgs(true, "Approved application list fetched successfully!", $applications, "110170", "1.0", responseTime(), "GET", $req->deviceId ?? "");
+            // Pagination
+            $perPage = $req->perPage ? $req->perPage : 10;
+            $list = $list->paginate($perPage);
+
+            // Format response (same structure as outboxList)
+            $f_list = [
+                "currentPage" => $list->currentPage(),
+                "lastPage"    => $list->lastPage(),
+                "total"       => $list->total(),
+                "data"        => collect($list->items())->map(function ($val) {
+                    $val->booking_date = Carbon::parse($val->booking_date)->format('d-m-Y');
+                    if ($val->delivery_date) {
+                        $val->delivery_date = Carbon::parse($val->delivery_date)->format('d-m-Y');
+                    }
+                    return $val;
+                }),
+            ];
+
+            return responseMsgs(true, "Approved application list fetched successfully!", $f_list, "110170", "1.0", responseTime(), "GET", $req->deviceId ?? "");
 
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), [], "110170", "1.0", "", "GET", $req->deviceId ?? "");
-
         }
     }
-
 
 
 }
