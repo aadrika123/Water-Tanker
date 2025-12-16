@@ -2086,7 +2086,7 @@ class WaterTankerController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | 🔹 REASON HISTORY (NEW ADDITION)
+            | REASON HISTORY (NEW ADDITION)
             |--------------------------------------------------------------------------
             */
             $reasons = [];
@@ -2116,7 +2116,7 @@ class WaterTankerController extends Controller
                 ];
             }
 
-            $list->reason = $reasons;
+            $list->remarks = $reasons;
 
             return responseMsgs(true, "Booking Details!!!", $list, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
 
