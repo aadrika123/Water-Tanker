@@ -4163,36 +4163,97 @@ class WaterTankerController extends Controller
     /**
      * | Get Application Status 
      */
+    // public function getAppStatus($appId)
+    // {
+    //     $booking = WtBooking::find($appId);
+    //     if (!$booking) {
+    //         $booking = WtCancellation::find($appId);
+    //     }
+    //     $driver  = $booking->getAssignedDriver();
+    //     $vehicle  = $booking->getAssignedVehicle();
+    //     $status = "";
+    //     if ($booking->getTable() == (new WtCancellation())->getTable()) {
+    //         $status = "Booking canceled on " . Carbon::parse($booking->cancel_date)->format("d-m-Y") . " by " . $booking->cancelled_by;
+    //     } elseif ($booking->payment_status == 0) {
+    //         $status = "Payment Pending of amount " . $booking->payment_amount;
+    //     } elseif ($booking->delivery_track_status == 2) {
+    //         $status = "Water Tanker Delivered On " . Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
+    //     } elseif ($booking->delivery_track_status == 1) {
+    //         $status = "Water Tanker Delivery trip Cancelled By Driver Due To " . Str::title($booking->delivery_comments);
+    //     } elseif ($booking->driver_id && $booking->vehicle_id) {
+    //         $status = "Driver (" . $driver->driver_name . ") And Vehicle (" . $vehicle->vehicle_no . ") assigned";
+    //     } elseif (!$booking->driver_id && !$booking->vehicle_id) {
+    //         $status = "Driver And Vehicle not assigned";
+    //     } elseif (!$booking->driver_id && $booking->vehicle_id) {
+    //         $status = "Driver is not assigned But Vehicle assigned ";
+    //     } elseif ($booking->driver_id && !$booking->vehicle_id) {
+    //         $status = "Driver is assigned But Vehicle not assigned ";
+    //     } elseif ($booking->is_vehicle_sent = 1) {
+    //         $status = "Driver is going for delivery";
+    //     }
+    //     return $status;
+    // }
+
     public function getAppStatus($appId)
     {
         $booking = WtBooking::find($appId);
         if (!$booking) {
             $booking = WtCancellation::find($appId);
         }
+
+        if (!$booking) {
+            return "";
+        }
+
         $driver  = $booking->getAssignedDriver();
-        $vehicle  = $booking->getAssignedVehicle();
-        $status = "";
+        $vehicle = $booking->getAssignedVehicle();
+        $status  = "";
+
+        // Booking Cancelled (highest priority)
         if ($booking->getTable() == (new WtCancellation())->getTable()) {
-            $status = "Booking canceled on " . Carbon::parse($booking->cancel_date)->format("d-m-Y") . " by " . $booking->cancelled_by;
+            $status = "Booking canceled on " .
+                Carbon::parse($booking->cancel_date)->format("d-m-Y") .
+                " by " . $booking->cancelled_by;
+        // Application Pending at Verifier (NEW)
+        } elseif ($booking->status == 1 && $booking->current_role == 79) {
+            $status = "Application is Pending at Verifier";
+        // Backwarded by Verifier
+        } elseif ($booking->parked_status === true && $booking->current_role == 79) {
+            $status = "Backwarded by Verifier";
+        //Payment Pending
         } elseif ($booking->payment_status == 0) {
             $status = "Payment Pending of amount " . $booking->payment_amount;
+        //Delivered
         } elseif ($booking->delivery_track_status == 2) {
-            $status = "Water Tanker Delivered On " . Carbon::parse($booking->driver_delivery_update_date_time)->format("d-m-Y h:i:s A");
+            $status = "Water Tanker Delivered On " .
+                Carbon::parse($booking->driver_delivery_update_date_time)
+                    ->format("d-m-Y h:i:s A");
+        // Delivery cancelled by driver
         } elseif ($booking->delivery_track_status == 1) {
-            $status = "Water Tanker Delivery trip Cancelled By Driver Due To " . Str::title($booking->delivery_comments);
+            $status = "Water Tanker Delivery trip Cancelled By Driver Due To " .
+                Str::title($booking->delivery_comments);
+        // Driver & Vehicle assigned
         } elseif ($booking->driver_id && $booking->vehicle_id) {
-            $status = "Driver (" . $driver->driver_name . ") And Vehicle (" . $vehicle->vehicle_no . ") assigned";
+            $status = "Driver (" . ($driver->driver_name ?? '') .
+                ") And Vehicle (" . ($vehicle->vehicle_no ?? '') . ") assigned";
+        // Neither assigned
         } elseif (!$booking->driver_id && !$booking->vehicle_id) {
             $status = "Driver And Vehicle not assigned";
+        // Only vehicle assigned
         } elseif (!$booking->driver_id && $booking->vehicle_id) {
-            $status = "Driver is not assigned But Vehicle assigned ";
+            $status = "Driver is not assigned But Vehicle assigned";
+        // Only driver assigned
         } elseif ($booking->driver_id && !$booking->vehicle_id) {
-            $status = "Driver is assigned But Vehicle not assigned ";
-        } elseif ($booking->is_vehicle_sent = 1) {
+            $status = "Driver is assigned But Vehicle not assigned";
+        // Vehicle sent for delivery
+        } elseif ($booking->is_vehicle_sent == 1) {
             $status = "Driver is going for delivery";
         }
+
         return $status;
     }
+
+
 
     /**======================================   Support Function ====================================================================== */
     /**
@@ -4549,9 +4610,6 @@ class WaterTankerController extends Controller
 
             $agencyId = $mCalculations->getAgency($req->ulbId);
             $req->merge(['agencyId' => $agencyId]);
-
-            // SET CURRENT ROLE
-            $req->merge(['current_role' => 79]);
 
             DB::beginTransaction();
             $res = $mWtBooking->freeBooking($req);
