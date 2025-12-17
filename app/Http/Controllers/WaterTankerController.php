@@ -3960,204 +3960,209 @@ class WaterTankerController extends Controller
     //     }
     // }
 
-    public function searchAppNew(Request $req)
-    {
-        try {
-            $user  = Auth()->user();
-            $ulbId = $user->ulb_id ?? null;
+   public function searchAppNew(Request $req)
+{
+    try {
+        $user  = Auth()->user();
+        $ulbId = $user->ulb_id ?? null;
 
-            $key      = $req->key;
-            $fromDate = $req->fromDate;
-            $uptoDate = $req->uptoDate;
+        $key      = $req->key;
+        $fromDate = $req->fromDate;
+        $uptoDate = $req->uptoDate;
 
-            $paymentStatus   = $req->paymentStatus;     // paid | unpaid | free
-            $bookingType     = $req->bookingType;       // paid | free
-            $applicationType = $req->applicationType;   // forwarded | backwarded | new
-            $userType        = $req->userType;           // Citizen | JSK | Employee
+        $paymentStatus   = $req->paymentStatus;     // paid | unpaid | free
+        $bookingType     = $req->bookingType;       // paid | free
+        $applicationType = $req->applicationType;   // forwarded | backwarded | new
+        $userType        = $req->userType;           // Citizen | JSK | Employee | Verifier
 
-            /* ---------------- Booking-only decision ---------------- */
+        /* ---------------- Booking-only decision ---------------- */
 
-            $hasBookingOnlyFilter =
-                $bookingType ||
-                $userType ||
-                in_array($applicationType, ['forwarded', 'backwarded', 'new']);
+        $hasBookingOnlyFilter =
+            $bookingType ||
+            $userType ||
+            in_array($applicationType, ['forwarded', 'backwarded', 'new']);
 
-            /* ---------------- Base Booking Query ---------------- */
+        /* ---------------- Base Booking Query ---------------- */
 
-            $bookings = WtBooking::select(
-                'id',
-                'applicant_name',
-                'booking_date',
-                'booking_no',
-                'delivery_date',
-                'delivery_time',
-                'payment_status',
-                'payment_details',
-                'feedback',
-                'parked_status',
-                'current_role',
-                'status',
-                'user_type'
-            );
+        $bookings = WtBooking::select(
+            'id',
+            'applicant_name',
+            'booking_date',
+            'booking_no',
+            'delivery_date',
+            'delivery_time',
+            'payment_status',
+            'payment_details',
+            'feedback',
+            'parked_status',
+            'current_role',
+            'status',
+            'user_type'
+        );
 
-            /* ---------------- Base Cancellation Query ---------------- */
+        /* ---------------- Base Cancellation Query ---------------- */
 
-            $cancellations = WtCancellation::select(
-                'id',
-                'applicant_name',
-                'booking_date',
-                'booking_no',
-                'delivery_date',
-                'delivery_time',
-                'payment_status',
-                'payment_details',
-                'feedback',            
-                'user_type',
-                DB::raw('NULL as parked_status'),
-                DB::raw('NULL as current_role'),
-                DB::raw('NULL as status')
-            );
+        $cancellations = WtCancellation::select(
+            'id',
+            'applicant_name',
+            'booking_date',
+            'booking_no',
+            'delivery_date',
+            'delivery_time',
+            'payment_status',
+            'payment_details',
+            'feedback',
 
-            /* ---------------- Search ---------------- */
+            // 👇 MUST MATCH ORDER & TYPE
+            DB::raw('NULL::boolean as parked_status'),
+            DB::raw('NULL::integer as current_role'),
+            DB::raw('NULL::integer as status'),
+            'user_type'
+        );
 
-            if ($key) {
-                $bookings->where(function ($q) use ($key) {
-                    $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%")
-                    ->orWhere('mobile', 'ILIKE', "%$key%");
-                });
+        /* ---------------- Search ---------------- */
 
-                $cancellations->where(function ($q) use ($key) {
-                    $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%")
-                    ->orWhere('mobile', 'ILIKE', "%$key%");
-                });
-            }
+        if ($key) {
+            $bookings->where(function ($q) use ($key) {
+                $q->where('booking_no', 'ILIKE', "%$key%")
+                  ->orWhere('applicant_name', 'ILIKE', "%$key%")
+                  ->orWhere('mobile', 'ILIKE', "%$key%");
+            });
 
-            /* ---------------- ULB ---------------- */
-
-            if ($ulbId) {
-                $bookings->where('ulb_id', $ulbId);
-                $cancellations->where('ulb_id', $ulbId);
-            }
-
-            /* ---------------- Date ---------------- */
-
-            if ($fromDate && $uptoDate) {
-                $bookings->whereBetween('booking_date', [$fromDate, $uptoDate]);
-                $cancellations->whereBetween('booking_date', [$fromDate, $uptoDate]);
-            }
-
-            /* ---------------- BOOKING TYPE + PAYMENT (STRICT) ---------------- */
-
-            if ($bookingType === 'free') {
-
-                // EXACT MATCH WITH SQL
-                $bookings
-                    ->where('is_tanker_free', true);
-
-            } elseif ($bookingType === 'paid') {
-
-                $bookings
-                    ->where('is_tanker_free', false);
-
-            } elseif ($paymentStatus) {
-
-                // paymentStatus applies ONLY if bookingType not present
-                $statusMap = ['paid' => 1, 'unpaid' => 0, 'free' => 2];
-
-                if (isset($statusMap[$paymentStatus])) {
-                    $bookings->where('payment_status', $statusMap[$paymentStatus]);
-                    $cancellations->where('payment_status', $statusMap[$paymentStatus]);
-                }
-            }
-
-            /* ---------------- User Type ---------------- */
-
-            if ($userType) {
-                $bookings->where('user_type', $userType);
-            }
-
-            /* ---------------- Application Type (MATCH SQL) ---------------- */
-
-            if ($applicationType === 'backwarded') {
-
-                $bookings->where('parked_status', true);
-
-            } elseif ($applicationType === 'forwarded') {
-
-                $bookings
-                    ->where('current_role', 35)
-                    ->where(function ($q) {
-                        $q->whereNull('parked_status')
-                        ->orWhere('parked_status', false);
-                    });
-
-            } elseif ($applicationType === 'new') {
-
-                $bookings->where('status', 1);
-            }
-
-            /* ---------------- Final Source ---------------- */
-
-            $list = $hasBookingOnlyFilter
-                ? $bookings
-                : $bookings->unionAll($cancellations);
-
-            /* ---------------- Pagination ---------------- */
-
-            $final = DB::query()
-                ->fromSub($list, 't')
-                ->orderBy('id', 'DESC')
-                ->paginate($req->perPage ?? 10);
-
-            /* ---------------- Response ---------------- */
-
-            $response = [
-                'currentPage' => $final->currentPage(),
-                'lastPage'    => $final->lastPage(),
-                'total'       => $final->total(),
-                'data'        => collect($final->items())->map(function ($item) {
-
-                    // ✅ Respect filter if provided
-                    if (!empty($applicationType)) {
-                        $item->applicationType = $applicationType;
-                    } else {
-                        // fallback auto-detection (when no filter used)
-                        if ($item->parked_status === true) {
-                            $item->applicationType = 'backwarded';
-                        } elseif ($item->current_role == 35) {
-                            $item->applicationType = 'forwarded';
-                        } elseif ($item->status == 1) {
-                            $item->applicationType = 'new';
-                        } else {
-                            $item->applicationType = 'in_process';
-                        }
-                    }
-
-
-                    $item->payment_details = json_decode($item->payment_details);
-                    $item->booking_date = Carbon::parse($item->booking_date)->format('d-m-Y');
-
-                    return $item;
-                }),
-            ];
-
-            return responseMsgs(
-                true,
-                'Booking list',
-                $response,
-                '110115',
-                '1.0',
-                responseTime(),
-                'POST',
-                $req->deviceId ?? ''
-            );
-
-        } catch (\Exception $e) {
-            return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
+            $cancellations->where(function ($q) use ($key) {
+                $q->where('booking_no', 'ILIKE', "%$key%")
+                  ->orWhere('applicant_name', 'ILIKE', "%$key%")
+                  ->orWhere('mobile', 'ILIKE', "%$key%");
+            });
         }
+
+        /* ---------------- ULB ---------------- */
+
+        if ($ulbId) {
+            $bookings->where('ulb_id', $ulbId);
+            $cancellations->where('ulb_id', $ulbId);
+        }
+
+        /* ---------------- Date ---------------- */
+
+        if ($fromDate && $uptoDate) {
+            $bookings->whereBetween('booking_date', [$fromDate, $uptoDate]);
+            $cancellations->whereBetween('booking_date', [$fromDate, $uptoDate]);
+        }
+
+        /* ---------------- Booking Type + Payment ---------------- */
+
+        if ($bookingType === 'free') {
+
+            $bookings->where('is_tanker_free', true);
+
+        } elseif ($bookingType === 'paid') {
+
+            $bookings->where('is_tanker_free', false);
+
+        } elseif ($paymentStatus) {
+
+            $statusMap = ['paid' => 1, 'unpaid' => 0, 'free' => 2];
+
+            if (isset($statusMap[$paymentStatus])) {
+                $bookings->where('payment_status', $statusMap[$paymentStatus]);
+                $cancellations->where('payment_status', $statusMap[$paymentStatus]);
+            }
+        }
+
+        /* ---------------- User Type (UPDATED LOGIC) ---------------- */
+
+        if ($userType === 'Employee') {
+
+            // Employee includes Verifier
+            $bookings->whereIn('user_type', ['Employee', 'Verifier']);
+            $cancellations->whereIn('user_type', ['Employee', 'Verifier']);
+
+        } elseif ($userType) {
+
+            $bookings->where('user_type', $userType);
+            $cancellations->where('user_type', $userType);
+        }
+
+        /* ---------------- Application Type ---------------- */
+
+        if ($applicationType === 'backwarded') {
+
+            $bookings->where('parked_status', true);
+
+        } elseif ($applicationType === 'forwarded') {
+
+            $bookings
+                ->where('current_role', 35)
+                ->where(function ($q) {
+                    $q->whereNull('parked_status')
+                      ->orWhere('parked_status', false);
+                });
+
+        } elseif ($applicationType === 'new') {
+
+            $bookings->where('status', 1);
+        }
+
+        /* ---------------- Final Source ---------------- */
+
+        $list = $hasBookingOnlyFilter
+            ? $bookings
+            : $bookings->unionAll($cancellations);
+
+        /* ---------------- Pagination ---------------- */
+
+        $final = DB::query()
+            ->fromSub($list, 't')
+            ->orderBy('id', 'DESC')
+            ->paginate($req->perPage ?? 10);
+
+        /* ---------------- Response ---------------- */
+
+        $response = [
+            'currentPage' => $final->currentPage(),
+            'lastPage'    => $final->lastPage(),
+            'total'       => $final->total(),
+            'data'        => collect($final->items())->map(function ($item) use ($applicationType) {
+
+                // Respect filter if sent
+                if (!empty($applicationType)) {
+                    $item->applicationType = $applicationType;
+                } else {
+                    if ($item->parked_status === true) {
+                        $item->applicationType = 'backwarded';
+                    } elseif ($item->current_role == 35) {
+                        $item->applicationType = 'forwarded';
+                    } elseif ($item->status == 1) {
+                        $item->applicationType = 'new';
+                    } else {
+                        $item->applicationType = 'in_process';
+                    }
+                }
+
+                $item->payment_details = json_decode($item->payment_details);
+                $item->booking_date = Carbon::parse($item->booking_date)->format('d-m-Y');
+
+                return $item;
+            }),
+        ];
+
+        return responseMsgs(
+            true,
+            'Booking list',
+            $response,
+            '110115',
+            '1.0',
+            responseTime(),
+            'POST',
+            $req->deviceId ?? ''
+        );
+
+    } catch (\Exception $e) {
+        return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
     }
+}
+
 
     /**
      * | Get Application Status 
