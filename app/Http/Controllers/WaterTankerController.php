@@ -4215,10 +4215,10 @@ class WaterTankerController extends Controller
                 Carbon::parse($booking->cancel_date)->format("d-m-Y") .
                 " by " . $booking->cancelled_by;
         // Application Pending at Verifier (NEW)
-        } elseif ($booking->status == 1 && $booking->current_role == 79) {
+        } elseif ($booking->payment_status == 2 && $booking->current_role == 79) {
             $status = "Application is Pending at Verifier";
         // Backwarded by Verifier
-        } elseif ($booking->parked_status === true && $booking->current_role == 79) {
+        } elseif ($booking->parked_status === true) {
             $status = "Backwarded by Verifier";
         //Payment Pending
         } elseif ($booking->payment_status == 0) {
@@ -4805,7 +4805,7 @@ class WaterTankerController extends Controller
     //         // -------------------------
     //         if ($request->verifyStatus == 'Verified') {
 
-    //             // ⭐ NEW CHANGE: Mark document as verified
+    //             // NEW CHANGE: Mark document as verified
     //             $booking->is_document_verified = true;
 
     //             $booking->current_role = 35;
@@ -5328,6 +5328,7 @@ class WaterTankerController extends Controller
 
             // Update parked status → FALSE
             $booking->parked_status = false;
+            $booking->current_role = 79; // Back to Verifier
             $booking->save();
 
             return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
