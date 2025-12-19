@@ -4215,10 +4215,10 @@ class WaterTankerController extends Controller
                 Carbon::parse($booking->cancel_date)->format("d-m-Y") .
                 " by " . $booking->cancelled_by;
         // Application Pending at Verifier (NEW)
-        } elseif ($booking->payment_status == 2 && $booking->current_role == 79) {
+        } elseif ($booking->parked_status !== true) {
             $status = "Application is Pending at Verifier";
         // Backwarded by Verifier
-        } elseif ($booking->parked_status === true) {
+        } elseif ($booking->parked_status == true) {
             $status = "Backwarded by Verifier";
         //Payment Pending
         } elseif ($booking->payment_status == 0) {
