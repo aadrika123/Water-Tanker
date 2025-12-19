@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\App;
+use Illuminate\Validation\Rule;
 
 class SepticTankController extends Controller
 {
@@ -1155,7 +1156,14 @@ class SepticTankController extends Controller
     public function addCapacity(Request $req)
     {
         $validator = Validator::make($req->all(), [
-            'capacity' => 'required|integer|unique:st_capacities',
+            // 'capacity' => 'required|integer|unique:st_capacities',
+            'capacity' => [
+                'required',
+                'integer',
+                Rule::unique('st_capacities')->where(function ($q) use ($req) {
+                    return $q->where('ulb_id', $req->auth['ulb_id']);
+                }),
+            ],
         ]);
         if ($validator->fails()) {
             return validationErrorV2($validator);

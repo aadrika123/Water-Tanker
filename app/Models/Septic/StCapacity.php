@@ -19,6 +19,8 @@ class StCapacity extends Model
         return [
             'capacity' => $req->capacity,
             'date' => Carbon::now()->format('Y-m-d'),
+            'ulb_id' => auth()->user()->ulb_id,
+            'created_by' => auth()->user()->id,
         ];
     }
 
