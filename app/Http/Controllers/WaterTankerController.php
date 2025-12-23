@@ -4578,7 +4578,7 @@ class WaterTankerController extends Controller
 
             // Find booking by booking_no (NOT id)
             $booking = WtBooking::where('booking_no', $request->bookingId)
-                ->where('ulb_id', $ulbId)
+                // ->where('ulb_id', $ulbId)
                 ->first();
 
             if (!$booking) {
