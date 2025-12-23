@@ -4718,11 +4718,11 @@ class WaterTankerController extends Controller
             ]);
 
             $user = auth()->user();
-            $ulbId = $user->ulb_id ?? null;
+            // $ulbId = $user->ulb_id ?? null;
 
             // Find booking by booking_no
             $booking = WtBooking::where('booking_no', $request->bookingId)
-                ->where('ulb_id', $ulbId)
+                // ->where('ulb_id', $ulbId)
                 ->first();
 
             if (!$booking) {
