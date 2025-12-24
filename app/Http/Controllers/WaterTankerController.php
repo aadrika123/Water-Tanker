@@ -3460,87 +3460,200 @@ class WaterTankerController extends Controller
         }
     }
 
+    // public function updateDeliveryTrackStatus(Request $request)
+    // {
+    //     $rules = [
+    //         "applicationId" => 'required|digits_between:1,9223372036854775807',
+    //         "status" => 'required|in:1,2',
+    //         "comments" => 'required|string|min:10',
+    //         "latitude" => 'required',
+    //         "longitude" => 'required',
+    //         "document" => 'required|mimes:png,jpg,jpeg,gif',
+    //     ];
+    //     $validated = Validator::make($request->all(), $rules);
+    //     if ($validated->fails()) {
+    //         return validationErrorV2($validated);
+    //     }
+    //     try {
+    //         $user = $request->auth;
+    //         if (!$user || $user["user_type"] != "Driver") {
+    //             throw new Exception("You are not authorized for this");
+    //         }
+    //         $driver = WtDriver::where("u_id", $user["id"])->first();
+    //         $ModelWtBooking =   new WtBooking();
+    //         $booking = $ModelWtBooking->find($request->applicationId);
+    //         if (!$booking) {
+    //             throw new Exception("booking not fund");
+    //         }
+    //         $reBooking = $booking->getLastReassignedBooking();
+    //         $updateData = $booking;
+    //         $isReassigned = $reBooking ? true : false;
+    //         if ($updateData->driver_id != $driver->id) {
+    //             throw new Exception("You have not this booking");
+    //         }
+    //         $document = new DocUpload();
+    //         $document = $document->severalDoc($request);
+    //         $document = $document->original["data"];
+    //         $sms = "Delivery Canceled";
+    //         if ($request->status == 2) {
+    //             $sms = "Delivered Successfully";
+    //         }
+    //         $updateData->delivery_track_status = $request->status;
+    //         $updateData->delivery_latitude = $request->latitude;
+    //         $updateData->delivery_longitude = $request->longitude;
+    //         $updateData->delivery_comments = $request->comments;
+    //         $updateData->driver_delivery_update_date_time = Carbon::now();
+    //         $updateData->unique_id = $document["document"]["data"]["uniqueId"];
+    //         $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
+
+    //         if ($updateData->delivery_track_status == 2) {
+    //             $booking->is_vehicle_sent = $updateData->delivery_track_status;
+    //             $booking->delivered_by_driver_id = $driver->id;
+    //             $booking->driver_delivery_date_time = Carbon::now();
+    //         }
+
+    //         DB::beginTransaction();
+    //         $updateData->update();
+    //         $booking->update();
+
+    //         DB::commit();
+    //         #_Whatsaap Message
+    //         // if (strlen($booking->mobile) == 10) {
+
+    //         //     $whatsapp2 = (Whatsapp_Send(
+    //         //         $booking->mobile,
+    //         //         "wt_successful_delivery",
+    //         //         [
+    //         //             "content_type" => "text",
+    //         //             [
+    //         //                 $booking->applicant_name ?? "",
+    //         //                 $booking->booking_no,
+    //         //                 "delivered/trip",
+    //         //                 "jharkhandegovernance.com",
+    //         //                 "87787878787 "
+    //         //             ]
+    //         //         ]
+    //         //     ));
+    //         // }
+    //         return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
+    //     }
+    // }
+
     public function updateDeliveryTrackStatus(Request $request)
-    {
-        $rules = [
-            "applicationId" => 'required|digits_between:1,9223372036854775807',
-            "status" => 'required|in:1,2',
-            "comments" => 'required|string|min:10',
-            "latitude" => 'required',
-            "longitude" => 'required',
-            "document" => 'required|mimes:png,jpg,jpeg,gif',
-        ];
-        $validated = Validator::make($request->all(), $rules);
-        if ($validated->fails()) {
-            return validationErrorV2($validated);
-        }
-        try {
-            $user = $request->auth;
-            if (!$user || $user["user_type"] != "Driver") {
-                throw new Exception("You are not authorized for this");
-            }
-            $driver = WtDriver::where("u_id", $user["id"])->first();
-            $ModelWtBooking =   new WtBooking();
-            $booking = $ModelWtBooking->find($request->applicationId);
-            if (!$booking) {
-                throw new Exception("booking not fund");
-            }
-            $reBooking = $booking->getLastReassignedBooking();
-            $updateData = $booking;
-            $isReassigned = $reBooking ? true : false;
-            if ($updateData->driver_id != $driver->id) {
-                throw new Exception("You have not this booking");
-            }
-            $document = new DocUpload();
-            $document = $document->severalDoc($request);
-            $document = $document->original["data"];
-            $sms = "Delivery Canceled";
-            if ($request->status == 2) {
-                $sms = "Delivered Successfully";
-            }
-            $updateData->delivery_track_status = $request->status;
-            $updateData->delivery_latitude = $request->latitude;
-            $updateData->delivery_longitude = $request->longitude;
-            $updateData->delivery_comments = $request->comments;
-            $updateData->driver_delivery_update_date_time = Carbon::now();
-            $updateData->unique_id = $document["document"]["data"]["uniqueId"];
-            $updateData->reference_no = $document["document"]["data"]["ReferenceNo"];
+{
+    $rules = [
+        "applicationId" => 'required|digits_between:1,9223372036854775807',
+        "status"        => 'required|in:1,2', // 1 = Driver Cancelled, 2 = Delivered
+        "comments"      => 'required|string|min:10',
+        "latitude"      => 'required',
+        "longitude"     => 'required',
+        "document"      => 'required|mimes:png,jpg,jpeg,gif',
+    ];
 
-            if ($updateData->delivery_track_status == 2) {
-                $booking->is_vehicle_sent = $updateData->delivery_track_status;
-                $booking->delivered_by_driver_id = $driver->id;
-                $booking->driver_delivery_date_time = Carbon::now();
-            }
-
-            DB::beginTransaction();
-            $updateData->update();
-            $booking->update();
-
-            DB::commit();
-            #_Whatsaap Message
-            // if (strlen($booking->mobile) == 10) {
-
-            //     $whatsapp2 = (Whatsapp_Send(
-            //         $booking->mobile,
-            //         "wt_successful_delivery",
-            //         [
-            //             "content_type" => "text",
-            //             [
-            //                 $booking->applicant_name ?? "",
-            //                 $booking->booking_no,
-            //                 "delivered/trip",
-            //                 "jharkhandegovernance.com",
-            //                 "87787878787 "
-            //             ]
-            //         ]
-            //     ));
-            // }
-            return responseMsgs(true, $sms, "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
-        } catch (Exception $e) {
-            DB::rollBack();
-            return responseMsgs(false, $e->getMessage(), "", "110115", "1.0", "", 'POST', $request->deviceId ?? "");
-        }
+    $validated = Validator::make($request->all(), $rules);
+    if ($validated->fails()) {
+        return validationErrorV2($validated);
     }
+
+    try {
+        $user = $request->auth;
+
+        if (!$user || $user["user_type"] !== "Driver") {
+            throw new Exception("You are not authorized for this");
+        }
+
+        $driver = WtDriver::where("u_id", $user["id"])->first();
+        if (!$driver) {
+            throw new Exception("Driver not found");
+        }
+
+        $booking = WtBooking::find($request->applicationId);
+        if (!$booking) {
+            throw new Exception("Booking not found");
+        }
+
+        // 🔒 Driver ownership check
+        if ($booking->driver_id != $driver->id) {
+            throw new Exception("You are not assigned to this booking");
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DOCUMENT UPLOAD
+        |--------------------------------------------------------------------------
+        */
+        $document = (new DocUpload())->severalDoc($request);
+        $document = $document->original["data"];
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELIVERY STATUS HANDLING
+        |--------------------------------------------------------------------------
+        */
+        $booking->delivery_track_status = $request->status;
+        $booking->delivery_latitude     = $request->latitude;
+        $booking->delivery_longitude    = $request->longitude;
+        $booking->delivery_comments     = $request->comments;
+        $booking->driver_delivery_update_date_time = Carbon::now();
+        $booking->unique_id             = $document["document"]["data"]["uniqueId"];
+        $booking->reference_no          = $document["document"]["data"]["ReferenceNo"];
+
+        /*
+        |--------------------------------------------------------------------------
+        | DRIVER CANCELLED DELIVERY
+        |--------------------------------------------------------------------------
+        */
+        if ($request->status == 1) {
+            $booking->is_driver_canceled_booking = true;
+            $sms = "Delivery Trip Cancelled by Driver";
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DELIVERY COMPLETED
+        |--------------------------------------------------------------------------
+        */
+        if ($request->status == 2) {
+            $booking->is_driver_canceled_booking = false;
+            $booking->is_vehicle_sent            = 2;
+            $booking->delivered_by_driver_id     = $driver->id;
+            $booking->driver_delivery_date_time  = Carbon::now();
+            $sms = "Delivered Successfully";
+        }
+
+        DB::beginTransaction();
+        $booking->save();
+        DB::commit();
+
+        return responseMsgs(
+            true,
+            $sms,
+            "",
+            "110115",
+            "1.0",
+            "",
+            'POST',
+            $request->deviceId ?? ""
+        );
+
+    } catch (Exception $e) {
+        DB::rollBack();
+        return responseMsgs(
+            false,
+            $e->getMessage(),
+            "",
+            "110115",
+            "1.0",
+            "",
+            'POST',
+            $request->deviceId ?? ""
+        );
+    }
+}
+
 
     // public function searchApp(Request $req)
     // {
