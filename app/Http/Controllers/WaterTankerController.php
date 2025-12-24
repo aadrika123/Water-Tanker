@@ -1944,69 +1944,7 @@ class WaterTankerController extends Controller
      * | Function - 50
      * | API - 50
      */
-    // public function getBookingDetailById(Request $req)
-    // {
-
-    //     $validator = Validator::make($req->all(), [
-    //         'applicationId' => [
-    //             "required",
-    //             function ($attribute, $value, $fail) {
-    //                 $existsInTable1 = WtBooking::where("id", $value)
-    //                     ->exists();
-    //                 if (!$existsInTable1) {
-    //                     $existsInTable1 = WtCancellation::where("id", $value)
-    //                         ->exists();
-    //                 }
-    //                 if (!$existsInTable1) {
-    //                     $fail('The ' . $attribute . ' is invalid.');
-    //                 }
-    //             },
-    //         ],
-    //     ]);
-    //     if ($validator->fails()) {
-    //         return validationErrorV2($validator);
-    //     }
-    //     try {
-    //         $mWtBooking = new WtBooking();
-    //         $data = $mWtBooking->find($req->applicationId);
-    //         if (!$data) {
-    //             $mWtBooking = new WtCancellation();
-    //             $data = WtCancellation::find($req->applicationId);
-    //         }
-    //         $tranDtls = $data->getAllTrans()->map(function ($val) {
-    //             $chequeDtls = $val->getChequeDtls();
-    //             $val->tran_date = Carbon::parse($val->tran_date)->format("d-m-Y");
-    //             $val->cheque_no = $chequeDtls->cheque_no ?? "";
-    //             $val->cheque_date = $chequeDtls->cheque_date ?? "";
-    //             $val->bank_name = $chequeDtls->bank_name ?? "";
-    //             $val->branch_name = $chequeDtls->branch_name ?? "";
-    //             return $val;
-    //         });
-    //         $wardDtl = DB::table("ulb_ward_masters")->find($data->ward_id);
-    //         $appStatus = $this->getAppStatus($req->applicationId);
-    //         $list = $mWtBooking->getBookingDetailById($req->applicationId);
-    //         $reassign = $data->getLastReassignedBooking();
-    //         $list->booking_status = $appStatus;
-    //         $list->tran_dtls = $tranDtls;
-    //         $list->ward_no =  $wardDtl ?  $wardDtl->ward_name ?? "" : "";
-
-    //         $list->payment_details = json_decode($list->payment_details);
-    //         $list->booking_date = Carbon::parse($list->booking_date)->format('d-m-Y');
-    //         $list->delivery_date = Carbon::parse($list->delivery_date)->format('d-m-Y');
-    //         $list->assign_date = Carbon::parse($reassign ? $reassign->re_assign_date : $list->assign_date)->format('d-m-Y');
-
-    //         $driver = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
-    //         $vehicle = $reassign ? $reassign->getAssignedVehicle() : $data->getAssignedVehicle();
-
-    //         $list->driver_name = $driver ? $driver->driver_name : "";
-    //         $list->driver_mobile = $driver ? $driver->driver_mobile : "";
-    //         $list->vehicle_no = $vehicle ? $vehicle->vehicle_no : "";
-    //         return responseMsgs(true, "Booking Details!!!", $list, "110150", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
-    //     } catch (Exception $e) {
-    //         return responseMsgs(false, $e->getMessage(), "", "110150", "1.0", "", 'POST', $req->deviceId ?? "");
-    //     }
-    // }
-
+    
     public function getBookingDetailById(Request $req)
     {
         $validator = Validator::make($req->all(), [
@@ -2028,13 +1966,14 @@ class WaterTankerController extends Controller
         }
 
         try {
+
             /*
             |--------------------------------------------------------------------------
             | FETCH BOOKING / CANCELLATION
             |--------------------------------------------------------------------------
             */
-            $data = WtBooking::find($req->applicationId);
             $isCancelled = false;
+            $data = WtBooking::find($req->applicationId);
 
             if (!$data) {
                 $data = WtCancellation::find($req->applicationId);
@@ -2063,50 +2002,75 @@ class WaterTankerController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | BASIC BOOKING DETAILS
+            | BOOKING / CANCELLATION DETAILS
+            |--------------------------------------------------------------------------
+            */
+            if ($isCancelled) {
+                // ✅ cancellation-safe method
+                $list = (new WtCancellation())->getBookingDetailById($req->applicationId);
+            } else {
+                $list = (new WtBooking())->getBookingDetailById($req->applicationId);
+            }
+
+            if (!$list) {
+                throw new Exception('Application details not found');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STATUS & META
             |--------------------------------------------------------------------------
             */
             $wardDtl   = DB::table("ulb_ward_masters")->find($data->ward_id);
             $appStatus = $this->getAppStatus($req->applicationId);
 
-            $list = (new WtBooking())->getBookingDetailById($req->applicationId);
+            $list->booking_status = $appStatus;
+            $list->tran_dtls      = $tranDtls;
+            $list->ward_no        = $wardDtl ? ($wardDtl->ward_name ?? "") : "";
 
-            $reassign = $data->getLastReassignedBooking();
-
-            $list->booking_status   = $appStatus;
-            $list->tran_dtls        = $tranDtls;
-            $list->ward_no          = $wardDtl ? ($wardDtl->ward_name ?? "") : "";
-
-            $list->payment_details  = $list->payment_details
+            $list->payment_details = $list->payment_details
                 ? json_decode($list->payment_details)
                 : null;
 
-            $list->booking_date     = Carbon::parse($list->booking_date)->format('d-m-Y');
-            $list->delivery_date    = Carbon::parse($list->delivery_date)->format('d-m-Y');
+            $list->booking_date  = Carbon::parse($list->booking_date)->format('d-m-Y');
+            $list->delivery_date = Carbon::parse($list->delivery_date)->format('d-m-Y');
 
-            $list->assign_date      = Carbon::parse(
+            /*
+            |--------------------------------------------------------------------------
+            | ASSIGN DATE (SAFE)
+            |--------------------------------------------------------------------------
+            */
+            $reassign = method_exists($data, 'getLastReassignedBooking')
+                ? $data->getLastReassignedBooking()
+                : null;
+
+            $list->assign_date = Carbon::parse(
                 $reassign ? $reassign->re_assign_date : $list->assign_date
             )->format('d-m-Y');
 
             /*
             |--------------------------------------------------------------------------
-            | DRIVER & VEHICLE DETAILS
+            | DRIVER & VEHICLE (SAFE)
             |--------------------------------------------------------------------------
             */
-            $driver  = $reassign ? $reassign->getAssignedDriver() : $data->getAssignedDriver();
-            $vehicle = $reassign ? $reassign->getAssignedVehicle() : $data->getAssignedVehicle();
+            $driver  = method_exists($data, 'getAssignedDriver')
+                ? $data->getAssignedDriver()
+                : null;
 
-            $list->driver_name   = $driver ? $driver->driver_name : "";
-            $list->driver_mobile = $driver ? $driver->driver_mobile : "";
-            $list->vehicle_no    = $vehicle ? $vehicle->vehicle_no : "";
+            $vehicle = method_exists($data, 'getAssignedVehicle')
+                ? $data->getAssignedVehicle()
+                : null;
+
+            $list->driver_name   = $driver->driver_name ?? "";
+            $list->driver_mobile = $driver->driver_mobile ?? "";
+            $list->vehicle_no    = $vehicle->vehicle_no ?? "";
 
             /*
             |--------------------------------------------------------------------------
-            | REMARKS (ONLY FROM log_wt_bookings)
+            | REMARKS (log_wt_bookings)
             |--------------------------------------------------------------------------
             */
-            $remarks = DB::table('log_wt_bookings')
-                ->select('reason', 'logged_at')
+            $list->remarks = DB::table('log_wt_bookings')
                 ->where('booking_id', $data->id)
                 ->whereNotNull('reason')
                 ->orderBy('logged_at', 'DESC')
@@ -2117,8 +2081,6 @@ class WaterTankerController extends Controller
                         'remark_at' => Carbon::parse($row->logged_at)->format('d-m-Y H:i:s'),
                     ];
                 });
-
-            $list->remarks = $remarks;
 
             /*
             |--------------------------------------------------------------------------
@@ -2149,6 +2111,7 @@ class WaterTankerController extends Controller
             );
         }
     }
+
 
     /**
      * | Re-Assign Booking
@@ -3999,61 +3962,116 @@ class WaterTankerController extends Controller
 
     public function getAppStatus($appId)
     {
+        // Fetch booking or cancellation
         $booking = WtBooking::find($appId);
+        $isCancelled = false;
+
         if (!$booking) {
             $booking = WtCancellation::find($appId);
+            $isCancelled = true;
         }
 
         if (!$booking) {
             return "";
         }
 
-        $driver  = $booking->getAssignedDriver();
-        $vehicle = $booking->getAssignedVehicle();
-        $status  = "";
+        $driver  = method_exists($booking, 'getAssignedDriver')
+            ? $booking->getAssignedDriver()
+            : null;
 
-        // Booking Cancelled (highest priority)
-        if ($booking->getTable() == (new WtCancellation())->getTable()) {
-            $status = "Booking canceled on " .
+        $vehicle = method_exists($booking, 'getAssignedVehicle')
+            ? $booking->getAssignedVehicle()
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1️⃣ CANCELLATION STATUS (HIGHEST PRIORITY)
+        |--------------------------------------------------------------------------
+        */
+        if ($isCancelled) {
+
+            // Cancelled by Water Agency
+            if ($booking->cancelled_by === 'Water-Agency') {
+                return "Cancelled by Agency";
+            }
+
+            // Normal cancellation
+            return "Booking canceled on " .
                 Carbon::parse($booking->cancel_date)->format("d-m-Y") .
                 " by " . $booking->cancelled_by;
-        // Application Pending at Verifier (NEW)
-        } elseif ($booking->parked_status !== true) {
-            $status = "Application is Pending at Verifier";
-        // Backwarded by Verifier
-        } elseif ($booking->parked_status == true) {
-            $status = "Backwarded by Verifier";
-        //Payment Pending
-        } elseif ($booking->payment_status == 0) {
-            $status = "Payment Pending of amount " . $booking->payment_amount;
-        //Delivered
-        } elseif ($booking->delivery_track_status == 2) {
-            $status = "Water Tanker Delivered On " .
-                Carbon::parse($booking->driver_delivery_update_date_time)
-                    ->format("d-m-Y h:i:s A");
-        // Delivery cancelled by driver
-        } elseif ($booking->delivery_track_status == 1) {
-            $status = "Water Tanker Delivery trip Cancelled By Driver Due To " .
-                Str::title($booking->delivery_comments);
-        // Driver & Vehicle assigned
-        } elseif ($booking->driver_id && $booking->vehicle_id) {
-            $status = "Driver (" . ($driver->driver_name ?? '') .
-                ") And Vehicle (" . ($vehicle->vehicle_no ?? '') . ") assigned";
-        // Neither assigned
-        } elseif (!$booking->driver_id && !$booking->vehicle_id) {
-            $status = "Driver And Vehicle not assigned";
-        // Only vehicle assigned
-        } elseif (!$booking->driver_id && $booking->vehicle_id) {
-            $status = "Driver is not assigned But Vehicle assigned";
-        // Only driver assigned
-        } elseif ($booking->driver_id && !$booking->vehicle_id) {
-            $status = "Driver is assigned But Vehicle not assigned";
-        // Vehicle sent for delivery
-        } elseif ($booking->is_vehicle_sent == 1) {
-            $status = "Driver is going for delivery";
         }
 
-        return $status;
+        /*
+        |--------------------------------------------------------------------------
+        | 2️⃣ DELIVERY STATUS
+        |--------------------------------------------------------------------------
+        */
+        if ($booking->delivery_track_status == 2) {
+            return "Water Tanker Delivered On " .
+                Carbon::parse($booking->driver_delivery_update_date_time)
+                    ->format("d-m-Y h:i:s A");
+        }
+
+        if ($booking->delivery_track_status == 1) {
+            return "Water Tanker Delivery trip Cancelled By Driver Due To " .
+                Str::title($booking->delivery_comments);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3️⃣ PAYMENT STATUS
+        |--------------------------------------------------------------------------
+        */
+        if ($booking->payment_status == 0) {
+            return "Payment Pending of amount " . $booking->payment_amount;
+        }
+
+        
+        /*
+        |--------------------------------------------------------------------------
+        | 5️⃣ DRIVER & VEHICLE ASSIGNMENT STATUS
+        |--------------------------------------------------------------------------
+        */
+        if (!is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
+            return "Driver and Vehicle assigned";
+        }
+
+        if (is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
+            return "Driver and Vehicle not assigned";
+        }
+
+        if (is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
+            return "Driver is not assigned But Vehicle assigned";
+        }
+
+        if (!is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
+            return "Driver is assigned But Vehicle not assigned";
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6️⃣ VEHICLE SENT FOR DELIVERY
+        |--------------------------------------------------------------------------
+        */
+        if ($booking->is_vehicle_sent == 1) {
+            return "Driver is going for delivery";
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4️⃣ APPLICATION WORKFLOW STATUS
+        |--------------------------------------------------------------------------
+        */
+        if ($booking->parked_status === true) {
+            return "Backwarded by Verifier";
+        }
+
+        if ($booking->parked_status !== true) {
+            return "Application is Pending at Verifier";
+        }
+
+
+        return "";
     }
 
 
