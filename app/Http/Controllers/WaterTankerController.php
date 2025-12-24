@@ -3543,116 +3543,116 @@ class WaterTankerController extends Controller
     // }
 
     public function updateDeliveryTrackStatus(Request $request)
-{
-    $rules = [
-        "applicationId" => 'required|digits_between:1,9223372036854775807',
-        "status"        => 'required|in:1,2', // 1 = Driver Cancelled, 2 = Delivered
-        "comments"      => 'required|string|min:10',
-        "latitude"      => 'required',
-        "longitude"     => 'required',
-        "document"      => 'required|mimes:png,jpg,jpeg,gif',
-    ];
+    {
+        $rules = [
+            "applicationId" => 'required|digits_between:1,9223372036854775807',
+            "status"        => 'required|in:1,2', // 1 = Driver Cancelled, 2 = Delivered
+            "comments"      => 'required|string|min:10',
+            "latitude"      => 'required',
+            "longitude"     => 'required',
+            "document"      => 'required|mimes:png,jpg,jpeg,gif',
+        ];
 
-    $validated = Validator::make($request->all(), $rules);
-    if ($validated->fails()) {
-        return validationErrorV2($validated);
+        $validated = Validator::make($request->all(), $rules);
+        if ($validated->fails()) {
+            return validationErrorV2($validated);
+        }
+
+        try {
+            $user = $request->auth;
+
+            if (!$user || $user["user_type"] !== "Driver") {
+                throw new Exception("You are not authorized for this");
+            }
+
+            $driver = WtDriver::where("u_id", $user["id"])->first();
+            if (!$driver) {
+                throw new Exception("Driver not found");
+            }
+
+            $booking = WtBooking::find($request->applicationId);
+            if (!$booking) {
+                throw new Exception("Booking not found");
+            }
+
+            // 🔒 Driver ownership check
+            if ($booking->driver_id != $driver->id) {
+                throw new Exception("You are not assigned to this booking");
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DOCUMENT UPLOAD
+            |--------------------------------------------------------------------------
+            */
+            $document = (new DocUpload())->severalDoc($request);
+            $document = $document->original["data"];
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELIVERY STATUS HANDLING
+            |--------------------------------------------------------------------------
+            */
+            $booking->delivery_track_status = $request->status;
+            $booking->delivery_latitude     = $request->latitude;
+            $booking->delivery_longitude    = $request->longitude;
+            $booking->delivery_comments     = $request->comments;
+            $booking->driver_delivery_update_date_time = Carbon::now();
+            $booking->unique_id             = $document["document"]["data"]["uniqueId"];
+            $booking->reference_no          = $document["document"]["data"]["ReferenceNo"];
+
+            /*
+            |--------------------------------------------------------------------------
+            | DRIVER CANCELLED DELIVERY
+            |--------------------------------------------------------------------------
+            */
+            if ($request->status == 1) {
+                $booking->is_driver_canceled_booking = true;
+                $sms = "Delivery Trip Cancelled by Driver";
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELIVERY COMPLETED
+            |--------------------------------------------------------------------------
+            */
+            if ($request->status == 2) {
+                $booking->is_driver_canceled_booking = false;
+                $booking->is_vehicle_sent            = 2;
+                $booking->delivered_by_driver_id     = $driver->id;
+                $booking->driver_delivery_date_time  = Carbon::now();
+                $sms = "Delivered Successfully";
+            }
+
+            DB::beginTransaction();
+            $booking->save();
+            DB::commit();
+
+            return responseMsgs(
+                true,
+                $sms,
+                "",
+                "110115",
+                "1.0",
+                "",
+                'POST',
+                $request->deviceId ?? ""
+            );
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(
+                false,
+                $e->getMessage(),
+                "",
+                "110115",
+                "1.0",
+                "",
+                'POST',
+                $request->deviceId ?? ""
+            );
+        }
     }
-
-    try {
-        $user = $request->auth;
-
-        if (!$user || $user["user_type"] !== "Driver") {
-            throw new Exception("You are not authorized for this");
-        }
-
-        $driver = WtDriver::where("u_id", $user["id"])->first();
-        if (!$driver) {
-            throw new Exception("Driver not found");
-        }
-
-        $booking = WtBooking::find($request->applicationId);
-        if (!$booking) {
-            throw new Exception("Booking not found");
-        }
-
-        // 🔒 Driver ownership check
-        if ($booking->driver_id != $driver->id) {
-            throw new Exception("You are not assigned to this booking");
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | DOCUMENT UPLOAD
-        |--------------------------------------------------------------------------
-        */
-        $document = (new DocUpload())->severalDoc($request);
-        $document = $document->original["data"];
-
-        /*
-        |--------------------------------------------------------------------------
-        | DELIVERY STATUS HANDLING
-        |--------------------------------------------------------------------------
-        */
-        $booking->delivery_track_status = $request->status;
-        $booking->delivery_latitude     = $request->latitude;
-        $booking->delivery_longitude    = $request->longitude;
-        $booking->delivery_comments     = $request->comments;
-        $booking->driver_delivery_update_date_time = Carbon::now();
-        $booking->unique_id             = $document["document"]["data"]["uniqueId"];
-        $booking->reference_no          = $document["document"]["data"]["ReferenceNo"];
-
-        /*
-        |--------------------------------------------------------------------------
-        | DRIVER CANCELLED DELIVERY
-        |--------------------------------------------------------------------------
-        */
-        if ($request->status == 1) {
-            $booking->is_driver_canceled_booking = true;
-            $sms = "Delivery Trip Cancelled by Driver";
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | DELIVERY COMPLETED
-        |--------------------------------------------------------------------------
-        */
-        if ($request->status == 2) {
-            $booking->is_driver_canceled_booking = false;
-            $booking->is_vehicle_sent            = 2;
-            $booking->delivered_by_driver_id     = $driver->id;
-            $booking->driver_delivery_date_time  = Carbon::now();
-            $sms = "Delivered Successfully";
-        }
-
-        DB::beginTransaction();
-        $booking->save();
-        DB::commit();
-
-        return responseMsgs(
-            true,
-            $sms,
-            "",
-            "110115",
-            "1.0",
-            "",
-            'POST',
-            $request->deviceId ?? ""
-        );
-
-    } catch (Exception $e) {
-        DB::rollBack();
-        return responseMsgs(
-            false,
-            $e->getMessage(),
-            "",
-            "110115",
-            "1.0",
-            "",
-            'POST',
-            $request->deviceId ?? ""
-        );
-    }
-}
 
 
     // public function searchApp(Request $req)
@@ -3839,11 +3839,13 @@ class WaterTankerController extends Controller
                 'wt_bookings.current_role',
                 'wt_bookings.status',
                 'wt_bookings.user_type',
+                'wt_bookings.is_driver_canceled_booking',   // ✅ ADD THIS
                 'log.action_type as log_action_type'
             )
             ->leftJoinSub($latestLogSub, 'log', function ($join) {
                 $join->on('log.booking_id', '=', 'wt_bookings.id');
             });
+
 
             /*
             |--------------------------------------------------------------------------
@@ -3864,8 +3866,10 @@ class WaterTankerController extends Controller
                 DB::raw('NULL::integer as current_role'),
                 DB::raw('NULL::integer as status'),
                 'wt_cancellations.user_type',
-                DB::raw('NULL::varchar as log_action_type')
+                DB::raw('false as is_driver_canceled_booking'),   // ✅ ADD THIS
+                DB::raw('NULL::text as log_action_type')
             );
+
 
             /*
             |--------------------------------------------------------------------------
@@ -4007,6 +4011,8 @@ class WaterTankerController extends Controller
                             $item->applicationType = 'new';
                         } elseif ($item->payment_status == 0) {
                             $item->applicationType = 'unpaid';
+                        } elseif ($item->is_driver_canceled_booking == true) {
+                            $item->applicationType = 'Canceled by Driver';
                         } else {
                             $item->applicationType = 'in_process';
                         }
