@@ -4137,9 +4137,9 @@ class WaterTankerController extends Controller
         | 3️⃣ PAYMENT STATUS
         |--------------------------------------------------------------------------
         */
-        // if ($booking->payment_status == 0) {
-        //     return "Payment Pending of amount " . $booking->payment_amount;
-        // }
+        if ($booking->payment_status == 0) {
+            return "Payment Pending of amount " . $booking->payment_amount;
+        }
 
         
         /*
