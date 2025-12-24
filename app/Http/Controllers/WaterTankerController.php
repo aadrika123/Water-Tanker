@@ -4137,9 +4137,9 @@ class WaterTankerController extends Controller
         | 3️⃣ PAYMENT STATUS
         |--------------------------------------------------------------------------
         */
-        if ($booking->payment_status == 0) {
-            return "Payment Pending of amount " . $booking->payment_amount;
-        }
+        // if ($booking->payment_status == 0) {
+        //     return "Payment Pending of amount " . $booking->payment_amount;
+        // }
 
         
         /*
@@ -4151,17 +4151,17 @@ class WaterTankerController extends Controller
             return "Driver and Vehicle assigned";
         }
 
-        if (is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
-            return "Driver and Vehicle not assigned";
-        }
+        // if (is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
+        //     return "Driver and Vehicle not assigned";
+        // }
 
-        if (is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
-            return "Driver is not assigned But Vehicle assigned";
-        }
+        // if (is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
+        //     return "Driver is not assigned But Vehicle assigned";
+        // }
 
-        if (!is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
-            return "Driver is assigned But Vehicle not assigned";
-        }
+        // if (!is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
+        //     return "Driver is assigned But Vehicle not assigned";
+        // }
 
         /*
         |--------------------------------------------------------------------------
