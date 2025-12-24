@@ -3781,8 +3781,6 @@ class WaterTankerController extends Controller
         }
     }
 
-    
-
     public function searchAppNew(Request $req)
     {
         try {
@@ -3839,13 +3837,12 @@ class WaterTankerController extends Controller
                 'wt_bookings.current_role',
                 'wt_bookings.status',
                 'wt_bookings.user_type',
-                'wt_bookings.is_driver_canceled_booking',   // ✅ ADD THIS
-                'log.action_type as log_action_type'
+                'wt_bookings.is_driver_canceled_booking',        // internal use
+                DB::raw('log.action_type::text as log_action_type')
             )
             ->leftJoinSub($latestLogSub, 'log', function ($join) {
                 $join->on('log.booking_id', '=', 'wt_bookings.id');
             });
-
 
             /*
             |--------------------------------------------------------------------------
@@ -3866,10 +3863,9 @@ class WaterTankerController extends Controller
                 DB::raw('NULL::integer as current_role'),
                 DB::raw('NULL::integer as status'),
                 'wt_cancellations.user_type',
-                DB::raw('false as is_driver_canceled_booking'),   // ✅ ADD THIS
+                DB::raw('false as is_driver_canceled_booking'),  // internal use
                 DB::raw('NULL::text as log_action_type')
             );
-
 
             /*
             |--------------------------------------------------------------------------
@@ -3879,14 +3875,12 @@ class WaterTankerController extends Controller
             if ($key) {
                 $bookings->where(function ($q) use ($key) {
                     $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%")
-                    ->orWhere('mobile', 'ILIKE', "%$key%");
+                    ->orWhere('applicant_name', 'ILIKE', "%$key%");
                 });
 
                 $cancellations->where(function ($q) use ($key) {
                     $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%")
-                    ->orWhere('mobile', 'ILIKE', "%$key%");
+                    ->orWhere('applicant_name', 'ILIKE', "%$key%");
                 });
             }
 
@@ -3915,9 +3909,9 @@ class WaterTankerController extends Controller
             | BOOKING TYPE
             |--------------------------------------------------------------------------
             */
-            if ($bookingType == 'free') {
+            if ($bookingType === 'free') {
                 $bookings->where('payment_status', 2);
-            } elseif ($bookingType == 'paid') {
+            } elseif ($bookingType === 'paid') {
                 $bookings->where('payment_status', 1);
             }
 
@@ -3993,11 +3987,14 @@ class WaterTankerController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | APPLICATION TYPE (RESUBMITTED OVERRIDE)
+                    | APPLICATION TYPE (PRIORITY ORDER)
                     |--------------------------------------------------------------------------
                     */
                     if ($item->log_action_type === 'EDIT') {
                         $item->applicationType = 'resubmitted';
+                    }
+                    elseif ($item->is_driver_canceled_booking === true) {
+                        $item->applicationType = 'Canceled by Driver';
                     }
                     elseif (!empty($applicationType)) {
                         $item->applicationType = $applicationType;
@@ -4011,8 +4008,6 @@ class WaterTankerController extends Controller
                             $item->applicationType = 'new';
                         } elseif ($item->payment_status == 0) {
                             $item->applicationType = 'unpaid';
-                        } elseif ($item->is_driver_canceled_booking == true) {
-                            $item->applicationType = 'Canceled by Driver';
                         } else {
                             $item->applicationType = 'in_process';
                         }
@@ -4021,7 +4016,9 @@ class WaterTankerController extends Controller
                     $item->payment_details = json_decode($item->payment_details);
                     $item->booking_date = Carbon::parse($item->booking_date)->format('d-m-Y');
 
-                    unset($item->log_action_type); // clean response
+                    // 🔥 CLEAN RESPONSE (HIDE INTERNAL FLAGS)
+                    unset($item->log_action_type);
+                    unset($item->is_driver_canceled_booking);
 
                     return $item;
                 }),
@@ -4042,7 +4039,6 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
         }
     }
-    
 
 
     /**
