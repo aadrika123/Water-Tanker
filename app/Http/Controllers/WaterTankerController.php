@@ -2653,6 +2653,7 @@ class WaterTankerController extends Controller
             $mWtBooking = new WtBooking();
             $list = $mWtBooking->getBookingListCitizen()
                 ->where('citizen_id', $req->auth['id'])
+                ->where('payment_status', "!=", 2)
                 ->orderByDesc('id')
                 ->get();
 
