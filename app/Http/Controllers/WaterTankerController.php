@@ -4140,9 +4140,8 @@ class WaterTankerController extends Controller
                 DB::raw('NULL::boolean as is_tanker_free'),
                 'wt_cancellations.cancelled_by',
                 DB::raw('NULL::text as log_action_type')
-            )
-            ->whereRaw('1 = 0'); // ✅ EXCLUDE CANCELLATIONS
-
+            );
+            
             /*
             |--------------------------------------------------------------------------
             | SEARCH
