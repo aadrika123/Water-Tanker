@@ -4041,6 +4041,254 @@ class WaterTankerController extends Controller
         }
     }
 
+    // only free verifier
+    public function searchFreeTankerAppNew(Request $req)
+    {
+        try {
+            $user  = Auth()->user();
+            $ulbId = $user->ulb_id ?? null;
+
+            $key      = $req->key;
+            $fromDate = $req->fromDate;
+            $uptoDate = $req->uptoDate;
+
+            $bookingType     = $req->bookingType;
+            $applicationType = $req->applicationType;
+            $userType        = $req->userType;
+
+            /*
+            |--------------------------------------------------------------------------
+            | LATEST LOG SUBQUERY
+            |--------------------------------------------------------------------------
+            */
+            $latestLogSub = DB::table('log_wt_bookings as l1')
+                ->select('l1.booking_id', 'l1.action_type')
+                ->whereRaw('l1.logged_at = (
+                    SELECT MAX(l2.logged_at)
+                    FROM log_wt_bookings l2
+                    WHERE l2.booking_id = l1.booking_id
+                )');
+
+            /*
+            |--------------------------------------------------------------------------
+            | BOOKING-ONLY DECISION
+            |--------------------------------------------------------------------------
+            */
+            $hasBookingOnlyFilter =
+                $bookingType ||
+                in_array($userType, ['Citizen', 'JSK', 'Verifier', 'Employee']) ||
+                in_array($applicationType, ['forwarded', 'backwarded', 'new', 'unpaid']);
+
+            /*
+            |--------------------------------------------------------------------------
+            | BASE BOOKINGS QUERY (FREE TANKER ONLY)
+            |--------------------------------------------------------------------------
+            */
+            $bookings = WtBooking::select(
+                'wt_bookings.id',
+                'wt_bookings.applicant_name',
+                'wt_bookings.booking_date',
+                'wt_bookings.booking_no',
+                'wt_bookings.delivery_date',
+                'wt_bookings.delivery_time',
+                'wt_bookings.payment_status',
+                'wt_bookings.payment_details',
+                'wt_bookings.feedback',
+                'wt_bookings.parked_status',
+                'wt_bookings.current_role',
+                'wt_bookings.status',
+                'wt_bookings.user_type',
+                'wt_bookings.driver_id',
+                'wt_bookings.vehicle_id',
+                'wt_bookings.is_driver_canceled_booking',
+                'wt_bookings.is_tanker_free',
+                DB::raw('NULL::text as cancelled_by'),
+                DB::raw('log.action_type::text as log_action_type')
+            )
+            ->leftJoinSub($latestLogSub, 'log', function ($join) {
+                $join->on('log.booking_id', '=', 'wt_bookings.id');
+            })
+            ->where('wt_bookings.is_tanker_free', true); // ✅ ONLY FREE TANKER
+
+            /*
+            |--------------------------------------------------------------------------
+            | BASE CANCELLATIONS QUERY (EXCLUDED SAFELY)
+            |--------------------------------------------------------------------------
+            | Free tanker cancellation is NOT applicable → exclude
+            */
+            $cancellations = WtCancellation::select(
+                'wt_cancellations.id',
+                'wt_cancellations.applicant_name',
+                'wt_cancellations.booking_date',
+                'wt_cancellations.booking_no',
+                'wt_cancellations.delivery_date',
+                'wt_cancellations.delivery_time',
+                'wt_cancellations.payment_status',
+                'wt_cancellations.payment_details',
+                'wt_cancellations.feedback',
+
+                DB::raw('NULL::boolean as parked_status'),
+                DB::raw('NULL::integer as current_role'),
+                DB::raw('NULL::integer as status'),
+
+                'wt_cancellations.user_type',
+
+                DB::raw('NULL::integer as driver_id'),
+                DB::raw('NULL::integer as vehicle_id'),
+
+                DB::raw('false as is_driver_canceled_booking'),
+                DB::raw('NULL::boolean as is_tanker_free'),
+                'wt_cancellations.cancelled_by',
+                DB::raw('NULL::text as log_action_type')
+            )
+            ->whereRaw('1 = 0'); // ✅ EXCLUDE CANCELLATIONS
+
+            /*
+            |--------------------------------------------------------------------------
+            | SEARCH
+            |--------------------------------------------------------------------------
+            */
+            if ($key) {
+                $bookings->where(function ($q) use ($key) {
+                    $q->where('booking_no', 'ILIKE', "%$key%")
+                    ->orWhere('applicant_name', 'ILIKE', "%$key%");
+                });
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ULB FILTER
+            |--------------------------------------------------------------------------
+            */
+            if ($ulbId) {
+                $bookings->where('wt_bookings.ulb_id', $ulbId);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | DATE FILTER
+            |--------------------------------------------------------------------------
+            */
+            if ($fromDate && $uptoDate) {
+                $bookings->whereBetween('booking_date', [$fromDate, $uptoDate]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | USER TYPE
+            |--------------------------------------------------------------------------
+            */
+            if ($userType === 'Verifier' || $userType === 'Employee') {
+                $bookings->where('user_type', 'Employee');
+            } elseif ($userType) {
+                $bookings->where('user_type', $userType);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | APPLICATION TYPE FILTER
+            |--------------------------------------------------------------------------
+            */
+            if ($applicationType === 'backwarded') {
+                $bookings->where('parked_status', true);
+            }
+            elseif ($applicationType === 'forwarded') {
+                $bookings->where('current_role', 35)
+                    ->where(function ($q) {
+                        $q->whereNull('parked_status')
+                        ->orWhere('parked_status', false);
+                    });
+            }
+            elseif ($applicationType === 'new') {
+                $bookings->where('status', 1);
+            }
+            elseif ($applicationType === 'unpaid') {
+                $bookings->where('payment_status', 0);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | FINAL QUERY
+            |--------------------------------------------------------------------------
+            */
+            $list = $hasBookingOnlyFilter
+                ? $bookings
+                : $bookings->unionAll($cancellations);
+
+            $final = DB::query()
+                ->fromSub($list, 't')
+                ->orderBy('id', 'DESC')
+                ->paginate($req->perPage ?? 10);
+
+            /*
+            |--------------------------------------------------------------------------
+            | RESPONSE TRANSFORM
+            |--------------------------------------------------------------------------
+            */
+            $response = [
+                'currentPage' => $final->currentPage(),
+                'lastPage'    => $final->lastPage(),
+                'total'       => $final->total(),
+                'data'        => collect($final->items())->map(function ($item) use ($applicationType) {
+
+                    if ($item->user_type === 'Employee') {
+                        $item->user_type = 'Verifier';
+                    }
+
+                    if (in_array($item->log_action_type, ['EDIT', 'FORWARDED'])) {
+                        $item->applicationType = 'resubmitted';
+                    }
+                    elseif ($item->is_driver_canceled_booking === true) {
+                        $item->applicationType = 'Canceled by Driver';
+                    }
+                    elseif ($item->cancelled_by === 'Water-Agency') {
+                        $item->applicationType = 'Canceled by Agency';
+                    }
+                    elseif (!is_null($item->driver_id) && !is_null($item->vehicle_id)) {
+                        $item->applicationType = 'Driver Assigned';
+                    }
+                    elseif (!empty($applicationType)) {
+                        $item->applicationType = $applicationType;
+                    }
+                    else {
+                        if ($item->parked_status === true) {
+                            $item->applicationType = 'backwarded';
+                        } elseif ($item->current_role == 35) {
+                            $item->applicationType = 'forwarded';
+                        } elseif ($item->status == 1) {
+                            $item->applicationType = 'new';
+                        } elseif ($item->payment_status == 0) {
+                            $item->applicationType = 'unpaid';
+                        } else {
+                            $item->applicationType = 'in_process';
+                        }
+                    }
+
+                    $item->payment_details = json_decode($item->payment_details);
+                    $item->booking_date    = Carbon::parse($item->booking_date)->format('d-m-Y');
+
+                    unset($item->log_action_type, $item->is_driver_canceled_booking);
+
+                    return $item;
+                }),
+            ];
+
+            return responseMsgs(
+                true,
+                'Free tanker booking list',
+                $response,
+                '110115',
+                '1.0',
+                responseTime(),
+                'POST',
+                $req->deviceId ?? ''
+            );
+
+        } catch (\Exception $e) {
+            return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
+        }
+    }
+
 
     /**
      * | Get Application Status 

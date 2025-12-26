@@ -146,6 +146,7 @@ Route::group(['middleware' => ['checkToken']], function () {
             Route::post('water-tanker/forwardRejectedApplication', 'forwardRejectedApplication');
             Route::post('water-tanker/CitizenForwardRejectedApp', 'CitizenForwardRejectedApp');
             Route::post('water-tanker/search-booking-new', 'searchAppNew');                                      // Rcurrently using this api for search
+            Route::post('water-tanker/verifier-search-booking-new', 'searchFreeTankerAppNew');                                      // Rcurrently using this api for search
             Route::post('water-tanker/get-approved-application-list', 'getApprovedApplicationList');             // Get Approved Application List
         });
 
