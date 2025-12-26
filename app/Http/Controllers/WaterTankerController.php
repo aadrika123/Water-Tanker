@@ -3840,7 +3840,8 @@ class WaterTankerController extends Controller
                 'wt_bookings.user_type',
                 'wt_bookings.driver_id',
                 'wt_bookings.vehicle_id',
-                'wt_bookings.is_driver_canceled_booking',        // internal use
+                'wt_bookings.is_driver_canceled_booking',
+                DB::raw('NULL::text as cancelled_by'),
                 DB::raw('log.action_type::text as log_action_type')
             )
             ->leftJoinSub($latestLogSub, 'log', function ($join) {
@@ -3873,26 +3874,10 @@ class WaterTankerController extends Controller
                 DB::raw('NULL::integer as vehicle_id'),
 
                 DB::raw('false as is_driver_canceled_booking'),
+                'wt_cancellations.cancelled_by',                
                 DB::raw('NULL::text as log_action_type')
             );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | SEARCH
-            |--------------------------------------------------------------------------
-            */
-            if ($key) {
-                $bookings->where(function ($q) use ($key) {
-                    $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%");
-                });
-
-                $cancellations->where(function ($q) use ($key) {
-                    $q->where('booking_no', 'ILIKE', "%$key%")
-                    ->orWhere('applicant_name', 'ILIKE', "%$key%");
-                });
-            }
 
             /*
             |--------------------------------------------------------------------------
