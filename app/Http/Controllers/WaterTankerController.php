@@ -4078,7 +4078,6 @@ class WaterTankerController extends Controller
 
     public function getAppStatus($appId)
     {
-        // Fetch booking or cancellation
         $booking = WtBooking::find($appId);
         $isCancelled = false;
 
@@ -4091,101 +4090,61 @@ class WaterTankerController extends Controller
             return "";
         }
 
-        $driver  = method_exists($booking, 'getAssignedDriver')
-            ? $booking->getAssignedDriver()
-            : null;
-
-        $vehicle = method_exists($booking, 'getAssignedVehicle')
-            ? $booking->getAssignedVehicle()
-            : null;
-
-        /*
-        |--------------------------------------------------------------------------
-        | 1️⃣ CANCELLATION STATUS (HIGHEST PRIORITY)
-        |--------------------------------------------------------------------------
-        */
-        if ($isCancelled) {
-
-            // Cancelled by Water Agency
-            if ($booking->cancelled_by === 'Water-Agency') {
-                return "Cancelled by Agency";
-            }
-
-            // Normal cancellation
-            return "Booking canceled on " .
-                Carbon::parse($booking->cancel_date)->format("d-m-Y") .
-                " by " . $booking->cancelled_by;
+        if ($isCancelled || $booking->cancelled_by === 'Water-Agency') {
+            return "Booking Cancelled by Agency";
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2️⃣ DELIVERY STATUS
-        |--------------------------------------------------------------------------
-        */
         if ($booking->delivery_track_status == 2) {
-            return "Water Tanker Delivered On " .
-                Carbon::parse($booking->driver_delivery_update_date_time)
-                    ->format("d-m-Y h:i:s A");
+            return "Water Tanker Delivery trip Cancelled By Driver Due To "
+                . ($booking->delivery_comments ?? '');
         }
 
-        if ($booking->delivery_track_status == 1) {
-            return "Water Tanker Delivery trip Cancelled By Driver Due To " .
-                Str::title($booking->delivery_comments);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 3️⃣ PAYMENT STATUS
-        |--------------------------------------------------------------------------
-        */
-        if ($booking->payment_status == 0) {
-            return "Payment Pending of amount " . $booking->payment_amount;
-        }
-
-        
-        /*
-        |--------------------------------------------------------------------------
-        | 5️⃣ DRIVER & VEHICLE ASSIGNMENT STATUS
-        |--------------------------------------------------------------------------
-        */
-        if (!is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
-            return "Driver and Vehicle assigned";
-        }
-
-        // if (is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
-        //     return "Driver and Vehicle not assigned";
-        // }
-
-        // if (is_null($booking->driver_id) && !is_null($booking->vehicle_id)) {
-        //     return "Driver is not assigned But Vehicle assigned";
-        // }
-
-        // if (!is_null($booking->driver_id) && is_null($booking->vehicle_id)) {
-        //     return "Driver is assigned But Vehicle not assigned";
-        // }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 6️⃣ VEHICLE SENT FOR DELIVERY
-        |--------------------------------------------------------------------------
-        */
-        if ($booking->is_vehicle_sent == 1) {
-            return "Driver is going for delivery";
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | 4️⃣ APPLICATION WORKFLOW STATUS
-        |--------------------------------------------------------------------------
-        */
-        if ($booking->parked_status === true) {
+        if (
+            $booking->status == 1 &&
+            $booking->is_tanker_free == true &&
+            $booking->parked_status == true
+        ) {
             return "Backwarded by Verifier";
         }
 
-        if ($booking->parked_status !== true) {
-            return "Application is Pending at Verifier";
+        if (
+            $booking->status == 1 &&
+            $booking->payment_status == 0 &&
+            $booking->is_tanker_free == false
+        ) {
+            return "Pending of amount " . $booking->payment_amount;
         }
 
+        if (
+            $booking->status == 1 &&
+            is_null($booking->driver_id) &&
+            is_null($booking->vehicle_id)
+        ) {
+            return "Driver and Vehicle not assigned";
+        }
+
+        if (
+            $booking->status == 1 &&
+            !is_null($booking->driver_id) &&
+            !is_null($booking->vehicle_id)
+        ) {
+            return "Driver and Vehicle assigned";
+        }
+
+        if (
+            $booking->status == 1 &&
+            $booking->is_tanker_free == true &&
+            $booking->current_role == 79
+        ) {
+            return "Pending at Verifier";
+        }
+
+        if (
+            $booking->status == 1 &&
+            $booking->current_role == 35
+        ) {
+            return "Pending at Agency, Driver and Vehicle Not Assigned";
+        }
 
         return "";
     }
