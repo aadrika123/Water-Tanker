@@ -811,7 +811,7 @@ class WaterTankerController extends Controller
                 ->where('wb.delivery_date', '>=', Carbon::now()->format('Y-m-d'))
                 ->where(function($query) {
                     $query->where(function($q) {
-                        $q->where('wb.is_tanker_free', true)
+                        $q->where('wb.current_role', 35)
                         ->where('wb.is_document_uploaded', true);
                     })->orWhere('wb.is_tanker_free', false);
                 })
@@ -5317,6 +5317,42 @@ class WaterTankerController extends Controller
     }
 
     // Forward Rejected Application
+    // public function forwardRejectedApplication(Request $req)
+    // {
+    //     try {
+    //         $req->validate([
+    //             'applicationId' => 'required|integer'
+    //         ]);
+
+    //         $user = auth()->user();
+    //         $ulbId = $user->ulb_id ?? null;
+
+    //         // Fetch the booking
+    //         $booking = WtBooking::where('id', $req->applicationId)
+    //             ->where('ulb_id', $ulbId)
+    //             ->first();
+
+    //         if (!$booking) {
+    //             return responseMsgs(false, "Application not found!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+    //         }
+
+    //         // Check if parked
+    //         if (!$booking->parked_status) {
+    //             return responseMsgs(false, "Application is not in parked state!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+    //         }
+
+    //         // Update parked status → FALSE
+    //         $booking->parked_status = false;
+    //         $booking->current_role = 79; // Back to Verifier
+    //         $booking->save();
+
+    //         return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+    //     } catch (Exception $e) {
+    //         return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+    //     }
+    // }
+
     public function forwardRejectedApplication(Request $req)
     {
         try {
@@ -5327,7 +5363,6 @@ class WaterTankerController extends Controller
             $user = auth()->user();
             $ulbId = $user->ulb_id ?? null;
 
-            // Fetch the booking
             $booking = WtBooking::where('id', $req->applicationId)
                 ->where('ulb_id', $ulbId)
                 ->first();
@@ -5341,19 +5376,44 @@ class WaterTankerController extends Controller
                 return responseMsgs(false, "Application is not in parked state!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
             }
 
-            // Update parked status → FALSE
+            DB::beginTransaction();
+
+            /*
+            |--------------------------------------------------------------------------
+            | STORE LOG BEFORE UPDATE
+            |--------------------------------------------------------------------------
+            */
+            $logData = $booking->toArray();
+            $logData['booking_id']  = $booking->id;
+            $logData['action_type'] = 'FORWARDED';
+            $logData['logged_by']   = $user->id;
+            $logData['logged_at']   = now();
+
+            unset($logData['id']); // remove booking primary key
+
+            DB::table('log_wt_bookings')->insert($logData);
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE BOOKING
+            |--------------------------------------------------------------------------
+            */
             $booking->parked_status = false;
-            $booking->current_role = 79; // Back to Verifier
+            $booking->current_role  = 79; // Back to Verifier
             $booking->save();
+
+            DB::commit();
 
             return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
 
         } catch (Exception $e) {
+            DB::rollBack();
             return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
         }
+        
     }
 
-    public function CitizenForwardRejectedApp(Request $req)
+  /*   public function CitizenForwardRejectedApp(Request $req)
     {
         try {
             $req->validate([
@@ -5387,7 +5447,63 @@ class WaterTankerController extends Controller
         } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
         }
+    } */
+
+    public function CitizenForwardRejectedApp(Request $req)
+    {
+        try {
+            $req->validate([
+                'applicationId' => 'required|integer'
+            ]);
+
+            $user = auth()->user();
+
+            $booking = WtBooking::where('id', $req->applicationId)->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Application not found!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            if (!$booking->parked_status) {
+                return responseMsgs(false, "Application is not in parked state!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            DB::beginTransaction();
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOG BEFORE FORWARD
+            |--------------------------------------------------------------------------
+            */
+            $logData = $booking->toArray();
+            $logData['booking_id']  = $booking->id;
+            $logData['action_type'] = 'FORWARDED';
+            $logData['logged_by']   = $user->id;
+            $logData['logged_at']   = now();
+
+            unset($logData['id']);
+
+            DB::table('log_wt_bookings')->insert($logData);
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE BOOKING
+            |--------------------------------------------------------------------------
+            */
+            $booking->parked_status = false;
+            $booking->current_role  = 79; // Verifier
+            $booking->save();
+
+            DB::commit();
+
+           return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
     }
+
 
     // Approved Application List with Vehicle & Driver assigned
     public function getApprovedApplicationList(Request $req)
