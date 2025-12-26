@@ -3817,7 +3817,7 @@ class WaterTankerController extends Controller
             $hasBookingOnlyFilter =
                 $bookingType ||
                 in_array($userType, ['Citizen', 'JSK', 'Verifier', 'Employee']) ||
-                in_array($applicationType, ['forwarded', 'backwarded', 'new', 'unpaid']);
+                in_array($applicationType, ['forwarded', 'backwarded', 'new', 'unpaid', 're-submitted']);
 
             /*
             |--------------------------------------------------------------------------
@@ -3928,21 +3928,42 @@ class WaterTankerController extends Controller
             | APPLICATION TYPE FILTER (REQUEST SIDE)
             |--------------------------------------------------------------------------
             */
-            if ($applicationType === 'backwarded') {
+            if ($applicationType == 'backwarded') {
                 $bookings->where('parked_status', true);
             }
             elseif ($applicationType === 'forwarded') {
-                $bookings->where('current_role', 35)
+            $bookings->where('current_role', 35)
+                    ->whereNull('driver_id')
+                    ->whereNull('vehicle_id')
                     ->where(function ($q) {
-                        $q->whereNull('parked_status')
-                        ->orWhere('parked_status', false);
+                        $q->whereNull('is_driver_canceled_booking')
+                        ->orWhere('is_driver_canceled_booking', false);
                     });
             }
-            elseif ($applicationType === 'new') {
-                $bookings->where('status', 1);
+           elseif ($applicationType === 'new') {
+                $bookings->where('status', 1)
+                    ->where(function ($q) {
+                        $q->whereNull('current_role')
+                        ->orWhere('current_role', 0);
+                    })
+                    ->whereNull('driver_id')
+                    ->whereNull('vehicle_id')
+                    ->where(function ($q) {
+                        $q->whereNull('is_driver_canceled_booking')
+                        ->orWhere('is_driver_canceled_booking', false);
+                    })
+                    ->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                        ->from('log_wt_bookings')
+                        ->whereColumn('log_wt_bookings.booking_id', 'wt_bookings.id')
+                        ->whereIn('action_type', ['EDIT', 'FORWARDED']);
+                    });
             }
-            elseif ($applicationType === 'unpaid') {
+            elseif ($applicationType == 'unpaid') {
                 $bookings->where('payment_status', 0);
+            }
+            elseif ($applicationType === 're-submitted') {
+                $bookings->whereIn('log.action_type', ['EDIT', 'FORWARDED']);
             }
 
             /*
@@ -3998,6 +4019,7 @@ class WaterTankerController extends Controller
                         $item->applicationType = 'Driver Assigned';
                     }
                     elseif (!empty($applicationType)) {
+                        // Do NOT override with other states
                         $item->applicationType = $applicationType;
                     }
                     else {
@@ -4040,6 +4062,7 @@ class WaterTankerController extends Controller
             return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
         }
     }
+
 
     // only free verifier
     public function searchFreeTankerAppNew(Request $req)
