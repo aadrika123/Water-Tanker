@@ -4582,7 +4582,7 @@ class WaterTankerController extends Controller
 
             // Fetch booking
             $booking = WtBooking::where('id', $req->applicationId)
-                ->where('ulb_id', $ulbId)
+                // ->where('ulb_id', $ulbId)
                 ->where('payment_status', 2) // Only free bookings
                 ->first();
 
@@ -4630,6 +4630,104 @@ class WaterTankerController extends Controller
             DB::commit();
 
             return responseMsgs(true, "Booking Updated Successfully!", $booking, "110118", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return responseMsgs(false, $e->getMessage(), "", "110118", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
+    public function citizenEditFreeBooking(Request $req)
+    {
+        $req->validate([
+            'applicationId' => 'required|integer',
+            'ulbId'         => 'required|integer',
+            'deliveryDate'  => 'nullable|date',
+            'deliveryTime'  => 'nullable',
+            'address'       => 'nullable|string',
+            'mobile'        => 'nullable|digits:10',
+            'email'         => 'nullable|email',
+            'locationId'    => 'nullable|integer',
+            'capacityId'    => 'nullable|integer',
+            'wardId'        => 'nullable|integer',
+            'reason'        => 'nullable|string',
+            'applicantName' => 'nullable|string',
+        ]);
+
+        try {
+            $user = Auth()->user();
+
+            /*
+            |--------------------------------------------------------------------------
+            | FETCH FREE BOOKING (ULB CHECK FROM BOOKING ITSELF)
+            |--------------------------------------------------------------------------
+            */
+            $booking = WtBooking::where('id', $req->applicationId)
+                ->where('ulb_id', $req->ulbId)
+                ->where('payment_status', 2)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(
+                    false,
+                    "Free booking not found for given ULB!",
+                    null,
+                    "110118",
+                    "1.0",
+                    "",
+                    'POST',
+                    $req->deviceId ?? ""
+                );
+            }
+
+            DB::beginTransaction();
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOG OLD DATA
+            |--------------------------------------------------------------------------
+            */
+            $logData = $booking->toArray();
+            $logData['booking_id']  = $booking->id;
+            $logData['action_type'] = 'EDIT';
+            $logData['logged_by']   = $user->id;
+            $logData['logged_at']   = now();
+            unset($logData['id']);
+
+            DB::table('log_wt_bookings')->insert($logData);
+
+            /*
+            |--------------------------------------------------------------------------
+            | UPDATE BOOKING
+            |--------------------------------------------------------------------------
+            */
+            $updateData = array_filter([
+                'delivery_date'  => $req->deliveryDate,
+                'delivery_time'  => $req->deliveryTime,
+                'address'        => $req->address,
+                'mobile'         => $req->mobile,
+                'email'          => $req->email,
+                'applicant_name' => $req->applicantName,
+                'location_id'    => $req->locationId,
+                'capacity_id'    => $req->capacityId,
+                'ward_id'        => $req->wardId,
+                'reason'         => $req->reason,
+            ], fn ($v) => !is_null($v));
+
+            $booking->update($updateData);
+
+            DB::commit();
+
+            return responseMsgs(
+                true,
+                "Booking Updated Successfully!",
+                $booking,
+                "110118",
+                "1.0",
+                responseTime(),
+                'POST',
+                $req->deviceId ?? ""
+            );
 
         } catch (Exception $e) {
             DB::rollBack();
