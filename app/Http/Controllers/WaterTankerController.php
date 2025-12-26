@@ -4006,6 +4006,12 @@ class WaterTankerController extends Controller
                     elseif ($item->is_driver_canceled_booking === true) {
                         $item->applicationType = 'Canceled by Driver';
                     }
+                    elseif ($item->cancelled_by === 'Water-Agency') {
+                        $item->applicationType = 'Canceled by Agency';
+                    }
+                    elseif ($item->parked_status === true) {
+                        $item->applicationType = 'Canceled by Driver';
+                    }
                     elseif (!is_null($item->driver_id) && !is_null($item->vehicle_id)) {
                         $item->applicationType = 'Driver Assigned';
                     }
