@@ -4086,6 +4086,9 @@ class WaterTankerController extends Controller
             $isCancelled = true;
         }
 
+        $driver  = $booking->getAssignedDriver();
+        $vehicle  = $booking->getAssignedVehicle();
+        
         if (!$booking) {
             return "";
         }
@@ -4094,7 +4097,7 @@ class WaterTankerController extends Controller
             return "Booking Cancelled by Agency";
         }
 
-        if ($booking->delivery_track_status == 2) {
+        if ($booking->is_driver_canceled_booking == true) {
             return "Water Tanker Delivery trip Cancelled By Driver Due To "
                 . ($booking->delivery_comments ?? '');
         }
@@ -4129,10 +4132,13 @@ class WaterTankerController extends Controller
         if (
             $booking->status == 1 &&
             !is_null($booking->driver_id) &&
-            !is_null($booking->vehicle_id)
+            !is_null($booking->vehicle_id) &&
+            $driver &&
+            $vehicle
         ) {
-            return "Driver and Vehicle assigned";
+            return "Driver (" . $driver->driver_name . ") And Vehicle (" . $vehicle->vehicle_no . ") assigned";
         }
+
 
         if (
             $booking->status == 1 &&
