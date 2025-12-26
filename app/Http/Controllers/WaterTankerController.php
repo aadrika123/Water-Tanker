@@ -3838,6 +3838,8 @@ class WaterTankerController extends Controller
                 'wt_bookings.current_role',
                 'wt_bookings.status',
                 'wt_bookings.user_type',
+                'wt_bookings.driver_id',
+                'wt_bookings.vehicle_id',
                 'wt_bookings.is_driver_canceled_booking',        // internal use
                 DB::raw('log.action_type::text as log_action_type')
             )
@@ -3860,13 +3862,20 @@ class WaterTankerController extends Controller
                 'wt_cancellations.payment_status',
                 'wt_cancellations.payment_details',
                 'wt_cancellations.feedback',
+
                 DB::raw('NULL::boolean as parked_status'),
                 DB::raw('NULL::integer as current_role'),
                 DB::raw('NULL::integer as status'),
+
                 'wt_cancellations.user_type',
-                DB::raw('false as is_driver_canceled_booking'),  // internal use
+
+                DB::raw('NULL::integer as driver_id'),
+                DB::raw('NULL::integer as vehicle_id'),
+
+                DB::raw('false as is_driver_canceled_booking'),
                 DB::raw('NULL::text as log_action_type')
             );
+
 
             /*
             |--------------------------------------------------------------------------
@@ -3988,7 +3997,7 @@ class WaterTankerController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
-                    | APPLICATION TYPE (PRIORITY ORDER)
+                    | APPLICATION STATUS (PRIORITY ORDER)
                     |--------------------------------------------------------------------------
                     */
                     if ($item->log_action_type === 'EDIT') {
@@ -3996,6 +4005,9 @@ class WaterTankerController extends Controller
                     }
                     elseif ($item->is_driver_canceled_booking === true) {
                         $item->applicationType = 'Canceled by Driver';
+                    }
+                    elseif (!is_null($item->driver_id) && !is_null($item->vehicle_id)) {
+                        $item->applicationType = 'Driver Assigned';
                     }
                     elseif (!empty($applicationType)) {
                         $item->applicationType = $applicationType;
@@ -4017,7 +4029,7 @@ class WaterTankerController extends Controller
                     $item->payment_details = json_decode($item->payment_details);
                     $item->booking_date = Carbon::parse($item->booking_date)->format('d-m-Y');
 
-                    // 🔥 CLEAN RESPONSE (HIDE INTERNAL FLAGS)
+                    // CLEAN RESPONSE (HIDE INTERNAL FLAGS)
                     unset($item->log_action_type);
                     unset($item->is_driver_canceled_booking);
 
@@ -4088,7 +4100,7 @@ class WaterTankerController extends Controller
 
         $driver  = $booking->getAssignedDriver();
         $vehicle  = $booking->getAssignedVehicle();
-        
+
         if (!$booking) {
             return "";
         }
