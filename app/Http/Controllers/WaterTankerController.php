@@ -4000,7 +4000,7 @@ class WaterTankerController extends Controller
                     | APPLICATION STATUS (PRIORITY ORDER)
                     |--------------------------------------------------------------------------
                     */
-                    if ($item->log_action_type === 'EDIT') {
+                    if (in_array($item->log_action_type, ['EDIT', 'FORWARDED'])) {
                         $item->applicationType = 'resubmitted';
                     }
                     elseif ($item->is_driver_canceled_booking === true) {
