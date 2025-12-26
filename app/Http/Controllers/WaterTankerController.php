@@ -4115,13 +4115,16 @@ class WaterTankerController extends Controller
             return "Pending of amount " . $booking->payment_amount;
         }
 
-        if (
+       if (
             $booking->status == 1 &&
             is_null($booking->driver_id) &&
-            is_null($booking->vehicle_id)
+            is_null($booking->vehicle_id) &&
+            $booking->current_role == 35 &&
+            $booking->parked_status == false
         ) {
             return "Driver and Vehicle not assigned";
         }
+
 
         if (
             $booking->status == 1 &&
