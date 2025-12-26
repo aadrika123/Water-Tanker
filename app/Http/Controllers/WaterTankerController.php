@@ -5373,6 +5373,42 @@ class WaterTankerController extends Controller
         }
     }
 
+    public function CitizenForwardRejectedApp(Request $req)
+    {
+        try {
+            $req->validate([
+                'applicationId' => 'required|integer'
+            ]);
+
+            $user = auth()->user();
+            // $ulbId = $user->ulb_id ?? null;
+
+            // Fetch the booking
+            $booking = WtBooking::where('id', $req->applicationId)
+                // ->where('ulb_id', $ulbId)
+                ->first();
+
+            if (!$booking) {
+                return responseMsgs(false, "Application not found!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            // Check if parked
+            if (!$booking->parked_status) {
+                return responseMsgs(false, "Application is not in parked state!", null, "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+            }
+
+            // Update parked status → FALSE
+            $booking->parked_status = false;
+            $booking->current_role = 79; // Back to Verifier
+            $booking->save();
+
+            return responseMsgs(true, "Application forwarded successfully!", $booking, "110160", "1.0", responseTime(), 'POST', $req->deviceId ?? "");
+
+        } catch (Exception $e) {
+            return responseMsgs(false, $e->getMessage(), "", "110160", "1.0", "", 'POST', $req->deviceId ?? "");
+        }
+    }
+
     // Approved Application List with Vehicle & Driver assigned
     public function getApprovedApplicationList(Request $req)
     {
