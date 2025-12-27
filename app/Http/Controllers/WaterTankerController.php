@@ -1989,9 +1989,11 @@ class WaterTankerController extends Controller
                 $chequeDtls = $val->getChequeDtls();
 
                 return [
+                    'id'            => $val->id,
+                    'booking_id'    => $val->booking_id,
                     'tran_no'      => $val->tran_no,
                     'tran_date'    => Carbon::parse($val->tran_date)->format('d-m-Y'),
-                    'amount'       => $val->amount,
+                    'amount'       => $val->paid_amount,
                     'payment_mode' => $val->payment_mode,
                     'cheque_no'    => $chequeDtls->cheque_no ?? "",
                     'cheque_date'  => $chequeDtls->cheque_date ?? "",
@@ -2006,7 +2008,7 @@ class WaterTankerController extends Controller
             |--------------------------------------------------------------------------
             */
             if ($isCancelled) {
-                // ✅ cancellation-safe method
+                // cancellation-safe method
                 $list = (new WtCancellation())->getBookingDetailById($req->applicationId);
             } else {
                 $list = (new WtBooking())->getBookingDetailById($req->applicationId);
