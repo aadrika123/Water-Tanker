@@ -4082,7 +4082,7 @@ class WaterTankerController extends Controller
                 $req->deviceId ?? ''
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
         }
     }
@@ -4323,10 +4323,16 @@ class WaterTankerController extends Controller
                 'total'       => $final->total(),
                 'data'        => collect($final->items())->map(function ($item) use ($applicationType) {
 
+                    // Normalize user_type
                     if ($item->user_type === 'Employee') {
                         $item->user_type = 'Verifier';
                     }
 
+                    /*
+                    |--------------------------------------------------------------------------
+                    | APPLICATION STATUS (PRIORITY ORDER)
+                    |--------------------------------------------------------------------------
+                    */
                     if (in_array($item->log_action_type, ['EDIT', 'FORWARDED'])) {
                         $item->applicationType = 'resubmitted';
                     }
@@ -4358,9 +4364,11 @@ class WaterTankerController extends Controller
                     }
 
                     $item->payment_details = json_decode($item->payment_details);
-                    $item->booking_date    = Carbon::parse($item->booking_date)->format('d-m-Y');
+                    $item->booking_date = Carbon::parse($item->booking_date)->format('d-m-Y');
 
-                    unset($item->log_action_type, $item->is_driver_canceled_booking);
+                    // CLEAN RESPONSE (HIDE INTERNAL FLAGS)
+                    unset($item->log_action_type);
+                    unset($item->is_driver_canceled_booking);
 
                     return $item;
                 }),
@@ -4377,7 +4385,7 @@ class WaterTankerController extends Controller
                 $req->deviceId ?? ''
             );
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return responseMsgs(false, $e->getMessage(), '', 'POST', $req->deviceId ?? '');
         }
     }
