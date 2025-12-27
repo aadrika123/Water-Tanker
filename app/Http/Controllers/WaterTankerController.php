@@ -4276,7 +4276,7 @@ class WaterTankerController extends Controller
                 $bookings->where('status', 1)
                     ->where(function ($q) {
                         $q->whereNull('current_role')
-                        ->orWhere('current_role', 0);
+                        ->orWhereIn('current_role', [0, 79]);
                     })
                     ->whereNull('driver_id')
                     ->whereNull('vehicle_id')
@@ -4291,6 +4291,7 @@ class WaterTankerController extends Controller
                         ->whereIn('action_type', ['EDIT', 'FORWARDED']);
                     });
             }
+
             elseif ($applicationType == 'unpaid') {
                 $bookings->where('payment_status', 0);
             }
